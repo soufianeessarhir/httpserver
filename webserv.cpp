@@ -1,0 +1,57 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   webserv.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/18 15:26:08 by sessarhi          #+#    #+#             */
+/*   Updated: 2025/05/11 17:40:46 by sessarhi         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "webserv.hpp"
+
+
+int main(int argc, char **argv)
+{
+	std::vector<Server> servers;
+	if (argc != 2)
+		return std::cerr << "Usage: " << argv[0] << " <config_file>" << std::endl, 1;
+	{
+		std::ifstream configFile(argv[1]);
+		if (!configFile.is_open())
+		{
+			std::cerr << "Error: Could not open config file." << std::endl;
+			return 1;
+		}
+		Parser parser(configFile, servers);
+		try
+		{
+			parser.Config();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+		}
+		configFile.close();
+	}
+	if (servers.empty())
+	{
+		std::cerr << "Error: No valid server configurations found." << std::endl;
+		return 1;
+	}
+	HttpServer httpServer(servers);
+	try
+	{
+		httpServer.run();
+	}
+	catch (const HttpServerError &e)
+	{
+		std::cerr << "HttpServerError: " << e.what() << std::endl;
+		httpServer.cleanup();
+		return 1;
+	}
+
+	return 0;
+}
