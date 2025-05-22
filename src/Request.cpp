@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/22 21:46:26 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/22 21:50:50 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,7 +156,7 @@ bool        Request::Decode()
         else
             uri.push_back(tmp[i]);
     }
-    //[sessarhi] may i need to check for illegat characters after decoding   
+    //[sessarhi] may i need to check for illegat characters after decoding
     return true;
 }
 
