@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/22 21:50:50 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/22 22:45:54 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,15 +79,14 @@ bool        Request::ParseRequestLine(std::string data)
         return false;
         
     }
-    if (version != "HTTP/1.1" && version != "HTTP/1.0")
+    if (version != "HTTP/1.1")
     {
         // [sessarhi] not supported
         RequestStatusCode = 505;
         return false;
     }
     if (ParseUri())
-        return false;
-        
+        return false; 
     return true;
 }
 
@@ -110,8 +109,7 @@ bool        Request::ParseUri()
     bool ret = Decode();
     if (ret)
         return false;
-    
-
+    // [sessarhi] may i add checking for utf-8 sequences
     return true;
 }
 
