@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/23 22:13:21 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/23 22:15:42 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,4 +173,5 @@ void        Request::trim(std::string &str) {
 size_t          Request::GetContentLenght()const
 {
     return 1;
+    
 }
