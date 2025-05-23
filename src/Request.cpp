@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/22 22:45:54 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/23 22:13:21 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,8 +106,7 @@ bool        Request::ParseUri()
             return false;
         }
     }
-    bool ret = Decode();
-    if (ret)
+    if ( Decode())
         return false;
     // [sessarhi] may i add checking for utf-8 sequences
     return true;
@@ -169,4 +168,9 @@ void        Request::trim(std::string &str) {
         --end;
 
     str = str.substr(start, end - start);
+}
+
+size_t          Request::GetContentLenght()const
+{
+    return 1;
 }
