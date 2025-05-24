@@ -1,12 +1,12 @@
-# ABOUT
-This project is about creating an HTTP server from scratch using standard C++ 98
+# ABOUT THE PROJECT
+-This project is about creating an HTTP server from scratch using standard C++ 98
 
 
 
 
-# resource list
+# RESOURCE LIST
 
-## NGNIX
+- ## NGNIX
 
 - [Inside NGINX: How We Designed for Performance & Scale](https://www.nginx.com/blog/inside-nginx-how-we-designed-for-performance-scale/)
 - [NGINX Architecture - Official Docs](https://nginx.org/en/docs/dev/development_guide.html)
@@ -21,7 +21,7 @@ This project is about creating an HTTP server from scratch using standard C++ 98
 - [Nginx FastCGI Module](https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html)
 - [Inside NGINX: How We Designed for Performance & Scale](https://www.nginx.com/blog/inside-nginx-how-we-designed-for-performance-scale/)
 
-## HTTP RFCs
+- ## HTTP RFCs
 
 - [HTTP/1.1 Message Syntax and Routing](https://datatracker.ietf.org/doc/html/rfc9112)
 - [URI: Generic Syntax](https://datatracker.ietf.org/doc/html/rfc3986)
@@ -30,12 +30,12 @@ This project is about creating an HTTP server from scratch using standard C++ 98
 - [HTTP State Management (Cookies)](https://datatracker.ietf.org/doc/html/rfc6265)
 - [cockies](https://datatracker.ietf.org/doc/html/rfc6265)
 
-## NETWORKING
+- ## NETWORKING
 
 - [Beej's Guide to Network Programming ](https://beej.us/guide/bgnet/)
 - [The Linux Programming Interface](https://broman.dev/download/The%20Linux%20Programming%20Interface.pdf)
 
-##  Multiplexed I/O
+- ##  Multiplexed I/O
 
 - [The C10K Problem](http://www.kegel.com/c10k.html)
 - [epoll Documentation](https://man7.org/linux/man-pages/man7/epoll.7.html)
