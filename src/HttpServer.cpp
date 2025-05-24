@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/24 15:39:40 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/24 18:03:12 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,6 +123,7 @@ void		HttpServer::HandlIncommingData(int fd)
 	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,0)) >= 0 ;)
 	{
 		conn->buffer.append(buf,rd_bytes);
+		// [sessarhi] maybe i will switch this to switch-case
 		if (conn->state == Connection::READING_REQUEST_LINE)
 		{
 			size_t end = conn->buffer.find("\r\n");
@@ -134,7 +135,11 @@ void		HttpServer::HandlIncommingData(int fd)
 					conn->buffer.erase(0,end + 2);
 					conn->state = Connection::READING_HEADERS;
 				}
-				// [sessarhi] handle if not
+				else
+				{
+					conn->response =  new Response(conn->request->GetStatus());
+					conn->state =  Connection::SENDING_RESPONSE;
+				}
 			}
 		}
 		else if (conn->state == Connection::READING_HEADERS)
@@ -162,7 +167,11 @@ void		HttpServer::HandlIncommingData(int fd)
 					bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
 					if (IsValid)
 						conn->buffer.erase(0,end + 2);
-					// [sessarhi] handle if not
+					else 
+					{
+						conn->response = new Response(conn->request->GetStatus());
+						conn->state =  Connection::SENDING_RESPONSE;
+					}
 				}
 				else
 				{
@@ -170,6 +179,10 @@ void		HttpServer::HandlIncommingData(int fd)
 					conn->state = Connection::SENDING_RESPONSE;
 				}
 			}
+			
+		}
+		else if (conn->state == Connection::READING_BODY)
+		{
 			
 		}
 		else if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
