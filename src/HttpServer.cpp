@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/24 12:11:31 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/24 15:39:40 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,10 +119,10 @@ void		HttpServer::HandlIncommingData(int fd)
 	if (!conn)
 		return ;
 	ssize_t rd_bytes = 0;
-	std::string buf[READ_BUFFER_SIZE];
+	char buf[READ_BUFFER_SIZE];
 	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,0)) >= 0 ;)
 	{
-		conn->buffer.append(buf->c_str(),READ_BUFFER_SIZE);
+		conn->buffer.append(buf,rd_bytes);
 		if (conn->state == Connection::READING_REQUEST_LINE)
 		{
 			size_t end = conn->buffer.find("\r\n");
@@ -171,6 +171,16 @@ void		HttpServer::HandlIncommingData(int fd)
 				}
 			}
 			
+		}
+		else if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
+		{
+			conn->response = new Response(414); //[sessarhi] uri too large response
+			conn->state = Connection::SENDING_RESPONSE;
+		}
+		else if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
+		{
+			conn->response = new Response(431); //[sessarhi] header field too large response
+			conn->state = Connection::SENDING_RESPONSE;
 		}
 	}
 }
