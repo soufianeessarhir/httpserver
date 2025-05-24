@@ -6,15 +6,23 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/23 22:13:56 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/24 12:07:15 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef REQUEST_HPP
-#define REQUEST_HPP
-#include <string>
-#include <map>
-#include <sstream>
+#ifndef             REQUEST_HPP
+
+#define             REQUEST_HPP
+
+#include            <string>
+
+#include            <map>
+
+#include            <sstream>
+
+#include            <errno.h> 
+
+#include            <cstdlib>
 
 
 class Request
@@ -53,9 +61,11 @@ public:
 
     const char*     GetBody()const;
     
-    std::string     GetHeader(std::string );
+    std::string     GetHeader(std::string )const;
     
     std::string     GetVersion()const;
+
+    int             GetStatus()const;
     
     
 
