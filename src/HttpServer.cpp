@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/22 18:40:52 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/24 12:11:31 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,7 +148,11 @@ void		HttpServer::HandlIncommingData(int fd)
 					conn->buffer.erase(0,end + 4);
 					conn->state = Connection::READING_BODY;
 				}
-				// [sessarhi] handle if not
+				else
+				{
+					conn->response = new Response(conn->request->GetStatus());
+					conn->state = Connection::SENDING_RESPONSE;
+				}
 			}
 			else
 			{
@@ -159,6 +163,11 @@ void		HttpServer::HandlIncommingData(int fd)
 					if (IsValid)
 						conn->buffer.erase(0,end + 2);
 					// [sessarhi] handle if not
+				}
+				else
+				{
+					conn->response = new Response(conn->request->GetStatus());
+					conn->state = Connection::SENDING_RESPONSE;
 				}
 			}
 			

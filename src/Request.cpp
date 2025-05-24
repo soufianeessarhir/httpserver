@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/23 22:15:42 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/24 12:07:48 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,9 @@ std::string Request::GetUri()const {return uri;}
 
 const char* Request::GetBody()const{return body;}
 
-std::string Request::GetHeader(std::string name)
+std::string Request::GetHeader(std::string name)const
 {
-    std::map<std::string, std::string>::iterator it = headers.find(name);
+    std::map<std::string, std::string>::const_iterator it = headers.find(name);
     if (it != headers.end())
         return (it->second);
     return NULL;
@@ -130,6 +130,11 @@ void        Request::ToCanonical(std::string &str)
     }
 }
 
+int         Request::GetStatus()const
+{
+    return RequestStatusCode;
+}
+
 bool        Request::Decode()
 {
     const std::string tmp = uri;
@@ -172,6 +177,12 @@ void        Request::trim(std::string &str) {
 
 size_t          Request::GetContentLenght()const
 {
-    return 1;
+    errno = 0;
+    char *endptr;
+    std::map<std::string,std::string>::const_iterator it = headers.find("contentlenght");
+    if (it == headers.end())
+        return 0;
+    long long val =  std::strtol((*it).second.c_str(),&endptr,10);
+    return val;
     
 }

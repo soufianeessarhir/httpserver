@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/22 18:55:17 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/24 11:58:19 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,11 @@
 #include		<deque>
 #include		<algorithm>
 
-#define			MAX_EVENTS			1024
-#define			READ_BUFFER_SIZE	4096
-#define			CLIENT_PER_CYCLE	512
+#define			MAX_EVENTS					1024
+#define			READ_BUFFER_SIZE			4096
+#define			CLIENT_PER_CYCLE			512
+#define			MAX_REQUEST_LINE_LENGHT		4096
+#define			MAX_header_field_LENGHT		4096
 
 
 class HttpServer
@@ -63,12 +65,16 @@ private:
 	void		ProcessClientsRoundRobin();
 	
 	bool		CheckForEventFd(std::deque<struct  epoll_event>&,int fd);
+
+
+
 	
-	std::vector<Server>				&servers;
 	
 	int								epoll_fd;
 	
 	struct  epoll_event 			ev, events[MAX_EVENTS];
+	
+	std::vector<Server>				&servers;
 	
 	std::map<int, Server> 			server_map;
 	
