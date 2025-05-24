@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/24 18:03:12 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/24 20:47:11 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,7 +151,10 @@ void		HttpServer::HandlIncommingData(int fd)
 				if (IsValid)
 				{
 					conn->buffer.erase(0,end + 4);
-					conn->state = Connection::READING_BODY;
+					if (conn->request->ExpectBody())
+						conn->state = Connection::READING_BODY;
+					else
+						conn->state =  Connection::PROCESSING;
 				}
 				else
 				{
@@ -173,15 +176,14 @@ void		HttpServer::HandlIncommingData(int fd)
 						conn->state =  Connection::SENDING_RESPONSE;
 					}
 				}
-				else
-				{
-					conn->response = new Response(conn->request->GetStatus());
-					conn->state = Connection::SENDING_RESPONSE;
-				}
 			}
 			
 		}
 		else if (conn->state == Connection::READING_BODY)
+		{
+			
+		}
+		else if (conn->state == Connection::PROCESSING)
 		{
 			
 		}
