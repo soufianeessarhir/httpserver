@@ -1,2 +1,2 @@
-# httpserver
-this project is about creating my own httpserver from scratch using c++
+# ABOUT
+This project is about creating an HTTP server from scratch using standard C++ 98
