@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/24 12:07:48 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/25 16:19:27 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,31 @@ std::string Request::GetHeader(std::string name)const
         return (it->second);
     return NULL;
 }
+size_t          Request::GetContentLenght()const
+{
+    errno = 0;
+    char *endptr;
+    std::map<std::string,std::string>::const_iterator it = headers.find("contentlenght");
+    if (it == headers.end())
+        return 0;
+    long long val =  std::strtol((*it).second.c_str(),&endptr,10);
+    return val;
+    
+}
+
+int         Request::GetStatus()const
+{
+    return RequestStatusCode;
+}
 
 std::string Request::GetVersion()const
 {
     return version;
+}
+
+bool        Request::GetIsComplet()const
+{
+    return IsComplete;
 }
 
 void        Request::SetBody(std::string &data)
@@ -130,10 +151,6 @@ void        Request::ToCanonical(std::string &str)
     }
 }
 
-int         Request::GetStatus()const
-{
-    return RequestStatusCode;
-}
 
 bool        Request::Decode()
 {
@@ -175,14 +192,3 @@ void        Request::trim(std::string &str) {
     str = str.substr(start, end - start);
 }
 
-size_t          Request::GetContentLenght()const
-{
-    errno = 0;
-    char *endptr;
-    std::map<std::string,std::string>::const_iterator it = headers.find("contentlenght");
-    if (it == headers.end())
-        return 0;
-    long long val =  std::strtol((*it).second.c_str(),&endptr,10);
-    return val;
-    
-}
