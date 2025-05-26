@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/24 11:58:19 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/25 19:45:48 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,10 @@ private:
 	void		ProcessClientsRoundRobin();
 	
 	bool		CheckForEventFd(std::deque<struct  epoll_event>&,int fd);
+	
+	void		ProcessREquest(Connection *);
+
+	
 
 
 
