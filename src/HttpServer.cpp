@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/25 16:20:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/26 17:17:43 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,11 @@ void		HttpServer::init()
 				sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 				if (sockfd == -1)
 					continue;
+				int optval = 1;
+				if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
+					close(sockfd);
+					continue;
+				}
 				SetSocketToNonblocking(sockfd);
 				if (bind(sockfd, p->ai_addr, p->ai_addrlen)!= -1)
 					break;
@@ -116,6 +121,7 @@ void		HttpServer::HandleNewConnection(int fd)
 void		HttpServer::HandlIncommingData(int fd)
 {
 	Connection *conn = clients[fd];
+	std::cout<< "accepted\n";
 	if (!conn)
 		return ;
 	ssize_t rd_bytes = 0;
@@ -152,12 +158,7 @@ void		HttpServer::HandlIncommingData(int fd)
 				{
 					conn->buffer.erase(0,end + 4);
 					if (conn->request->GetIsComplet())
-					{
-						if (conn->request->ExpectBody())
-							conn->state = Connection::READING_BODY;
-						else
-							conn->state =  Connection::PROCESSING;
-					}
+						conn->state = Connection::PROCESSING;
 				}
 				else
 				{
@@ -182,11 +183,15 @@ void		HttpServer::HandlIncommingData(int fd)
 			}
 			
 		}
-		else if (conn->state == Connection::READING_BODY)
-		{
-			
-		}
 		else if (conn->state == Connection::PROCESSING)
+		{
+			ProcessREquest(conn);
+			if (conn->request->ExpectBody())
+				conn->state = Connection::READING_BODY;
+			else
+			conn->state = Connection::SENDING_RESPONSE;
+		}
+		else if(conn->state == Connection::READING_BODY)
 		{
 			
 		}
@@ -259,6 +264,13 @@ void		HttpServer::ProcessClientsRoundRobin()
 		}
 	}
 }
+
+void 		HttpServer::ProcessREquest(Connection *conn)
+{
+	std::string host = conn->request->GetHeader("host");
+	
+}
+
 
 void		HttpServer::HandlOutgoingData(int fd)
 {

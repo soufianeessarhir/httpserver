@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:26:08 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/11 17:40:46 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/25 19:56:07 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,15 +41,15 @@ int main(int argc, char **argv)
 		std::cerr << "Error: No valid server configurations found." << std::endl;
 		return 1;
 	}
-	HttpServer httpServer(servers);
 	try
 	{
+		HttpServer httpServer(servers);
 		httpServer.run();
 	}
-	catch (const HttpServerError &e)
+	catch (HttpServerError &e)
 	{
 		std::cerr << "HttpServerError: " << e.what() << std::endl;
-		httpServer.cleanup();
+		// httpServer.cleanup();
 		return 1;
 	}
 
