@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/26 17:17:43 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/26 20:36:35 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -268,6 +268,17 @@ void		HttpServer::ProcessClientsRoundRobin()
 void 		HttpServer::ProcessREquest(Connection *conn)
 {
 	std::string host = conn->request->GetHeader("host");
+	for (size_t i = 0; i < servers.size();++i)
+	{
+		for (size_t j = 0; j < servers[i].server_names.size();++j)
+		{
+			if (servers[i].server_names[j] == host)
+			{
+				conn->server = &servers[i];
+				break;
+			}
+		}
+	}
 	
 }
 
