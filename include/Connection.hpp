@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/22 18:54:41 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/26 20:31:15 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ public:
     int             fd;
     Request         *request;
     Response        *response;
+    Server          *server;
     std::string     buffer;
     __ssize_t       BytesSent;
     time_t          LastAct;
