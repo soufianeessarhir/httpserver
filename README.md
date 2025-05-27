@@ -28,7 +28,6 @@
 - [HTTP Semantics](https://datatracker.ietf.org/doc/html/rfc9110)
 - [CGI Version 1.1](https://datatracker.ietf.org/doc/html/rfc3875)
 - [HTTP State Management (Cookies)](https://datatracker.ietf.org/doc/html/rfc6265)
-- [cockies](https://datatracker.ietf.org/doc/html/rfc6265)
 
 - ## NETWORKING
 
