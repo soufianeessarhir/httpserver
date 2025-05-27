@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/26 20:36:35 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/27 20:16:44 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -253,14 +253,23 @@ void		HttpServer::ProcessClientsRoundRobin()
 			active_clients.pop_front();
 			continue;
 		}
-		// Connection *conn = clients[client_ev.data.fd];
+		Connection *conn = clients[client_ev.data.fd];
 		if (client_ev.events & EPOLLIN)
 		{
 			HandlIncommingData(client_ev.data.fd);
+			if (conn->state == Connection::SENDING_RESPONSE)
+			{
+				client_ev.events = EPOLLOUT;
+			}
+				
 		}
 		else if (client_ev.events & EPOLLOUT)
 		{
 			HandlOutgoingData(client_ev.data.fd);
+		}
+		if (conn->state != Connection::COMPLETE)
+		{
+			active_clients.push_back(client_ev);
 		}
 	}
 }
