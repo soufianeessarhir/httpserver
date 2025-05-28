@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/26 20:31:15 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/27 21:40:23 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ class Connection
 
 public:
     Connection(int fd);
-    
+    ~Connection();
     enum State 
     {
         READING_REQUEST_LINE,
