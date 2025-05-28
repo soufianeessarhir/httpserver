@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/27 20:16:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/28 20:08:53 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,11 +51,11 @@ void		HttpServer::init()
 				sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 				if (sockfd == -1)
 					continue;
-				int optval = 1;
-				if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
-					close(sockfd);
-					continue;
-				}
+				// int optval = 1;
+				// if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
+				// 	close(sockfd);
+				// 	continue;
+				// }
 				SetSocketToNonblocking(sockfd);
 				if (bind(sockfd, p->ai_addr, p->ai_addrlen)!= -1)
 					break;
@@ -117,6 +117,24 @@ void		HttpServer::HandleNewConnection(int fd)
 			throw HttpServerError("Epoll control failed");
 	}
 }
+void		HttpServer::ProcessRequestLine(Connection *conn)
+{
+	size_t end = conn->buffer.find("\r\n");
+	if (end  != std::string::npos)
+	{
+		bool IsValid = conn->request->ParseRequestLine(conn->buffer.substr(0,end + 2));
+		if (IsValid)
+		{
+			conn->buffer.erase(0,end + 2);
+			conn->state = Connection::READING_HEADERS;
+		}
+		else
+		{
+			conn->response =  new Response(conn->request->GetStatus());
+			conn->state =  Connection::SENDING_RESPONSE;
+		}
+	}
+}
 
 void		HttpServer::HandlIncommingData(int fd)
 {
@@ -132,21 +150,7 @@ void		HttpServer::HandlIncommingData(int fd)
 		// [sessarhi] maybe i will switch this to switch-case
 		if (conn->state == Connection::READING_REQUEST_LINE)
 		{
-			size_t end = conn->buffer.find("\r\n");
-			if (end  != std::string::npos)
-			{
-				bool IsValid = conn->request->ParseRequestLine(conn->buffer.substr(0,end + 2));
-				if (IsValid)
-				{
-					conn->buffer.erase(0,end + 2);
-					conn->state = Connection::READING_HEADERS;
-				}
-				else
-				{
-					conn->response =  new Response(conn->request->GetStatus());
-					conn->state =  Connection::SENDING_RESPONSE;
-				}
-			}
+			ProcessRequestLine(conn);
 		}
 		else if (conn->state == Connection::READING_HEADERS)
 		{
