@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/28 20:08:53 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/29 21:11:06 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,11 +51,6 @@ void		HttpServer::init()
 				sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 				if (sockfd == -1)
 					continue;
-				// int optval = 1;
-				// if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
-				// 	close(sockfd);
-				// 	continue;
-				// }
 				SetSocketToNonblocking(sockfd);
 				if (bind(sockfd, p->ai_addr, p->ai_addrlen)!= -1)
 					break;
@@ -136,25 +131,9 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 	}
 }
 
-void		HttpServer::HandlIncommingData(int fd)
+void		HttpServer::ProcessHeaders(Connection *conn)
 {
-	Connection *conn = clients[fd];
-	std::cout<< "accepted\n";
-	if (!conn)
-		return ;
-	ssize_t rd_bytes = 0;
-	char buf[READ_BUFFER_SIZE];
-	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,0)) >= 0 ;)
-	{
-		conn->buffer.append(buf,rd_bytes);
-		// [sessarhi] maybe i will switch this to switch-case
-		if (conn->state == Connection::READING_REQUEST_LINE)
-		{
-			ProcessRequestLine(conn);
-		}
-		else if (conn->state == Connection::READING_HEADERS)
-		{
-			size_t end = conn->buffer.find("\r\n\r\n");
+		size_t end = conn->buffer.find("\r\n\r\n");
 			if (end != std::string::npos)
 			{
 				bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 4));
@@ -185,7 +164,27 @@ void		HttpServer::HandlIncommingData(int fd)
 					}
 				}
 			}
-			
+}
+
+void		HttpServer::HandlIncommingData(int fd)
+{
+	Connection *conn = clients[fd];
+	std::cout<< "accepted\n";
+	if (!conn)
+		return ;
+	ssize_t rd_bytes = 0;
+	char buf[READ_BUFFER_SIZE];
+	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,0)) >= 0 ;)
+	{
+		conn->buffer.append(buf,rd_bytes);
+		// [sessarhi] maybe i will switch this to switch-case
+		if (conn->state == Connection::READING_REQUEST_LINE)
+		{
+			ProcessRequestLine(conn);
+		}
+		else if (conn->state == Connection::READING_HEADERS)
+		{
+			ProcessHeaders(conn);
 		}
 		else if (conn->state == Connection::PROCESSING)
 		{
