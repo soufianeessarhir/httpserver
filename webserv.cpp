@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:26:08 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/29 15:40:55 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/30 21:12:12 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ int main(int argc, char **argv)
 		catch(const std::exception& e)
 		{
 			std::cerr << e.what() << '\n';
+			configFile.close();
+			return  1;
 		}
 		configFile.close();
 	}
