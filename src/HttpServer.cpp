@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/29 21:11:06 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/30 20:38:03 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,35 +178,36 @@ void		HttpServer::HandlIncommingData(int fd)
 	{
 		conn->buffer.append(buf,rd_bytes);
 		// [sessarhi] maybe i will switch this to switch-case
-		if (conn->state == Connection::READING_REQUEST_LINE)
+		switch (conn->state)
 		{
-			ProcessRequestLine(conn);
-		}
-		else if (conn->state == Connection::READING_HEADERS)
-		{
-			ProcessHeaders(conn);
-		}
-		else if (conn->state == Connection::PROCESSING)
-		{
-			ProcessREquest(conn);
-			if (conn->request->ExpectBody())
-				conn->state = Connection::READING_BODY;
-			else
-			conn->state = Connection::SENDING_RESPONSE;
-		}
-		else if(conn->state == Connection::READING_BODY)
-		{
-			
-		}
-		else if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
-		{
-			conn->response = new Response(414); //[sessarhi] uri too large response
-			conn->state = Connection::SENDING_RESPONSE;
-		}
-		else if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
-		{
-			conn->response = new Response(431); //[sessarhi] header field too large response
-			conn->state = Connection::SENDING_RESPONSE;
+			case Connection::READING_REQUEST_LINE:
+				ProcessRequestLine(conn);
+				break;
+			case Connection::READING_HEADERS:
+				ProcessHeaders(conn);
+				break;
+			case Connection::PROCESSING:
+				ProcessREquest(conn);
+				if (conn->request->ExpectBody())
+					conn->state = Connection::READING_BODY;
+				else
+					conn->state = Connection::SENDING_RESPONSE;
+				break;
+			case Connection::READING_BODY:
+				// read post body
+				break;
+			default:
+				if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
+				{
+					conn->response = new Response(414); //[sessarhi] uri too large response
+					conn->state = Connection::SENDING_RESPONSE;
+				}
+				else if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
+				{
+					conn->response = new Response(431); //[sessarhi] header field too large response
+					conn->state = Connection::SENDING_RESPONSE;
+				}
+				break;
 		}
 	}
 }
