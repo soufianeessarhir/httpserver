@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/25 16:19:27 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/31 20:15:12 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,10 +57,22 @@ void        Request::SetBody(std::string &data)
 
 bool        Request::ParseHeaders(std::string data)
 {
+    
     std::istringstream iss(data);
     std::string line;
     while (std::getline(iss,line))
     {
+        if (!line.empty() && line[line.size() - 1] == '\r') {
+            line.erase(line.size() - 1);
+        }
+        if (headers.size() == 0)
+        {
+            if (line.empty() || OnlySpaces(line))
+            {
+                RequestStatusCode = 400;
+                return false;
+            }
+        }
         if (line.empty())
         {
             IsComplete = true;
@@ -81,6 +93,16 @@ bool        Request::ParseHeaders(std::string data)
     }
     return true;
     
+}
+
+bool        Request::OnlySpaces(std::string &line)
+{
+    for (size_t i = 0;i < line.size();++i)
+    {
+        if (!isspace(static_cast<unsigned char>(line[i])))
+            return false;
+    }
+    return true;
 }
 
 bool        Request::ParseRequestLine(std::string data)

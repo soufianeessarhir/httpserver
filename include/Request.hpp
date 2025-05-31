@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/25 16:16:33 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/31 20:11:35 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,8 @@ public:
     bool            ParseUri();
 
     bool            Decode();
+
+    bool            OnlySpaces(std::string&);
 
     
 
