@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/31 17:08:54 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/31 19:57:44 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,13 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 	size_t end = conn->buffer.find("\r\n");
 	if (end  != std::string::npos)
 	{
-		bool IsValid = conn->request->ParseRequestLine(conn->buffer.substr(0,end + 2));
+		std::string line = conn->buffer.substr(0,end + 2);
+		if (line == "\r\n")
+		{
+			conn->buffer.erase(0,end + 2);
+			return ;
+		}
+		bool IsValid = conn->request->ParseRequestLine(line);
 		if (IsValid)
 		{
 			conn->buffer.erase(0,end + 2);
