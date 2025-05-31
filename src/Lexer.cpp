@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:11:26 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/02 21:43:39 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/31 21:02:44 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,8 @@ Token Lexer::getNextToken()
 		while (pos < RdBuf.length() && (isdigit(RdBuf[pos]) || RdBuf[pos] == '.'))
 			pos++;
 		std::string value = RdBuf.substr(start, pos - start);
+		if (value.find('.') != std::string::npos)
+			return Token( TOKEN_IDENTIFIER, value );
 		return Token( TOKEN_NUMBER, value );
 	}
 

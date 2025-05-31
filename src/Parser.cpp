@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/02 21:47:05 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/31 21:03:34 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,8 +86,10 @@ void Parser::ListenDirective()
 {
 	servers.back().listen.push_back(std::pair<std::string, int>("", -1));
 	currentToken = lexer.getNextToken();
+
 	if (currentToken.type == TOKEN_IDENTIFIER)
 	{
+		
 		Host();
 		currentToken = lexer.getNextToken();
 		if (currentToken.type == TOKEN_COLON)
