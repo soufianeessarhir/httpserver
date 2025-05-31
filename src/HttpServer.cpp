@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/30 20:38:03 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/05/31 17:08:54 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,8 @@ void		HttpServer::init()
 				sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 				if (sockfd == -1)
 					continue;
+				int optval = 1;
+				setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 				SetSocketToNonblocking(sockfd);
 				if (bind(sockfd, p->ai_addr, p->ai_addrlen)!= -1)
 					break;
