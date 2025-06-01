@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/31 20:11:35 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/01 11:57:56 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ public:
     
     bool            ParseHeaders(std::string );
     
-    bool            ParseRequestLine(std::string );
+    bool            ParseRequestLine(std::string& );
     
     bool            ExpectBody()const;
     
