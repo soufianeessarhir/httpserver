@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/31 19:57:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/01 12:02:06 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,6 +91,7 @@ void		HttpServer::SetSocketToNonblocking(int fd)
 
 void		HttpServer::HandleNewConnection(int fd)
 {
+	std::cout<< "accepted\n";
 	for (;;)
 	{
 		struct sockaddr_storage client_sock;
@@ -119,8 +120,8 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 	size_t end = conn->buffer.find("\r\n");
 	if (end  != std::string::npos)
 	{
-		std::string line = conn->buffer.substr(0,end + 2);
-		if (line == "\r\n")
+		std::string line = conn->buffer.substr(0,end);
+		if (line.empty())
 		{
 			conn->buffer.erase(0,end + 2);
 			return ;
@@ -177,7 +178,6 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 void		HttpServer::HandlIncommingData(int fd)
 {
 	Connection *conn = clients[fd];
-	std::cout<< "accepted\n";
 	if (!conn)
 		return ;
 	ssize_t rd_bytes = 0;

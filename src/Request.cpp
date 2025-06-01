@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/31 20:15:12 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/01 12:13:04 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,15 +105,33 @@ bool        Request::OnlySpaces(std::string &line)
     return true;
 }
 
-bool        Request::ParseRequestLine(std::string data)
+bool        Request::ParseRequestLine(std::string& data)
 {
-    std::istringstream iss(data);
-    if (!(iss >> method >> uri >> version))
+    size_t first_space = data.find(' ');
+    if (first_space == std::string::npos)
     {
-        // [sessarhi] bad request
         RequestStatusCode = 400;
         return false;
-        
+    }
+    size_t second_space = data.find(first_space + 1);
+    if (second_space == std::string::npos)
+    {
+        RequestStatusCode = 400;
+        return false;
+    }
+    size_t invalid = data.find(second_space + 1);
+    if (invalid != std::string::npos)
+    {
+        RequestStatusCode = 400;
+        return false;
+    }
+    method = data.substr(0,first_space);
+    uri = data.substr(first_space + 1, second_space);
+    version = data.substr(second_space + 1);
+    if (method.empty() || uri.empty() || version.empty())
+    {
+        RequestStatusCode = 400;
+        return false;
     }
     if (method != "GET" && method != "POST" && method != "DELETE")
     {
@@ -128,9 +146,10 @@ bool        Request::ParseRequestLine(std::string data)
         RequestStatusCode = 505;
         return false;
     }
-    if (ParseUri())
+    if (!ParseUri())
         return false; 
     return true;
+    
 }
 
 bool        Request::ParseUri()
@@ -149,7 +168,7 @@ bool        Request::ParseUri()
             return false;
         }
     }
-    if ( Decode())
+    if (Decode())
         return false;
     // [sessarhi] may i add checking for utf-8 sequences
     return true;
