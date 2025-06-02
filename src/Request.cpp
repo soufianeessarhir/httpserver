@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/01 12:13:04 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/02 17:41:44 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,6 @@ bool        Request::ParseHeaders(std::string data)
         }
         std::string name = line.substr(0,del);
         std::string value = line.substr(del + 1);
-        trim(name);
         trim(value);
         ToCanonical(name);
         headers[name] = value;
