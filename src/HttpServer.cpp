@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/01 12:02:06 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/03 21:39:16 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 HttpServer::HttpServer(std::vector<Server> &srvs):servers(srvs)
 {
 	epoll_fd = epoll_create1(0);
+	SetSocketToNonblocking(epoll_fd);
 	if (epoll_fd == -1)
 		throw HttpServerError("Epoll creation failed");
 	this->init();
@@ -91,7 +92,7 @@ void		HttpServer::SetSocketToNonblocking(int fd)
 
 void		HttpServer::HandleNewConnection(int fd)
 {
-	std::cout<< "accepted\n";
+	// std::cout<< "accepted\n";
 	for (;;)
 	{
 		struct sockaddr_storage client_sock;
@@ -129,6 +130,7 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 		bool IsValid = conn->request->ParseRequestLine(line);
 		if (IsValid)
 		{
+			// std::cout<<"switching to READING_HEADERS\n";
 			conn->buffer.erase(0,end + 2);
 			conn->state = Connection::READING_HEADERS;
 		}
@@ -185,34 +187,52 @@ void		HttpServer::HandlIncommingData(int fd)
 	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,0)) >= 0 ;)
 	{
 		conn->buffer.append(buf,rd_bytes);
-		// [sessarhi] maybe i will switch this to switch-case
 		switch (conn->state)
 		{
 			case Connection::READING_REQUEST_LINE:
+				std::cout<<"READING_REQUEST_LINE is reached\n";
 				ProcessRequestLine(conn);
 				break;
 			case Connection::READING_HEADERS:
+				std::cout<<"READING_HEADERS is reached\n";
 				ProcessHeaders(conn);
 				break;
 			case Connection::PROCESSING:
+				std::cout<<"PROCESSING is reached\n";
 				ProcessREquest(conn);
 				if (conn->request->ExpectBody())
 					conn->state = Connection::READING_BODY;
 				else
+				{
+					ev.data.fd = fd;
+					ev.events = EPOLLOUT | EPOLLET;
+					epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
 					conn->state = Connection::SENDING_RESPONSE;
+				}
 				break;
 			case Connection::READING_BODY:
 				// read post body
+				break;
+			case Connection::SENDING_RESPONSE:
+				ev.data.fd = fd;
+				ev.events = EPOLLOUT | EPOLLET;
+				epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
 				break;
 			default:
 				if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
 				{
 					conn->response = new Response(414); //[sessarhi] uri too large response
+					ev.data.fd = fd;
+					ev.events = EPOLLOUT | EPOLLET;
+					epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
 					conn->state = Connection::SENDING_RESPONSE;
 				}
 				else if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
 				{
 					conn->response = new Response(431); //[sessarhi] header field too large response
+					ev.data.fd = fd;
+					ev.events = EPOLLOUT | EPOLLET;
+					epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
 					conn->state = Connection::SENDING_RESPONSE;
 				}
 				break;
@@ -224,8 +244,7 @@ void		HttpServer::run()
 {
 	for(;;)
 	{
-		std::cout << "Waiting for events..." << std::endl;
-		int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+		int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, 500);
 		if (event_count == -1)
 		    throw HttpServerError("Epoll wait failed");
 		for (int i = 0; i < event_count; ++i)
@@ -304,9 +323,44 @@ void 		HttpServer::ProcessREquest(Connection *conn)
 }
 
 
-void		HttpServer::HandlOutgoingData(int fd)
+void        HttpServer::HandlOutgoingData(int fd)
 {
-	(void)fd;
+    std::string body =
+        "<html>\r\n"
+        "<head>\r\n"
+        "  <title>Example Page</title>\r\n"
+        "</head>\r\n"
+        "<body>\r\n"
+        "  <h1>Success!</h1>\r\n"
+        "  <p>This is a simple example HTML page sent via C++98.</p>\r\n"
+        "</body>\r\n"
+        "</html>";
+    char len_str[32];
+    sprintf(len_str, "%lu", (unsigned long)body.length());
+
+    std::string http_response =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/html; charset=UTF-8\r\n"
+        "Content-Length: ";
+    http_response += len_str;
+    http_response += "\r\n"
+        "Connection: close\r\n"
+        "\r\n";
+    http_response += body;
+    const char* response_cstr = http_response.c_str();
+    size_t response_len = http_response.length();
+    ssize_t bytes_sent = send(fd, response_cstr, response_len, 0);
+    if (bytes_sent < 0) 
+    {
+        std::cerr << "Error sending response: " << strerror(errno) << std::endl;
+
+    }
+    else if (static_cast<size_t>(bytes_sent) < response_len)
+    {
+        std::cerr << "Warning: Partial send. Sent " << bytes_sent << " of " << response_len << " bytes." << std::endl;
+ // Indicate sending started
+    }
+    std::cout << "HTTP Response sent successfully (" << bytes_sent << " bytes)." << std::endl;
 }
 
 bool		HttpServer::CheckForEventFd(std::deque<struct  epoll_event>&,int fd)
