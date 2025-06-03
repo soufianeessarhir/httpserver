@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/02 17:41:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/03 11:49:33 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,11 @@ bool        Request::ParseHeaders(std::string data)
             return false;
         }
         std::string name = line.substr(0,del);
+        if (Haswhitespace(name)) //[sessarhi] maybe i need to check for emply fileds | values
+        {
+            RequestStatusCode = 400;
+            return false;
+        }
         std::string value = line.substr(del + 1);
         trim(value);
         ToCanonical(name);
@@ -150,6 +155,13 @@ bool        Request::ParseRequestLine(std::string& data)
     return true;
     
 }
+
+bool            Request::Haswhitespace(std::string& FieldName)
+{
+    if (isspace(FieldName[0]) || isspace(FieldName[FieldName.size() - 1]))
+        return true;
+    return false;
+}       
 
 bool        Request::ParseUri()
 {
