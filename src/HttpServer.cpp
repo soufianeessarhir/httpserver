@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/03 21:39:16 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/03 21:58:53 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -332,7 +332,8 @@ void        HttpServer::HandlOutgoingData(int fd)
         "</head>\r\n"
         "<body>\r\n"
         "  <h1>Success!</h1>\r\n"
-        "  <p>This is a simple example HTML page sent via C++98.</p>\r\n"
+		"<img src=\"https://cdn.intra.42.fr/users/69c9ee167204b441a606d08fbcb79cca/eaboudi.jpg\">\r\n"
+        "  <p><b>This is a simple example HTML page sent via C++98.</b></p>\r\n"
         "</body>\r\n"
         "</html>";
     char len_str[32];
