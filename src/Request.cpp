@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/03 11:49:33 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/03 13:44:10 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ bool        Request::ParseHeaders(std::string data)
             return false;
         }
         std::string name = line.substr(0,del);
-        if (Haswhitespace(name)) //[sessarhi] maybe i need to check for emply fileds | values
+        if (name.empty() || Haswhitespace(name)) //[sessarhi] maybe i need to check for emply fileds | values
         {
             RequestStatusCode = 400;
             return false;
@@ -187,7 +187,10 @@ bool        Request::ParseUri()
 
 bool        Request::ExpectBody()const
 {
-    return method == "POST";
+    return headers.find("content-length") != headers.end()
+        || headers.find("transfer-encoding") != headers.end();
+    //because presence of body is depends on the content 
+    //length or transfer encoding only
 }
 
 bool        Request::KeepAlive()const
