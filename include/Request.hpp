@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/01 11:57:56 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/03 11:37:28 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ public:
 
     bool            OnlySpaces(std::string&);
 
-    
+    bool            Haswhitespace(std::string&);
 
     
     std::string     GetUri()const;
