@@ -1,5 +1,5 @@
 Name=webserv
-CXX=c++  -fsanitize=address -g
+CXX=c++ -g #-fsanitize=address -g
 CXXFLAGS=-Wall -Wextra -Werror -std=c++98 
 
 SRCS= webserv.cpp src/HttpServer.cpp  src/Lexer.cpp  src/Parser.cpp\

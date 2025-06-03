@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/29 20:50:27 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/03 21:12:03 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@
 #include		<errno.h>
 #include		<deque>
 #include		<algorithm>
+#include		<cstdio>
 
 #define			MAX_EVENTS					1024
 #define			READ_BUFFER_SIZE			4096
