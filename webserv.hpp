@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:25:08 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/04/26 20:37:52 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/04 10:22:31 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include "include/Parser.hpp"
 #include "include/HttpServer.hpp"
+#include <signal.h>
 
 
 

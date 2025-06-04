@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:26:08 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/30 21:12:12 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/04 11:03:24 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,13 @@
 int main(int argc, char **argv)
 {
 	std::vector<Server> servers;
+	// signal(SIGPIPE, SIG_IGN);
+
+	// struct sigaction sa;
+	// sa.sa_handler = SIG_IGN;
+	// sigemptyset(&sa.sa_mask);
+	// sa.sa_flags = 0;
+	// sigaction(SIGPIPE, &sa, NULL);
 	if (argc != 2)
 		return std::cerr << "Usage: " << argv[0] << " <config_file>" << std::endl, 1;
 	{

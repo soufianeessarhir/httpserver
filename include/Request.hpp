@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/03 11:37:28 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/04 11:01:43 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@
 #include            <errno.h> 
 
 #include            <cstdlib>
+
+#include            <iostream>
 
 
 class Request
