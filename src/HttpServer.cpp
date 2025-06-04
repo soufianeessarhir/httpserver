@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/03 21:58:53 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/04 11:31:49 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,12 +130,13 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 		bool IsValid = conn->request->ParseRequestLine(line);
 		if (IsValid)
 		{
-			// std::cout<<"switching to READING_HEADERS\n";
+			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 			conn->buffer.erase(0,end + 2);
 			conn->state = Connection::READING_HEADERS;
 		}
 		else
 		{
+			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 			conn->response =  new Response(conn->request->GetStatus());
 			conn->state =  Connection::SENDING_RESPONSE;
 		}
@@ -186,6 +187,7 @@ void		HttpServer::HandlIncommingData(int fd)
 	char buf[READ_BUFFER_SIZE];
 	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,0)) >= 0 ;)
 	{
+		std::cout<<buf<<std::endl;
 		conn->buffer.append(buf,rd_bytes);
 		switch (conn->state)
 		{
@@ -262,6 +264,7 @@ void		HttpServer::run()
 			}
 			else if (events->events & (EPOLLHUP | EPOLLERR))
 			{
+				std::cout<<"events->events & (EPOLLHUP | EPOLLERR)\n";
 				// [sessarhi] handle errors for this fd
 			}
 		}
@@ -279,11 +282,11 @@ void		HttpServer::ProcessClientsRoundRobin()
 	{
 		struct  epoll_event client_ev = active_clients.front();
 		active_clients.pop_front();
-		if (clients.find(client_ev.data.fd) == clients.end())
-		{
-			active_clients.pop_front();
-			continue;
-		}
+		// if (clients.find(client_ev.data.fd) == clients.end())
+		// {
+		// 	active_clients.pop_front();
+		// 	continue;
+		// }
 		Connection *conn = clients[client_ev.data.fd];
 		if (client_ev.events & EPOLLIN)
 		{
@@ -298,10 +301,10 @@ void		HttpServer::ProcessClientsRoundRobin()
 		{
 			HandlOutgoingData(client_ev.data.fd);
 		}
-		if (conn->state != Connection::COMPLETE)
-		{
+		// if (conn->state != Connection::COMPLETE)
+		// {
 			active_clients.push_back(client_ev);
-		}
+		// }
 	}
 }
 

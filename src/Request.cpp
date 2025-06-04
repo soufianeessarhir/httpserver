@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/03 13:44:10 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/04 11:31:40 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,26 +111,28 @@ bool        Request::OnlySpaces(std::string &line)
 
 bool        Request::ParseRequestLine(std::string& data)
 {
+    
     size_t first_space = data.find(' ');
     if (first_space == std::string::npos)
     {
         RequestStatusCode = 400;
         return false;
     }
-    size_t second_space = data.find(first_space + 1);
+    
+    size_t second_space = data.find(' ',first_space + 1);
     if (second_space == std::string::npos)
     {
         RequestStatusCode = 400;
         return false;
     }
-    size_t invalid = data.find(second_space + 1);
+    size_t invalid = data.find(' ', second_space + 1);
     if (invalid != std::string::npos)
     {
         RequestStatusCode = 400;
         return false;
     }
     method = data.substr(0,first_space);
-    uri = data.substr(first_space + 1, second_space);
+    uri = data.substr(first_space + 1, second_space - first_space - 1);
     version = data.substr(second_space + 1);
     if (method.empty() || uri.empty() || version.empty())
     {
@@ -179,7 +181,7 @@ bool        Request::ParseUri()
             return false;
         }
     }
-    if (Decode())
+    if (!Decode())
         return false;
     // [sessarhi] may i add checking for utf-8 sequences
     return true;
