@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/05 14:47:42 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/05 15:24:22 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,9 +131,10 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 		bool IsValid = conn->request->ParseRequestLine(line);
 		if (IsValid)
 		{
-			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 			conn->buffer.erase(0,end + 2);
+			// std::cout<<conn->buffer<<std::endl;
 			conn->state = Connection::READING_HEADERS;
+			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 		}
 		else
 		{
@@ -190,56 +191,58 @@ void		HttpServer::HandlIncommingData(int fd)
 	{
 		std::cout<<buf<<std::endl;
 		conn->buffer.append(buf,rd_bytes);
-		switch (conn->state)
-		{
-			case Connection::READING_REQUEST_LINE:
-				std::cout<<"READING_REQUEST_LINE is reached\n";
-				ProcessRequestLine(conn);
-				break;
-			case Connection::READING_HEADERS:
-				std::cout<<"READING_HEADERS is reached\n";
-				ProcessHeaders(conn);
-				break;
-			case Connection::PROCESSING:
-				std::cout<<"PROCESSING is reached\n";
-				ProcessRequest(conn);
-				if (conn->request->ExpectBody())
-					conn->state = Connection::READING_BODY;
-				else
-				{
-					ev.data.fd = fd;
-					ev.events = EPOLLOUT | EPOLLET;
-					epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
-					conn->state = Connection::SENDING_RESPONSE;
-				}
-				break;
-			case Connection::READING_BODY:
-				// read post body
-				break;
-			case Connection::SENDING_RESPONSE:
+	}
+	
+	switch (conn->state)
+	{
+		case Connection::READING_REQUEST_LINE:
+			std::cout<<"READING_REQUEST_LINE is reached\n";
+			ProcessRequestLine(conn);
+			break;
+		case Connection::READING_HEADERS:
+			std::cout<<"READING_HEADERS is reached\n";
+			ProcessHeaders(conn);
+			break;
+		case Connection::PROCESSING:
+			std::cout<<"PROCESSING is reached\n";
+			ProcessRequest(conn);
+			if (conn->request->ExpectBody())
+				conn->state = Connection::READING_BODY;
+			else
+			{
 				ev.data.fd = fd;
 				ev.events = EPOLLOUT | EPOLLET;
 				epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
-				break;
-			default:
-				if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
-				{
-					conn->response = new Response(414); //[sessarhi] uri too large response
-					ev.data.fd = fd;
-					ev.events = EPOLLOUT | EPOLLET;
-					epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
-					conn->state = Connection::SENDING_RESPONSE;
-				}
-				else if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
-				{
-					conn->response = new Response(431); //[sessarhi] header field too large response
-					ev.data.fd = fd;
-					ev.events = EPOLLOUT | EPOLLET;
-					epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
-					conn->state = Connection::SENDING_RESPONSE;
-				}
-				break;
-		}
+				conn->state = Connection::SENDING_RESPONSE;
+			}
+			break;
+		case Connection::READING_BODY:
+			// read post body
+			break;
+		case Connection::SENDING_RESPONSE:
+			ev.data.fd = fd;
+			ev.events = EPOLLOUT | EPOLLET;
+			epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
+			break;
+		default:
+			std::cout<<"default state has been reached\n";
+			if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
+			{
+				conn->response = new Response(414); //[sessarhi] uri too large response
+				ev.data.fd = fd;
+				ev.events = EPOLLOUT | EPOLLET;
+				epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
+				conn->state = Connection::SENDING_RESPONSE;
+			}
+			else if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
+			{
+				conn->response = new Response(431); //[sessarhi] header field too large response
+				ev.data.fd = fd;
+				ev.events = EPOLLOUT | EPOLLET;
+				epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
+				conn->state = Connection::SENDING_RESPONSE;
+			}
+			break;
 	}
 }
 
@@ -302,10 +305,10 @@ void		HttpServer::ProcessClientsRoundRobin()
 		{
 			HandlOutgoingData(client_ev.data.fd);
 		}
-		// if (conn->state != Connection::COMPLETE)
-		// {
+		if (conn->state != Connection::COMPLETE)
+		{
 			active_clients.push_back(client_ev);
-		// }
+		}
 	}
 }
 
