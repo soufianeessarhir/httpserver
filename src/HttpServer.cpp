@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/04 11:31:49 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/05 14:47:42 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,6 +116,7 @@ void		HttpServer::HandleNewConnection(int fd)
 			throw HttpServerError("Epoll control failed");
 	}
 }
+
 void		HttpServer::ProcessRequestLine(Connection *conn)
 {
 	size_t end = conn->buffer.find("\r\n");
@@ -201,7 +202,7 @@ void		HttpServer::HandlIncommingData(int fd)
 				break;
 			case Connection::PROCESSING:
 				std::cout<<"PROCESSING is reached\n";
-				ProcessREquest(conn);
+				ProcessRequest(conn);
 				if (conn->request->ExpectBody())
 					conn->state = Connection::READING_BODY;
 				else
@@ -308,17 +309,31 @@ void		HttpServer::ProcessClientsRoundRobin()
 	}
 }
 
-void 		HttpServer::ProcessREquest(Connection *conn)
+void 		HttpServer::ProcessRequest(Connection *conn)
 {
 	std::string host = conn->request->GetHeader("host");
+	bool is_default = true;
+	int port = 122;
+	std::string ip = "should be determined";
 	for (size_t i = 0; i < servers.size();++i)
 	{
-		for (size_t j = 0; j < servers[i].server_names.size();++j)
+		for (size_t j = 0 ; j < servers[i].listen.size();++j)
 		{
-			if (servers[i].server_names[j] == host)
+			if (port == servers[i].listen[j].second && ip == servers[i].listen[j].first)
 			{
-				conn->server = &servers[i];
-				break;
+				if (is_default)
+				{
+					conn->server = &servers[i];
+					is_default = false;
+				}
+				for (size_t k = 0; k < servers[i].server_names.size();++k)
+				{
+					if (servers[i].server_names[k] == host)
+					{
+						conn->server = &servers[i];
+						break;
+					}
+				}
 			}
 		}
 	}
