@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/05 15:24:22 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/05 16:33:14 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -315,9 +315,15 @@ void		HttpServer::ProcessClientsRoundRobin()
 void 		HttpServer::ProcessRequest(Connection *conn)
 {
 	std::string host = conn->request->GetHeader("host");
+	struct sockaddr_in client_addr;
+	socklen_t addr_len = sizeof(client_addr);
+	if(getpeername(conn->fd,(struct sockaddr*)&client_addr,&addr_len) == -1)
+	{
+		return; // an action should be taken in case of error
+	}
 	bool is_default = true;
-	int port = 122;
-	std::string ip = "should be determined";
+	int port = ntohs(client_addr.sin_port);
+	std::string ip = inet_ntoa(client_addr.sin_addr);
 	for (size_t i = 0; i < servers.size();++i)
 	{
 		for (size_t j = 0 ; j < servers[i].listen.size();++j)
