@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/03 21:12:03 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/05 13:42:03 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ private:
 	
 	bool		CheckForEventFd(std::deque<struct  epoll_event>&,int fd);
 	
-	void		ProcessREquest(Connection *);
+	void		ProcessRequest(Connection *);
 
 	
 
