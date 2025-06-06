@@ -17,7 +17,7 @@ $(Name): $(OBJS)
 	@echo "Run the server with: ./$(Name) <config_file>"
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) -I include $(CXXFLAGS) -c $< -o $@
 	@echo "Compiling $< to $@"
 	@echo "Object file created: $@"
 

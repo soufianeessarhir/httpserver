@@ -6,11 +6,11 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/05 16:33:14 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/06 15:40:57 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/HttpServer.hpp"
+#include "HttpServer.hpp"
 
 
 
@@ -266,10 +266,14 @@ void		HttpServer::run()
 					active_clients.push_back(events[i]);
 				}
 			}
-			else if (events->events & (EPOLLHUP | EPOLLERR))
+			else if (events[i].events  & EPOLLHUP)
 			{
 				std::cout<<"events->events & (EPOLLHUP | EPOLLERR)\n";
 				// [sessarhi] handle errors for this fd
+			}
+			else if (events[i].events  & EPOLLERR)
+			{
+				
 			}
 		}
 		ProcessClientsRoundRobin();

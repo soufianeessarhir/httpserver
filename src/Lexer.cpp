@@ -6,11 +6,11 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:11:26 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/31 21:02:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/06 15:41:14 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/Lexer.hpp"
+#include "Lexer.hpp"
 
 Lexer::Lexer(std::ifstream &Conf): ConfigFile(Conf),
 		pos(0)
