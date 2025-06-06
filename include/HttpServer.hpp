@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/05 16:31:26 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/06 17:21:28 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@
 #define			READ_BUFFER_SIZE			4096
 #define			CLIENT_PER_CYCLE			512
 #define			MAX_REQUEST_LINE_LENGHT		4096
-#define			MAX_header_field_LENGHT		4096
+#define			MAX_header_field_LENGHT		1024
 
 
 class HttpServer
