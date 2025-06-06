@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/06 15:40:57 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/06 17:30:11 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,10 +124,11 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 	{
 		std::string line = conn->buffer.substr(0,end);
 		if (line.empty())
-		{
-			conn->buffer.erase(0,end + 2);
-			return ;
-		}
+        {
+            conn->buffer.erase(0, end + 2);
+            return;
+        }
+        
 		bool IsValid = conn->request->ParseRequestLine(line);
 		if (IsValid)
 		{
@@ -147,15 +148,14 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 
 void		HttpServer::ProcessHeaders(Connection *conn)
 {
-		size_t end = conn->buffer.find("\r\n\r\n");
+			size_t end = conn->buffer.find("\r\n\r\n");
 			if (end != std::string::npos)
 			{
-				bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 4));
+				bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
+				conn->buffer.erase(0,end + 4);
 				if (IsValid)
 				{
-					conn->buffer.erase(0,end + 4);
-					if (conn->request->GetIsComplet())
-						conn->state = Connection::PROCESSING;
+					conn->state = Connection::PROCESSING;
 				}
 				else
 				{
@@ -163,21 +163,21 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 					conn->state = Connection::SENDING_RESPONSE;
 				}
 			}
-			else
-			{
-				size_t end = conn->buffer.find("\r\n");
-				if (end != std::string::npos)
-				{
-					bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
-					if (IsValid)
-						conn->buffer.erase(0,end + 2);
-					else 
-					{
-						conn->response = new Response(conn->request->GetStatus());
-						conn->state =  Connection::SENDING_RESPONSE;
-					}
-				}
-			}
+			// else
+			// {
+			// 	size_t end = conn->buffer.find("\r\n");
+			// 	if (end != std::string::npos)
+			// 	{
+			// 		bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
+			// 		if (IsValid)
+			// 			conn->buffer.erase(0,end + 2);
+			// 		else 
+			// 		{
+			// 			conn->response = new Response(conn->request->GetStatus());
+			// 			conn->state =  Connection::SENDING_RESPONSE;
+			// 		}
+			// 	}
+			// }
 }
 
 void		HttpServer::HandlIncommingData(int fd)
@@ -187,7 +187,7 @@ void		HttpServer::HandlIncommingData(int fd)
 		return ;
 	ssize_t rd_bytes = 0;
 	char buf[READ_BUFFER_SIZE];
-	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,0)) >= 0 ;)
+	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT)) > 0 ;)
 	{
 		std::cout<<buf<<std::endl;
 		conn->buffer.append(buf,rd_bytes);
