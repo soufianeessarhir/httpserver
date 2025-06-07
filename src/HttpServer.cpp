@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/06 20:32:37 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/07 14:07:23 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,9 +109,7 @@ void		HttpServer::HandleNewConnection(int fd)
 		if (client_fd == -1)
 		{
 			if (errno == EAGAIN || errno == EWOULDBLOCK)
-			{
 				break;
-			}
 			else
 				throw HttpServerError("Accept failed");
 		}
@@ -136,12 +134,10 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
             conn->buffer.erase(0, end + 2);
             return;
         }
-        
 		bool IsValid = conn->request->ParseRequestLine(line);
 		if (IsValid)
 		{
 			conn->buffer.erase(0,end + 2);
-			// std::cout<<conn->buffer<<std::endl;
 			conn->state = Connection::READING_HEADERS;
 			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 		}
@@ -156,36 +152,21 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 
 void		HttpServer::ProcessHeaders(Connection *conn)
 {
-			size_t end = conn->buffer.find("\r\n\r\n");
-			if (end != std::string::npos)
-			{
-				bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
-				conn->buffer.erase(0,end + 4);
-				if (IsValid)
-				{
-					conn->state = Connection::PROCESSING;
-				}
-				else
-				{
-					conn->response = new Response(conn->request->GetStatus());
-					conn->state = Connection::SENDING_RESPONSE;
-				}
-			}
-			// else
-			// {
-			// 	size_t end = conn->buffer.find("\r\n");
-			// 	if (end != std::string::npos)
-			// 	{
-			// 		bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
-			// 		if (IsValid)
-			// 			conn->buffer.erase(0,end + 2);
-			// 		else 
-			// 		{
-			// 			conn->response = new Response(conn->request->GetStatus());
-			// 			conn->state =  Connection::SENDING_RESPONSE;
-			// 		}
-			// 	}
-			// }
+	size_t end = conn->buffer.find("\r\n\r\n");
+	if (end != std::string::npos)
+	{
+		bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
+		conn->buffer.erase(0,end + 4);
+		if (IsValid)
+		{
+			conn->state = Connection::PROCESSING;
+		}
+		else
+		{
+			conn->response = new Response(conn->request->GetStatus());
+			conn->state = Connection::SENDING_RESPONSE;
+		}
+	}
 }
 
 void		HttpServer::HandlIncommingData(int fd)
@@ -211,18 +192,34 @@ void		HttpServer::HandlIncommingData(int fd)
 		switch (conn->state)
 		{
 			case Connection::READING_REQUEST_LINE:
+			
 				std::cout<<"READING_REQUEST_LINE is reached\n";
+				if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
+				{
+					conn->response = new Response(414); //[sessarhi] uri too large response
+					SetSocketForWrite(conn);
+				}
 				ProcessRequestLine(conn);
 				if (conn->state == Connection::READING_HEADERS)
 					continue_processing = true;
 				break;
+				
 			case Connection::READING_HEADERS:
+			
 				std::cout<<"READING_HEADERS is reached\n";
+				if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
+				{
+					conn->response = new Response(431); //[sessarhi] header field too large response
+					SetSocketForWrite(conn);
+					conn->state = Connection::SENDING_RESPONSE;
+				}
 				ProcessHeaders(conn);
 				if (conn->state == Connection::PROCESSING)
 					continue_processing = true;
 				break;
+				
 			case Connection::PROCESSING:
+			
 				std::cout<<"PROCESSING is reached\n";
 				ProcessRequest(conn);
 				if (conn->request->ExpectBody())
@@ -233,25 +230,17 @@ void		HttpServer::HandlIncommingData(int fd)
 				else
 					SetSocketForWrite(conn);
 				break;
+				
 			case Connection::READING_BODY:
+			
 				// read post body
 				break;
+				
 			case Connection::SENDING_RESPONSE:
+			
 				SetSocketForWrite(conn);
 				break;
-			default:
-				std::cout<<"default state has been reached\n";
-				if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
-				{
-					conn->response = new Response(414); //[sessarhi] uri too large response
-					SetSocketForWrite(conn);
-				}
-				else if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
-				{
-					conn->response = new Response(431); //[sessarhi] header field too large response
-					SetSocketForWrite(conn);
-					conn->state = Connection::SENDING_RESPONSE;
-				}
+			default :
 				break;
 		}
 		
