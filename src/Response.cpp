@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/06 19:37:40 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/06/09 16:39:29 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,11 @@ Response::~Response()
 
 int Response::GetStatus()const{return StatusCode;}
 
-std::string Response::GetData()const {return data;}
+std::string& Response::GetData() {return data;}
+void Response::SetData(const std::string &data)
+{
+    this->data = data;
+}
 
 std::string Response::BuildResponse()
 {
