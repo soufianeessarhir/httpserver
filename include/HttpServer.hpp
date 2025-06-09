@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/06 20:29:13 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/09 15:47:13 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@
 #define			MAX_EVENTS					1024
 #define			READ_BUFFER_SIZE			4096
 #define			CLIENT_PER_CYCLE			512
-#define			MAX_REQUEST_LINE_LENGHT		4096
+#define			MAX_REQUEST_LINE_LENGHT		8000 //RFC 9112,
 #define			MAX_header_field_LENGHT		1024
 
 
