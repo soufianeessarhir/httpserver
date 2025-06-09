@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/08 20:35:02 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/09 16:52:15 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -368,10 +368,59 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 
 void        HttpServer::HandlOutgoingData(int fd)
 {
-	Connection *conn = clients[fd];
-	std::string	StatusLine = conn->response->BuildResponse();
-	write(fd, StatusLine.c_str(), StatusLine.size());
-	send(fd, StatusLine.c_str(), StatusLine.size(), 0);
+    Connection *conn = clients[fd];
+    if (!conn || !conn->response)
+        return;
+    if (conn->response->GetData().empty())
+    {
+        conn->response->SetData(conn->response->BuildResponse());
+        conn->BytesSent = 0;
+    }
+    size_t remaining = conn->response->GetData().size() - conn->BytesSent;
+    if (remaining > 0)
+    {
+        ssize_t bytes_written = send(fd, 
+            conn->response->GetData().c_str() + conn->BytesSent, 
+            remaining, MSG_DONTWAIT);
+        
+        if (bytes_written > 0)
+        {
+            conn->BytesSent += static_cast<size_t>(bytes_written);
+        }
+        else if (bytes_written == -1)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                return;
+            }
+            else
+            {
+                conn->state = Connection::COMPLETE;
+                return;
+            }
+        }
+        else if (bytes_written == 0)
+        {
+            conn->state = Connection::COMPLETE;
+            return;
+        }
+    }
+    if (conn->BytesSent >= static_cast<ssize_t>(conn->response->GetData().size()))
+    {
+        struct epoll_event event;
+        event.data.fd = fd;
+        event.events = EPOLLIN | EPOLLET;
+        if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &event) == -1)
+        {
+            conn->state = Connection::COMPLETE;
+            return;
+        }
+        conn->state = Connection::COMPLETE;
+        conn->response->GetData().clear();
+        conn->BytesSent = 0;
+        delete conn->response;
+        conn->response = NULL;
+    }
 }
 
 void		HttpServer::cleanup()

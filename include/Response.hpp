@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:31:30 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/07 09:39:45 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/06/09 16:52:46 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,8 @@ class Response
         ~Response();
 
         int GetStatus()const;
-        std::string GetData()const;
+        std::string& GetData();
+        void SetData(const std::string &data);
         std::string BuildResponse();
     private:
         int StatusCode;
