@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/04 11:31:40 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/10 18:29:45 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,6 +165,79 @@ bool            Request::Haswhitespace(std::string& FieldName)
     return false;
 }       
 
+void            Request::RemoveFromOutputpath(std::string &output)
+{
+    if (output.empty())
+        return;
+    size_t last_slash = output.find_last_of('/');
+    if (last_slash == std::string::npos)
+    {
+        output.clear();
+        return;
+    }
+    output = output.substr(0,last_slash);
+}
+void            Request::NormalizePath()
+{
+    size_t querypos = uri .find('?');
+    std::string query;
+    std::string output;
+    if(querypos != std::string::npos)
+    {
+        query = uri .substr(querypos);
+        uri  = uri .substr(0,querypos);
+    }
+    else
+        query = "";
+    while(!uri .empty())
+    {
+        if(uri .length() >= 3 && uri .substr(0,3) == "../")// ../
+        {
+            uri  = uri .substr(3);
+        }
+        else if(uri .length() >= 2 && uri .substr(0,2) == "./") // ./
+        {
+            uri  = uri .substr(2);
+        }
+        else if(uri .length() >= 3 && uri .substr(0,3) == "/./") // /./
+        {
+            uri  = "/" +  uri .substr(3);
+        }
+        else if(uri  == "/.") // /.
+        {
+            uri  = "/";
+        }
+        else if(uri .length() >= 4 && uri .substr(0,4) == "/../") // /../
+        {
+            uri  = uri .substr(3);
+            RemoveFromOutputpath(output);
+        }
+        else if(uri  == "/..") // /..
+        {
+            uri  = "/";
+            RemoveFromOutputpath (output);
+        }
+        else if (uri  == "." || uri  == "..")
+        {
+            uri  = "";
+        }
+        else
+        {
+            size_t first_slash = uri .find('/',1);
+            if (first_slash == std::string::npos && !uri .empty())
+            {
+                output += uri ;
+                uri  = "";
+            }
+            else
+            {
+                output += uri .substr(0,first_slash);
+                uri  = uri .substr(first_slash);
+            }
+        }
+    }
+    uri = output + query;
+}
 bool        Request::ParseUri()
 {
     const std::string Ilegall = "<>\"\\^`{}|";
