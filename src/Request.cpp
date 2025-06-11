@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/10 18:29:45 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/11 11:53:40 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -257,6 +257,9 @@ bool        Request::ParseUri()
     if (!Decode())
         return false;
     // [sessarhi] may i add checking for utf-8 sequences
+    NormalizePath();
+    if (uri.empty() || uri[0] != '/')
+        return false;
     return true;
 }
 
