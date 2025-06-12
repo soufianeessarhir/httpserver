@@ -6,16 +6,21 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/09 16:25:48 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/06/11 16:34:01 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef         CONNECTION_HPP
 #define         CONNECTION_HPP
 
-#include        "Request.hpp"
-#include        "Response.hpp"
+#include "Connection.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
+#include "ConfigData.hpp"
 
+class Request;
+class Response;
+class Server;
 class Connection
 {
 
