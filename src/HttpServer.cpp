@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/09 19:39:32 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/12 11:04:12 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -303,11 +303,11 @@ void		HttpServer::ProcessClientsRoundRobin()
 	{
 		struct  epoll_event client_ev = active_clients.front();
 		active_clients.pop_front();
-		// if (clients.find(client_ev.data.fd) == clients.end())
-		// {
-		// 	active_clients.pop_front();
-		// 	continue;
-		// }
+		if (clients.find(client_ev.data.fd) == clients.end())
+		{
+			active_clients.pop_front();
+			continue;
+		}
 		Connection *conn = clients[client_ev.data.fd];
 		if (client_ev.events & EPOLLIN)
 		{
@@ -363,7 +363,18 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			}
 		}
 	}
-	
+	if (conn->request->GetMethod() == "GET")
+	{
+		
+	}
+	else if (conn->request->GetMethod() == "POST")
+	{
+		
+	}
+	else if (conn->request->GetMethod() == "DELETE")
+	{
+		
+	}
 }
 
 void        HttpServer::HandlOutgoingData(int fd)

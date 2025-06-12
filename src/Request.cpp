@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/11 11:53:40 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/12 11:02:50 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,11 @@ std::string Request::GetVersion()const
 bool        Request::GetIsComplet()const
 {
     return IsComplete;
+}
+
+std::string     Request::GetMethod()
+{
+    return method;
 }
 
 void        Request::SetBody(std::string &data)

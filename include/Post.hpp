@@ -6,10 +6,11 @@ class Post
 {
 public:
     Post(std::string &);
+    ~Post();
     void ProcessChunck();
     void ProcessContentLength();
     bool IsChuck()const;
-    ~Post();
+    void SetChunked(bool);
 private:
     std::ofstream OutputFile;
     bool is_chunk;
