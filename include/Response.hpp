@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:31:30 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/09 16:52:46 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/06/12 12:19:19 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,26 +18,23 @@
 #include <sstream>
 #include "ConfigData.hpp"
 #include "Request.hpp"
+#include "GetMethodResponse.hpp"
 
 #define HttpVersion "HTTP/1.1 "
 std::map<int, std::string> createErrorPhrase(void);
+
+class GetMethodResponse;
+
 class Response
 {
     public:
-        Response(int status);
-        Response(Request &, Server &);
+        Response(int errorCode) :GET(NULL)  ,ErrorCode(errorCode){};
+        Response(Request *, Server *);
         ~Response();
-
-        int GetStatus()const;
-        std::string& GetData();
-        void SetData(const std::string &data);
-        std::string BuildResponse();
+        GetMethodResponse *GET;
+        int ErrorCode;
     private:
-        int StatusCode;
-        std::map<std::string, std::string> headers;
-        static const std::map<int, std::string> ErrorPhrase;
-        std::string data;
-        std::string body;
+       
 };
 
 

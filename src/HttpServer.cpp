@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/12 11:04:12 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/12 12:19:47 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,6 +106,20 @@ void		HttpServer::SetSocketForWrite(Connection *conn)
 	epoll_ctl(epoll_fd, EPOLL_CTL_MOD, conn->fd, &ev);
 	conn->state = Connection::SENDING_RESPONSE;
 }
+
+void HttpServer::SetSocketForRead(Connection *conn)
+{
+    ev.data.fd = conn->fd;
+    ev.events = EPOLLIN | EPOLLET;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, conn->fd, &ev) == -1)
+    {
+        perror("epoll_ctl: change to read mode");
+        conn->state = Connection::COMPLETE;
+        return;
+    }
+    conn->state = Connection::READING_REQUEST_LINE; // For keep-alive
+}
+
 void		HttpServer::HandleNewConnection(int fd)
 {
 	// std::cout<< "accepted\n";
@@ -320,6 +334,7 @@ void		HttpServer::ProcessClientsRoundRobin()
 		}
 		else if (client_ev.events & EPOLLOUT)
 		{
+			std::cout<<"1\n";
 			HandlOutgoingData(client_ev.data.fd);
 		}
 		if (conn->state != Connection::COMPLETE)
@@ -363,6 +378,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			}
 		}
 	}
+	conn->response = new Response(conn->request,conn->server);
 	if (conn->request->GetMethod() == "GET")
 	{
 		
@@ -380,58 +396,24 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 void        HttpServer::HandlOutgoingData(int fd)
 {
     Connection *conn = clients[fd];
-    if (!conn || !conn->response)
-        return;
-    if (conn->response->GetData().empty())
+	std::cout << "2\n";
+    // if (!conn || !conn->response)
+    // {
+	// 	std::cout << "3\n";
+	// 	return;
+    // }
+	std::cout<< conn->response->GET<<std::endl;
+    conn->response->GET = new GetMethodResponse(conn->request->GetStatus(), "/home/eaboudi/Desktop/httpserver/src/index.html");
+    conn->response->GET->SendStatusLine(conn);
+    conn->response->GET->SendHeaders(conn);
+    if (conn->response->GET->GetStatusCode() == 200)
     {
-        conn->response->SetData(conn->response->BuildResponse());
-        conn->BytesSent = 0;
+        conn->response->GET->SendBody(conn);
+        if (conn->response->GET->GetBody().empty())
+            conn->state = Connection::COMPLETE; // No body to send
     }
-    size_t remaining = conn->response->GetData().size() - conn->BytesSent;
-    if (remaining > 0)
-    {
-        ssize_t bytes_written = send(fd, 
-            conn->response->GetData().c_str() + conn->BytesSent, 
-            remaining, MSG_DONTWAIT);
-        
-        if (bytes_written > 0)
-        {
-            conn->BytesSent += static_cast<size_t>(bytes_written);
-        }
-        else if (bytes_written == -1)
-        {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
-            {
-                return;
-            }
-            else
-            {
-                conn->state = Connection::COMPLETE;
-                return;
-            }
-        }
-        else if (bytes_written == 0)
-        {
-            conn->state = Connection::COMPLETE;
-            return;
-        }
-    }
-    if (conn->BytesSent >= static_cast<ssize_t>(conn->response->GetData().size()))
-    {
-        struct epoll_event event;
-        event.data.fd = fd;
-        event.events = EPOLLIN | EPOLLET;
-        if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &event) == -1)
-        {
-            conn->state = Connection::COMPLETE;
-            return;
-        }
-        conn->state = Connection::COMPLETE;
-        conn->response->GetData().clear();
-        conn->BytesSent = 0;
-        delete conn->response;
-        conn->response = NULL;
-    }
+    else
+        conn->state = Connection::COMPLETE; // Error response sent
 }
 
 void		HttpServer::cleanup()
