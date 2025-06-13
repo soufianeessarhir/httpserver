@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/12 12:19:47 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/13 20:45:04 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -378,6 +378,10 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			}
 		}
 	}
+	if (MatchLocation(conn))
+	{
+		
+	}
 	conn->response = new Response(conn->request,conn->server);
 	if (conn->request->GetMethod() == "GET")
 	{
@@ -392,6 +396,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		
 	}
 }
+
 
 void        HttpServer::HandlOutgoingData(int fd)
 {
@@ -425,6 +430,13 @@ void		HttpServer::cleanup()
 	server_map.clear();
 }
 
+bool		HttpServer::MatchLocation(Connection *conn)
+{
+	std::string target = conn->request->GetUri();
+	target = target.find_last_of('?') == std::string::npos ? target : 
+		target.substr(target.find_last_of('?'));
+	return true;
+}
 HttpServer::~HttpServer()
 {
 	if (epoll_fd != -1)
