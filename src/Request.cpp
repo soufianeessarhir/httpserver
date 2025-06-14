@@ -6,13 +6,13 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/12 11:02:50 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/14 10:22:36 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Request.hpp"
 
-std::string Request::GetUri()const {return uri;}
+std::string Request::GetUri() {return uri;}
 
 const char* Request::GetBody()const{return body;}
 
