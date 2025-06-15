@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/14 12:03:40 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/15 18:02:36 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 		if (IsValid)
 		{
 			conn->buffer.erase(0,end + 2);
-			// std::cout<<conn->buffer<<std::endl;
 			conn->state = Connection::READING_HEADERS;
 			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 		}
@@ -95,14 +94,17 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			}
 		}
 	}
-	MatchLocation(conn);
-	
-	conn->response = new Response(conn->request,conn->server);
-	if (conn->request->GetMethod() == "GET")
+	if(!MatchLocation(conn))
 	{
-		
+		conn->response = new Response(404);
+		conn->state = Connection::SENDING_RESPONSE;
 	}
-	else if (conn->request->GetMethod() == "POST")
+	// conn->response = new Response(conn->request,conn->server);
+	if (conn->request->GetMethod() == "POST")
+	{
+		ProcessPostRequest(conn);
+	}
+	else if (conn->request->GetMethod() == "GET")
 	{
 		
 	}
@@ -111,35 +113,54 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		
 	}
 }
-
-bool		HttpServer::MatchLocation(Connection *conn)
+bool HttpServer::MatchLocation(Connection *conn)
 {
-	std::string target =conn->request->GetUri();
-	target = target.find_last_of('?') == std::string::npos ? target : 
-		target.substr(target.find_last_of('?'));
-	std::map<std::string,LocationData>::iterator it = conn->server->locations.find(target);
-	while (target.size() > 0)
-	{
-		
-		if (it != conn->server->locations.end())
-		{
-			conn->location = &it->second;
-			break;
-		}
-		size_t last_slash = target.find_last_of('/');
-		if (last_slash != std::string::npos)
-		{
-			target = target.substr(0,last_slash);
-		}
-		else
-		{
-			std::map<std::string,LocationData>::iterator it = conn->server->locations.find("/");
-			if(it == conn->server->locations.end())
-			{
-				//handel no location matching
-			}
-		}
-	}
-	return true;
+    std::string target = conn->request->GetUri();
+    size_t query_pos = target.find('?');
+    if (query_pos != std::string::npos) {
+        target = target.substr(0, query_pos);
+    }
+    std::map<std::string, LocationData>::iterator it = conn->server->locations.find(target);
+    if (it != conn->server->locations.end()) {
+        conn->location = &it->second;
+        return true;
+    }
+    
+    while (!target.empty()) {
+        size_t last_slash = target.find_last_of('/');
+        
+        if (last_slash == std::string::npos) {
+            break;
+        }
+        if (last_slash == 0) {
+            target = "/";
+        } else {
+            target = target.substr(0, last_slash);
+        }
+        it = conn->server->locations.find(target);
+        if (it != conn->server->locations.end()) {
+            conn->location = &it->second;
+            return true;
+        }
+        if (target == "/") {
+            break;
+        }
+    }
+    it = conn->server->locations.find("/");
+    if (it != conn->server->locations.end()) {
+        conn->location = &it->second;
+        return true;
+    }
+    return false;
 }
 
+
+bool		HttpServer::ProcessPostRequest(Connection *conn)
+{
+	if (conn->location->methods.find("POST") == conn->location->methods.end())
+	{
+		conn->response = new Response(405);
+		return false;
+	}	
+	return true;
+}

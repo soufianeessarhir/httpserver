@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/13 20:44:48 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/15 18:00:18 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,8 @@ private:
 	void		SetSocketForRead(Connection *);
 	
 	bool		MatchLocation(Connection *);
+
+	bool		ProcessPostRequest(Connection *);
 	
 
 	
