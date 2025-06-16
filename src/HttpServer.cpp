@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/14 12:03:28 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/16 20:10:39 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ HttpServer::HttpServer(std::vector<Server> &srvs):servers(srvs)
 		throw HttpServerError("Epoll creation failed");
 	this->init();
 }
-
 
 void		HttpServer::init()
 {
@@ -122,7 +121,6 @@ void HttpServer::SetSocketForRead(Connection *conn)
 
 void		HttpServer::HandleNewConnection(int fd)
 {
-	// std::cout<< "accepted\n";
 	for (;;)
 	{
 		struct sockaddr_storage client_sock;
@@ -156,7 +154,6 @@ void		HttpServer::HandlIncommingData(int fd)
 	char buf[READ_BUFFER_SIZE];
 	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT)) > 0 ;)
 	{
-		std::cout<<buf<<std::endl;
 		conn->buffer.append(buf,rd_bytes);
 	}
 	if (rd_bytes == 0) {
@@ -171,7 +168,6 @@ void		HttpServer::HandlIncommingData(int fd)
 		{
 			case Connection::READING_REQUEST_LINE:
 			
-				std::cout<<"READING_REQUEST_LINE is reached\n";
 				if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
 				{
 					conn->response = new Response(414); //[sessarhi] uri too large response
@@ -184,7 +180,6 @@ void		HttpServer::HandlIncommingData(int fd)
 				
 			case Connection::READING_HEADERS:
 			
-				std::cout<<"READING_HEADERS is reached\n";
 				if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
 				{
 					conn->response = new Response(431); //[sessarhi] header field too large response
@@ -245,7 +240,6 @@ void		HttpServer::run()
 			}
 			else if (events[i].events  & EPOLLHUP)
 			{
-				std::cout<<"events->events & (EPOLLHUP | EPOLLERR)\n";
 				// [sessarhi] handle errors for this fd
 			}
 			else if (events[i].events  & EPOLLERR)
