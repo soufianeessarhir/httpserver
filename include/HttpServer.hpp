@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/15 18:00:18 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/16 10:26:01 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,9 @@ private:
 	bool		MatchLocation(Connection *);
 
 	bool		ProcessPostRequest(Connection *);
+	
+	void 		FillLocationMisseddata(Connection *);
+	
 	
 
 	
