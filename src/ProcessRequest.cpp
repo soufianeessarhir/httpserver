@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/16 18:20:34 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/16 20:10:57 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,6 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 void 		HttpServer::ProcessRequest(Connection *conn)
 {
 	std::string host = conn->request->GetHeader("host");
-	std::cout<<host<<std::endl;
 	std::string hostname = host;
     size_t colon_pos = host.find(':');
     if (colon_pos != std::string::npos) 
@@ -117,6 +116,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	{
 		conn->response = new Response(404);
 		conn->state = Connection::SENDING_RESPONSE;
+		return;
 	}
 	FillLocationMisseddata(conn);
 	// conn->response = new Response(conn->request,conn->server);
@@ -187,6 +187,10 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 
 void 		HttpServer::FillLocationMisseddata(Connection *conn)
 {
+	// if (!conn->location)
+	// {
+	// 	return;
+	// }
 	if (conn->location->root.empty())
 	{
 		conn->location->root = conn->server->root;
