@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/15 18:02:36 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/16 12:07:15 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,6 +99,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		conn->response = new Response(404);
 		conn->state = Connection::SENDING_RESPONSE;
 	}
+	FillLocationMisseddata(conn);
 	// conn->response = new Response(conn->request,conn->server);
 	if (conn->request->GetMethod() == "POST")
 	{
@@ -163,4 +164,43 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 		return false;
 	}	
 	return true;
+}
+
+void 		HttpServer::FillLocationMisseddata(Connection *conn)
+{
+	if (conn->location->root.empty())
+	{
+		conn->location->root = conn->server->root;
+	}
+	if (conn->location->index.empty() && !conn->server->index.empty())
+	{
+		conn->location->index = conn->server->index;
+	}
+	if (!conn->location->has_redirect && conn->server->has_redirect)
+	{
+		conn->location->has_redirect = conn->server->has_redirect;
+		conn->location->redirect.first = conn->server->redirect.first;
+		conn->location->redirect.second = conn->server->redirect.second;
+	}
+	if (!conn->location->autoindex_set && conn->server->autoindex_set)
+	{
+		conn->location->autoindex = conn->server->autoindex;
+	}
+	if (conn->location->cgi.empty() && !conn->server->cgi.empty())
+	{
+		conn->location->cgi = conn->server->cgi;
+	}
+	if (!conn->location->upload_set && conn->server->upload_set)
+	{
+		conn->location->upload = conn->server->upload;
+		conn->location->upload_store = conn->server->upload_store;
+	}
+	if (conn->location->error_pages.empty() && !conn->server->error_pages.empty())
+	{
+		conn->location->error_pages = conn->server->error_pages;
+	}
+	if (!conn->location->max_body_size && conn->server->max_body_size)
+	{
+		conn->location->max_body_size = conn->server->max_body_size;
+	}
 }
