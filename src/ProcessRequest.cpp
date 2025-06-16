@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/16 12:07:15 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/16 18:20:34 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,37 +63,56 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 void 		HttpServer::ProcessRequest(Connection *conn)
 {
 	std::string host = conn->request->GetHeader("host");
-	struct sockaddr_in client_addr;
-	socklen_t addr_len = sizeof(client_addr);
-	if(getpeername(conn->fd,(struct sockaddr*)&client_addr,&addr_len) == -1)
+	std::cout<<host<<std::endl;
+	std::string hostname = host;
+    size_t colon_pos = host.find(':');
+    if (colon_pos != std::string::npos) 
 	{
-		return; // an action should be taken in case of error
+        hostname = host.substr(0, colon_pos);
+    }
+	struct sockaddr_in server_addr;
+	socklen_t addr_len = sizeof(server_addr);
+	if(getsockname(conn->fd, (struct sockaddr*)&server_addr, &addr_len) == -1) {
+		return;
 	}
-	bool is_default = true;
-	int port = ntohs(client_addr.sin_port);
-	std::string ip = inet_ntoa(client_addr.sin_addr);
-	for (size_t i = 0; i < servers.size();++i)
+	int port = ntohs(server_addr.sin_port);
+	std::string ip = inet_ntoa(server_addr.sin_addr);
+	Server* default_server = NULL;
+    Server* matched_server = NULL;
+    
+    for (size_t i = 0; i < servers.size(); ++i) 
 	{
-		for (size_t j = 0 ; j < servers[i].listen.size();++j)
+        bool port_matches = false;
+        for (size_t j = 0; j < servers[i].listen.size(); ++j) 
 		{
-			if (port == servers[i].listen[j].second && ip == servers[i].listen[j].first)
-			{
-				if (is_default)
-				{
-					conn->server = &servers[i];
-					is_default = false;
-				}
-				for (size_t k = 0; k < servers[i].server_names.size();++k)
-				{
-					if (servers[i].server_names[k] == host)
-					{
-						conn->server = &servers[i];
-						break;
-					}
-				}
-			}
-		}
-	}
+            if (port == servers[i].listen[j].second && 
+                (servers[i].listen[j].first == ip || 
+                 servers[i].listen[j].first == "0.0.0.0")) {
+                port_matches = true;
+                break;
+            }
+        }
+        if (!port_matches) continue;
+        if (!default_server) 
+		{
+            default_server = &servers[i]; 
+        }
+        for (size_t k = 0; k < servers[i].server_names.size(); ++k) {
+            if (servers[i].server_names[k] == hostname) {
+                matched_server = &servers[i];
+                break;
+            }
+        }
+        if (matched_server) break;
+    }
+    conn->server = matched_server ? matched_server : default_server;
+    if (!conn->server) 
+	{
+        conn->response = new Response(500);
+        conn->state = Connection::SENDING_RESPONSE;
+        return;
+    }
+	
 	if(!MatchLocation(conn))
 	{
 		conn->response = new Response(404);
@@ -185,9 +204,11 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 	if (!conn->location->autoindex_set && conn->server->autoindex_set)
 	{
 		conn->location->autoindex = conn->server->autoindex;
+		conn->location->autoindex_set = true;
 	}
 	if (conn->location->cgi.empty() && !conn->server->cgi.empty())
 	{
+		//maybe i should merge them
 		conn->location->cgi = conn->server->cgi;
 	}
 	if (!conn->location->upload_set && conn->server->upload_set)
@@ -199,7 +220,7 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 	{
 		conn->location->error_pages = conn->server->error_pages;
 	}
-	if (!conn->location->max_body_size && conn->server->max_body_size)
+	if (conn->location->max_body_size == 0 && conn->server->max_body_size > 0)
 	{
 		conn->location->max_body_size = conn->server->max_body_size;
 	}
