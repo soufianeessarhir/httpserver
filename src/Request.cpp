@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/14 10:22:36 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/16 18:16:25 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ std::string Request::GetHeader(std::string name)const
     std::map<std::string, std::string>::const_iterator it = headers.find(name);
     if (it != headers.end())
         return (it->second);
-    return NULL;
+    return "";
 }
 size_t          Request::GetContentLenght()const
 {
