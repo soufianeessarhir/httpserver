@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/31 21:03:34 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/17 10:14:39 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,11 +224,12 @@ void Parser::ClientMaxBodySizeDirective(size_t & max_body_size)
 
 void Parser::LocationBlock()
 {
-	tmpkey = currentToken.value;
-	servers.back().locations[tmpkey] = LocationData();
+	// currentToken = lexer.getNextToken();
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_PATH)
-		throw ParseException("Expected location path after 'location'");
+	throw ParseException("Expected location path after 'location'");
+	tmpkey = currentToken.value;
+	servers.back().locations[tmpkey] = LocationData();
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_OPEN_BRACE)
 		throw ParseException("Expected '{' after location path");
