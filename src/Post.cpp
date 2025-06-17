@@ -15,10 +15,6 @@ void Post::ProcessContentLength()
 
 }
 
-bool Post::IsChuck()const
-{
-    return is_chunk;
-}
 Post::~Post()
 {
     if (OutputFile.is_open())

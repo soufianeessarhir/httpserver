@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/16 20:10:39 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/17 12:01:45 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,14 +167,13 @@ void		HttpServer::HandlIncommingData(int fd)
 		switch (conn->state)
 		{
 			case Connection::READING_REQUEST_LINE:
-			
 				if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
 				{
 					conn->response = new Response(414); //[sessarhi] uri too large response
 					SetSocketForWrite(conn);
 				}
 				ProcessRequestLine(conn);
-				if (conn->state == Connection::READING_HEADERS)
+				if (conn->state == Connection::READING_HEADERS || conn->state == Connection::SENDING_RESPONSE)
 					continue_processing = true;
 				break;
 				
