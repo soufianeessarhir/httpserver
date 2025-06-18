@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/17 12:04:00 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/18 11:24:29 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,7 +181,8 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 	{
 		conn->response = new Response(405);
 		return false;
-	}	
+	}
+	
 	return true;
 }
 

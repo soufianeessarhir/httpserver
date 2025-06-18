@@ -26,6 +26,20 @@ public:
 private:
     TransferType transfer_type;
     ChunkState chunk_state;
-    std::ofstream OutputFile;
+
+    // Chunk-specific data
+    std::string chunk_size_buffer;
+    size_t current_chunk_size;
+    size_t chunk_bytes_read;
+    std::string chunk_data_buffer;
+    
+    // Content-Length specific data
+    size_t content_length;
+    size_t content_bytes_read;
+    
+    // Common data
+    std::string body_buffer;
+    std::ofstream output_file;
+    size_t max_body_size;
 };
 #endif

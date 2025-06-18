@@ -1,6 +1,6 @@
 #include "Post.hpp"
 
-Post::Post(std::string & filename):OutputFile(filename.c_str())
+Post::Post(std::string & filename):output_file(filename.c_str())
 {
 
 }
@@ -17,8 +17,8 @@ void Post::ProcessContentLength()
 
 Post::~Post()
 {
-    if (OutputFile.is_open())
+    if (output_file.is_open())
     {
-        OutputFile.close();
+        output_file.close();
     }
 }
