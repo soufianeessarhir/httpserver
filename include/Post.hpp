@@ -19,8 +19,10 @@ public:
         CHUNK_COMPLETE,
         CHUNK_ERROR          
     };
-    Post(std::string &);
+    Post();
     ~Post();
+    void SetTransferType(TransferType );
+    void SetChunkState(ChunkState);
     void ProcessChunck();
     void ProcessContentLength();
 private:
