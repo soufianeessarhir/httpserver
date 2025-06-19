@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/18 11:24:29 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/19 17:17:33 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,6 +180,32 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 	if (conn->location->methods.find("POST") == conn->location->methods.end())
 	{
 		conn->response = new Response(405);
+		return false;
+	}
+	conn->post = new Post();
+	std::string encoding = conn->request->GetHeader("transfer-encoding");
+	if (!encoding.empty())
+	{
+		size_t last_space = encoding.find_last_of(' ');
+		if (last_space != std::string::npos)
+		{
+			encoding = encoding.substr(last_space);
+		}
+		if (encoding != "chunked")
+		{
+			conn->response = new Response(400);
+			return false;
+		}
+		conn->post->SetTransferType(Post::CHUNKED);
+		conn->post->SetChunkState(Post::READING_CHUNK_SIZE);
+	}
+	else if (!conn->request->GetHeader("content-length").empty())
+	{
+		conn->post->SetTransferType(Post::CONTENT_LENGTH);
+	}
+	else
+	{
+		conn->response = new Response(414);
 		return false;
 	}
 	
