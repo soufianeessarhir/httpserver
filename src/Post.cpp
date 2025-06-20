@@ -1,7 +1,18 @@
 #include "Post.hpp"
 
-Post::Post()
+Post::Post(Connection *conn , TransferType type)
 {
+    if (type ==  CONTENT_LENGTH)
+    {
+        content_length = conn->request->GetContentLenght();
+        content_bytes_read = 0;
+    }
+    else
+    {
+        chunk_state = READING_CHUNK_SIZE;
+        chunk_bytes_read = 0;
+    }
+    max_body_size = conn->location->max_body_size;
 
 }
 
@@ -28,14 +39,6 @@ void Post::ProcessChunck()
     }
 }
 
-void Post::SetTransferType(TransferType type)
-{
-    transfer_type = type;
-}
-void Post::SetChunkState(ChunkState state)
-{
-    chunk_state = state;
-}
 
 void Post::ProcessContentLength()
 {

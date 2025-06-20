@@ -2,6 +2,8 @@
 #define POST_HPP
 
 #include <fstream>
+#include "Connection.hpp"
+class Connection;
 class Post
 {
 public:
@@ -19,10 +21,8 @@ public:
         CHUNK_COMPLETE,
         CHUNK_ERROR          
     };
-    Post();
+    Post(Connection * , TransferType);
     ~Post();
-    void SetTransferType(TransferType );
-    void SetChunkState(ChunkState);
     void ProcessChunck();
     void ProcessContentLength();
 private:
@@ -40,7 +40,7 @@ private:
     size_t content_bytes_read;
     
     // Common data
-    std::string body_buffer;
+    // std::string body_buffer;
     std::ofstream output_file;
     size_t max_body_size;
 };
