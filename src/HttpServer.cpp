@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/17 12:01:45 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/20 17:50:08 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,7 +203,10 @@ void		HttpServer::HandlIncommingData(int fd)
 				break;
 				
 			case Connection::READING_BODY:
-			
+				if(conn->post->transfer_type == Post::CHUNKED)
+					conn->post->ProcessChunck();
+				else
+					conn->post->ProcessContentLength();
 				break;
 				
 			case Connection::SENDING_RESPONSE:

@@ -1,6 +1,6 @@
 #include "Post.hpp"
 
-Post::Post(Connection *conn , TransferType type)
+Post::Post(Connection *conn , TransferType type):conn(conn)
 {
     if (type ==  CONTENT_LENGTH)
     {
@@ -22,15 +22,9 @@ void Post::ProcessChunck()
     {
         case Post::READING_CHUNK_SIZE:
             break;
-        case Post::READING_CHUNK_SIZE_CRLF:
-            break;
         case Post::READING_CHUNK_DATA:
             break;
-        case Post::READING_CHUNK_DATA_CRLF:
-            break;
         case Post::READING_TRAILER_HEADERS:
-            break;
-        case Post::READING_FINAL_CRLF:
             break;
         case Post::CHUNK_COMPLETE:
             break;
