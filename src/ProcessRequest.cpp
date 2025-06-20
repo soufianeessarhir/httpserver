@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/19 17:17:33 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/20 11:51:04 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,7 +182,7 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 		conn->response = new Response(405);
 		return false;
 	}
-	conn->post = new Post();
+	// 
 	std::string encoding = conn->request->GetHeader("transfer-encoding");
 	if (!encoding.empty())
 	{
@@ -196,16 +196,15 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 			conn->response = new Response(400);
 			return false;
 		}
-		conn->post->SetTransferType(Post::CHUNKED);
-		conn->post->SetChunkState(Post::READING_CHUNK_SIZE);
+		conn->post = new Post(conn,Post::CHUNKED);
 	}
 	else if (!conn->request->GetHeader("content-length").empty())
 	{
-		conn->post->SetTransferType(Post::CONTENT_LENGTH);
+		conn->post = new Post(conn,Post::CONTENT_LENGTH);
 	}
 	else
 	{
-		conn->response = new Response(414);
+		conn->response = new Response(411);
 		return false;
 	}
 	

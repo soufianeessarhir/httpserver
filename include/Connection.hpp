@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/19 10:37:04 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/20 12:03:46 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 class Request;
 class Response;
 class Server;
+class Post;
 class Connection
 {
 
