@@ -40,12 +40,30 @@ void Post::ReadChunkSize()
 
 void Post::ReadChunkData()
 {
-
+    size_t size_to_read = std::min(conn->buffer.size(),current_chunk_size - chunk_bytes_read);
+    //porcess readed data
+    conn->buffer.erase(0,size_to_read);
+    if (current_chunk_size == chunk_bytes_read)
+    {
+        size_t CRLF = conn->buffer.find("\r\n");
+        if (CRLF != std::string::npos)
+        {
+            conn->buffer.erase(0,2);
+            chunk_state = Post::READING_CHUNK_SIZE;
+            current_chunk_size = 0;
+            chunk_bytes_read = 0;
+        }
+        else
+        {
+            chunk_state = Post::CHUNK_ERROR;
+        }
+    }
 }
 
 void Post::ReadTrailerHeaders()
 {
 
+    chunk_state = Post::CHUNK_COMPLETE;
 }
 
 void Post::ProcessChunck()
@@ -71,7 +89,10 @@ void Post::ProcessChunck()
 
 void Post::ProcessContentLength()
 {
-
+    size_t bytes_to_read = std::min(conn->buffer.size(),content_length - content_bytes_read);
+    //write to file 
+    conn->buffer.erase(0,bytes_to_read);
+    content_bytes_read += bytes_to_read;
 }
 
 Post::~Post()
