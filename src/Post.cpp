@@ -62,8 +62,12 @@ void Post::ReadChunkData()
 
 void Post::ReadTrailerHeaders()
 {
-
-    chunk_state = Post::CHUNK_COMPLETE;
+    size_t CRLF = conn->buffer.find("\r\n");
+    if (CRLF != std::string::npos)
+    {
+        conn->buffer.erase(0,CRLF + 2);
+        chunk_state = Post::CHUNK_COMPLETE;
+    }
 }
 
 void Post::ProcessChunck()
