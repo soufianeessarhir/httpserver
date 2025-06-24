@@ -12,6 +12,13 @@ Post::Post(Connection *conn , TransferType type):conn(conn)
         chunk_state = READING_CHUNK_SIZE;
         chunk_bytes_read = 0;
     }
+    std::string content_type = conn->request->GetHeader("content-Type");
+    if (content_type.find("multipart/form-data") != std::string::npos)
+    {
+        is_multipart = true;
+        
+    }          
+        
     max_body_size = conn->location->max_body_size;
 
 }
@@ -62,6 +69,7 @@ void Post::ReadChunkData()
 
 void Post::ReadTrailerHeaders()
 {
+    // should be protected for size limits
     size_t CRLF = conn->buffer.find("\r\n");
     if (CRLF != std::string::npos)
     {
@@ -84,8 +92,11 @@ void Post::ProcessChunck()
             ReadTrailerHeaders();
             break;
         case Post::CHUNK_COMPLETE:
+            conn->state = Connection::SENDING_RESPONSE;
             break;
         case Post::CHUNK_ERROR:
+            //the status code should be set here
+            conn->state = Connection::SENDING_RESPONSE;
             break;
     }
 }

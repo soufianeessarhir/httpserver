@@ -34,6 +34,8 @@ private:
     size_t content_bytes_read;
     std::ofstream output_file;
     size_t max_body_size;
+    bool is_multipart;
+    std::string boundry;
 
 private:
     void ReadChunkSize();
