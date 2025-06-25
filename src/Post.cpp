@@ -103,30 +103,49 @@ void Post::ProcessChunck()
 
 void Post::ProcessMultiPart()
 {
+    std::string delimiter = "--" + boundry;
     switch (multipart_state)
     {
-    case READING_PREAMBLE:
-        /* code */
+        case READING_PREAMBLE:
+        {
+            size_t del = conn->buffer.find(delimiter);
+            if (del != std::string::npos)
+            {
+                conn->buffer.erase(0,del);
+                multipart_state = Post::READING_BOUNDARY;
+            }
+        }
         break;
-    case READING_BOUNDARY:
-        /* code */
+        case READING_BOUNDARY:
+        {
+            size_t CRLF = conn->buffer.find("\r\n");
+            if(CRLF != std::string::npos)
+            {
+                if (conn->buffer.substr(0,CRLF) != delimiter)
+                {
+                    multipart_state = Post::MULTIPART_ERROR;
+                }
+                conn->buffer.erase(0,CRLF + 2);
+                multipart_state = Post::READING_PART_HEADERS;
+            }
+        }
         break;
         case READING_PART_HEADERS:
-        /* code */
-        break;
-    case READING_PART_DATA:
-        /* code */
-        break;
-    case READING_EPILOGUE:
-        /* code */
-        break;
-    case MULTIPART_COMPLETE:
-        /* code */
-        break;
-    case MULTIPART_ERROR:
-        /* code */
-        break;
-    }
+            /* code */
+            break;
+        case READING_PART_DATA:
+            /* code */
+            break;
+        case READING_EPILOGUE:
+            /* code */
+            break;
+        case MULTIPART_COMPLETE:
+            /* code */
+            break;
+        case MULTIPART_ERROR:
+            /* code */
+            break;
+        }
 }
 void Post::ProcessContentLength()
 {
