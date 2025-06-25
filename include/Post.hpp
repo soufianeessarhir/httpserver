@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include "Connection.hpp"
+#include "MultiPart.hpp"
 class Connection;
 class Post
 {
@@ -17,6 +18,16 @@ public:
         READING_TRAILER_HEADERS,
         CHUNK_COMPLETE,
         CHUNK_ERROR          
+    };
+    enum MultiPaertState
+    {
+        READING_PREAMBLE,       
+        READING_BOUNDARY,       
+        READING_PART_HEADERS,   
+        READING_PART_DATA,
+        READING_EPILOGUE,
+        MULTIPART_COMPLETE,
+        MULTIPART_ERROR   
     };
     Post(Connection * , TransferType);
     ~Post();
@@ -36,10 +47,13 @@ private:
     size_t max_body_size;
     bool is_multipart;
     std::string boundry;
+    std::vector<MultipartPart> parts;
+    MultiPaertState multipart_state;
 
 private:
     void ReadChunkSize();
     void ReadChunkData();
     void ReadTrailerHeaders();
+    void ProcessMultiPart();
 };
 #endif

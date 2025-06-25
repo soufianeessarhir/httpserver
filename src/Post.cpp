@@ -101,7 +101,33 @@ void Post::ProcessChunck()
     }
 }
 
-
+void Post::ProcessMultiPart()
+{
+    switch (multipart_state)
+    {
+    case READING_PREAMBLE:
+        /* code */
+        break;
+    case READING_BOUNDARY:
+        /* code */
+        break;
+        case READING_PART_HEADERS:
+        /* code */
+        break;
+    case READING_PART_DATA:
+        /* code */
+        break;
+    case READING_EPILOGUE:
+        /* code */
+        break;
+    case MULTIPART_COMPLETE:
+        /* code */
+        break;
+    case MULTIPART_ERROR:
+        /* code */
+        break;
+    }
+}
 void Post::ProcessContentLength()
 {
     size_t bytes_to_read = std::min(conn->buffer.size(),content_length - content_bytes_read);
