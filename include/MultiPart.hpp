@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 11:17:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/25 11:20:10 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/26 11:24:12 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,17 +15,17 @@
 
 #include <string>
 #include <map>
+#include <sstream>
+#include "Request.hpp"
 
-class MultipartPart 
+struct  MultiPart 
 {
-    private:
         std::map<std::string, std::string> headers;
         std::string content;
         std::string name;
         std::string filename;
         std::string contentType;
-        
-    public:
+        bool ProcessMultiPartHeaders(std::string& data);
         bool isFile() const;
         std::string getName() const;
         std::string getFilename() const;

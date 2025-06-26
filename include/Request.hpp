@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/14 10:22:32 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/26 11:26:46 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,17 +48,17 @@ public:
     
     bool            KeepAlive()const;
     
-    void            ToCanonical(std::string &);
+    static void     ToCanonical(std::string &);
 
-    void            trim(std::string &);
+    static void     trim(std::string &);
 
     bool            ParseUri();
 
     bool            Decode();
 
-    bool            OnlySpaces(std::string&);
+    static bool     OnlySpaces(std::string&);
 
-    bool            Haswhitespace(std::string&);
+    static bool     Haswhitespace(std::string&);
 
     void            NormalizePath();
 
