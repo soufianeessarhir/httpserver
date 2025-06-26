@@ -47,7 +47,7 @@ private:
     size_t max_body_size;
     bool is_multipart;
     std::string boundry;
-    std::vector<MultipartPart> parts;
+    std::vector<MultiPart> parts;
     MultiPaertState multipart_state;
 
 private:

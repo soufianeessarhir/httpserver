@@ -131,7 +131,15 @@ void Post::ProcessMultiPart()
         }
         break;
         case READING_PART_HEADERS:
-            /* code */
+        {
+            size_t CRLFCRLF = conn->buffer.find("\r\n\r\n");
+            if (CRLFCRLF != std::string::npos)
+            {
+                //process headers
+                conn->buffer.erase(0 , CRLFCRLF + 4);
+                multipart_state = Post::READING_PART_DATA;
+            }
+        }
             break;
         case READING_PART_DATA:
             /* code */
