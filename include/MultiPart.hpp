@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 11:17:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/26 11:24:12 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/26 11:37:11 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ struct  MultiPart
         std::string name;
         std::string filename;
         std::string contentType;
-        bool ProcessMultiPartHeaders(std::string& data);
+        bool ProcessMultiPartHeaders(std::string data);
         bool isFile() const;
         std::string getName() const;
         std::string getFilename() const;

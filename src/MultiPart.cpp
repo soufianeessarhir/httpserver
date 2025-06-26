@@ -1,6 +1,6 @@
 #include "MultiPart.hpp"
 
-bool MultiPart::ProcessMultiPartHeaders(std::string& data)
+bool MultiPart::ProcessMultiPartHeaders(std::string data)
 {
     std::istringstream iss(data);
     std::string line;
@@ -28,6 +28,7 @@ bool MultiPart::ProcessMultiPartHeaders(std::string& data)
         std::string name = line.substr(0,del);
         if (name.empty() || Request::Haswhitespace(name)) //[sessarhi] maybe i need to check for emply fileds | values
         {
+
             return false;
         }
         std::string value = line.substr(del + 1);
