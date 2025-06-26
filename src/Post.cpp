@@ -118,6 +118,12 @@ void Post::ProcessMultiPart()
         break;
         case READING_BOUNDARY:
         {
+            size_t close_del = conn->buffer.find(delimiter + "--");
+            if (close_del !=  std::string::npos)
+            {
+                conn->buffer.erase(close_del + (delimiter + "--").length() - 1);
+                multipart_state = Post::MULTIPART_COMPLETE;
+            }
             size_t CRLF = conn->buffer.find("\r\n");
             if(CRLF != std::string::npos)
             {
@@ -132,13 +138,14 @@ void Post::ProcessMultiPart()
         break;
         case READING_PART_HEADERS:
         {
+            // here should be a header size  limit check
             size_t CRLFCRLF = conn->buffer.find("\r\n\r\n");
             if (CRLFCRLF != std::string::npos)
             {
                 parts.push_back(MultiPart());
                 if(!parts.back().ProcessMultiPartHeaders(conn->buffer.substr(0,CRLFCRLF))) 
                 {
-
+                    multipart_state = Post::MULTIPART_ERROR;
                 }
                 conn->buffer.erase(0 , CRLFCRLF + 4);
                 multipart_state = Post::READING_PART_DATA;
@@ -146,7 +153,17 @@ void Post::ProcessMultiPart()
         }
             break;
         case READING_PART_DATA:
-            /* code */
+        {
+            size_t del =  conn->buffer.find(delimiter);
+            if (del !=  std::string::npos)
+            {
+                // process sub-data
+                conn->buffer.erase(0,del + delimiter.length() - 1);
+                multipart_state =  Post::READING_BOUNDARY;
+            }
+            //process data
+            conn->buffer.clear();
+        }
             break;
         case READING_EPILOGUE:
             /* code */
