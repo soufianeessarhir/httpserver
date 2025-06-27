@@ -30,7 +30,43 @@ Post::Post(Connection *conn , TransferType type):conn(conn)
 
 bool Post::ExtractAndValidateBoundry()
 {
-
+    std::string ct = conn->request->GetHeader("content-type");
+    bool quoted = false;
+    if (ct.empty())
+        return false;
+    std::string origin = ct;
+    for (std::string::iterator it = ct.begin();it != ct.end();++it)
+        *it = std::tolower(static_cast<char>(*it)); 
+    size_t BNDR = ct.find("boundary");
+    if (BNDR==std::string::npos)
+        return false;
+    size_t begin = BNDR + 9;
+    for (;begin < ct.length() && isspace(ct[begin]);++begin);
+    if (ct[begin] != '=')
+    return false;
+    begin++;
+    for (;begin < ct.length() && isspace(ct[begin]);++begin);
+    if (ct[begin] == '"')
+    {
+        begin ++;
+        quoted = true;
+    }
+    size_t end = begin;
+    for (;end < ct.length() &&
+    (isalnum(ct[end]) || ct[begin] == '\'' || ct[begin] == '(' || ct[begin] == ')' || ct[begin] == '+' || 
+    ct[begin] == '_'  || ct[begin] == ',' || ct[begin] == '-' || ct[begin] == '.' || 
+    ct[begin] == '/'  || ct[begin] == ':' || ct[begin] == '=' || ct[begin] == '?') 
+     ;end++);
+    if (quoted)
+    {
+        if ( ct[end] != '"')
+            return false;
+        boundry = origin.substr(begin , end - begin);
+        if (boundry.empty())
+            return false;
+        return true;
+    }
+    // if ()
     return true;
 }
 
