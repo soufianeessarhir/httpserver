@@ -10,7 +10,8 @@ class Post
 public:
     enum  TransferType {
     CONTENT_LENGTH,
-    CHUNKED
+    CHUNKED,
+    ERROR
     };
     enum  ChunkState {
         READING_CHUNK_SIZE,
@@ -34,8 +35,9 @@ public:
     void ProcessChunck();
     void ProcessContentLength();
     TransferType transfer_type;
-    ChunkState chunk_state;
+
 private:
+    ChunkState chunk_state;
     Connection *conn;
     std::string chunk_size_buffer;
     size_t current_chunk_size;
@@ -50,10 +52,12 @@ private:
     std::vector<MultiPart> parts;
     MultiPaertState multipart_state;
 
+
 private:
     void ReadChunkSize();
     void ReadChunkData();
     void ReadTrailerHeaders();
     void ProcessMultiPart();
+    bool ExtractAndValidateBoundry();
 };
 #endif

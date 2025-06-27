@@ -16,12 +16,24 @@ Post::Post(Connection *conn , TransferType type):conn(conn)
     if (content_type.find("multipart/form-data") != std::string::npos)
     {
         is_multipart = true;
+        multipart_state= Post::READING_PREAMBLE;
+        if (!ExtractAndValidateBoundry())
+        {
+            transfer_type = Post::ERROR;
+        }
         
     }          
         
     max_body_size = conn->location->max_body_size;
 
 }
+
+bool Post::ExtractAndValidateBoundry()
+{
+
+    return true;
+}
+
 void Post::ReadChunkSize()
 {
     size_t CRLF = conn->buffer.find("\r\n");
