@@ -23,7 +23,6 @@ Post::Post(Connection *conn , TransferType type):conn(conn)
         }
         
     }          
-        
     max_body_size = conn->location->max_body_size;
 
 }
@@ -99,7 +98,8 @@ void Post::ReadChunkSize()
 void Post::ReadChunkData()
 {
     size_t size_to_read = std::min(conn->buffer.size(),current_chunk_size - chunk_bytes_read);
-    //porcess readed data
+    if (is_multipart)
+        ProcessMultiPart();
     conn->buffer.erase(0,size_to_read);
     if (current_chunk_size == chunk_bytes_read)
     {
@@ -131,106 +131,127 @@ void Post::ReadTrailerHeaders()
 
 void Post::ProcessChunck()
 {
-    switch (chunk_state)
+    bool contunue = true;
+    while (contunue)
     {
-        case Post::READING_CHUNK_SIZE:
-            ReadChunkSize();
-            break;
-        case Post::READING_CHUNK_DATA:
-            ReadChunkData();
-            break;
-        case Post::READING_TRAILER_HEADERS:
-            ReadTrailerHeaders();
-            break;
-        case Post::CHUNK_COMPLETE:
-            conn->state = Connection::SENDING_RESPONSE;
-            break;
-        case Post::CHUNK_ERROR:
-            //the status code should be set here
-            conn->state = Connection::SENDING_RESPONSE;
-            break;
+        contunue = false;
+        switch (chunk_state)
+        {
+            case Post::READING_CHUNK_SIZE:
+                ReadChunkSize();
+                contunue = chunk_state != Post::READING_CHUNK_SIZE;
+                break;
+            case Post::READING_CHUNK_DATA:
+                ReadChunkData();
+                contunue = chunk_state != Post::Post::READING_CHUNK_DATA;
+                break;
+            case Post::READING_TRAILER_HEADERS:
+                ReadTrailerHeaders();
+                contunue = chunk_state != Post::READING_TRAILER_HEADERS;
+                break;
+            case Post::CHUNK_COMPLETE:
+                conn->state = Connection::SENDING_RESPONSE;
+                break;
+            case Post::CHUNK_ERROR:
+                //the status code should be set here
+                conn->state = Connection::SENDING_RESPONSE;
+                break;
+        }
     }
 }
 
 void Post::ProcessMultiPart()
 {
     std::string delimiter = "--" + boundry;
-    switch (multipart_state)
+    bool contunue = true;
+    while (contunue)
     {
-        case READING_PREAMBLE:
+        contunue = false;
+        switch (multipart_state)
         {
-            size_t del = conn->buffer.find(delimiter);
-            if (del != std::string::npos)
+            case READING_PREAMBLE:
             {
-                conn->buffer.erase(0,del);
-                multipart_state = Post::READING_BOUNDARY;
-            }
-        }
-        break;
-        case READING_BOUNDARY:
-        {
-            size_t close_del = conn->buffer.find(delimiter + "--");
-            if (close_del !=  std::string::npos)
-            {
-                conn->buffer.erase(close_del + (delimiter + "--").length() - 1);
-                multipart_state = Post::MULTIPART_COMPLETE;
-            }
-            size_t CRLF = conn->buffer.find("\r\n");
-            if(CRLF != std::string::npos)
-            {
-                if (conn->buffer.substr(0,CRLF) != delimiter)
+                size_t del = conn->buffer.find(delimiter);
+                if (del != std::string::npos)
                 {
-                    multipart_state = Post::MULTIPART_ERROR;
+                    conn->buffer.erase(0,del);
+                    multipart_state = Post::READING_BOUNDARY;
+                    contunue = true;
                 }
-                conn->buffer.erase(0,CRLF + 2);
-                multipart_state = Post::READING_PART_HEADERS;
             }
-        }
-        break;
-        case READING_PART_HEADERS:
-        {
-            // here should be a header size  limit check
-            size_t CRLFCRLF = conn->buffer.find("\r\n\r\n");
-            if (CRLFCRLF != std::string::npos)
+            break;
+            case READING_BOUNDARY:
             {
-                parts.push_back(MultiPart());
-                if(!parts.back().ProcessMultiPartHeaders(conn->buffer.substr(0,CRLFCRLF))) 
+                size_t close_del = conn->buffer.find(delimiter + "--");
+                if (close_del !=  std::string::npos)
                 {
-                    multipart_state = Post::MULTIPART_ERROR;
+                    conn->buffer.erase(close_del + (delimiter + "--").length() - 1);
+                    multipart_state = Post::MULTIPART_COMPLETE;
+                    contunue = true;
                 }
-                conn->buffer.erase(0 , CRLFCRLF + 4);
-                multipart_state = Post::READING_PART_DATA;
+                size_t CRLF = conn->buffer.find("\r\n");
+                if(CRLF != std::string::npos)
+                {
+                    if (conn->buffer.substr(0,CRLF) != delimiter)
+                    {
+                        multipart_state = Post::MULTIPART_ERROR;
+                        contunue = true;
+                    }
+                    conn->buffer.erase(0,CRLF + 2);
+                    multipart_state = Post::READING_PART_HEADERS;
+                    contunue = true;
+                }
             }
-        }
             break;
-        case READING_PART_DATA:
-        {
-            size_t del =  conn->buffer.find(delimiter);
-            if (del !=  std::string::npos)
+            case READING_PART_HEADERS:
             {
-                // process sub-data
-                conn->buffer.erase(0,del + delimiter.length() - 1);
-                multipart_state =  Post::READING_BOUNDARY;
+                // here should be a header size  limit check
+                size_t CRLFCRLF = conn->buffer.find("\r\n\r\n");
+                if (CRLFCRLF != std::string::npos)
+                {
+                    parts.push_back(MultiPart());
+                    if(!parts.back().ProcessMultiPartHeaders(conn->buffer.substr(0,CRLFCRLF))) 
+                    {
+                        multipart_state = Post::MULTIPART_ERROR;
+                        contunue = true;
+                    }
+                    conn->buffer.erase(0 , CRLFCRLF + 4);
+                    multipart_state = Post::READING_PART_DATA;
+                    contunue = true;
+                }
             }
-            //process data
-            conn->buffer.clear();
-        }
-            break;
-        case READING_EPILOGUE:
-            /* code */
-            break;
-        case MULTIPART_COMPLETE:
-            /* code */
-            break;
-        case MULTIPART_ERROR:
-            /* code */
-            break;
-        }
+                break;
+            case READING_PART_DATA:
+            {
+                size_t del =  conn->buffer.find(delimiter);
+                if (del !=  std::string::npos)
+                {
+                    // process sub-data
+                    conn->buffer.erase(0,del + delimiter.length() - 1);
+                    multipart_state =  Post::READING_BOUNDARY;
+                    contunue = true;
+                }
+                //process data
+                conn->buffer.clear();
+            }
+                break;
+            case READING_EPILOGUE:
+                /* code */
+                break;
+            case MULTIPART_COMPLETE:
+                /* code */
+                break;
+            case MULTIPART_ERROR:
+                /* code */
+                break;
+            }
+    }
 }
 void Post::ProcessContentLength()
 {
     size_t bytes_to_read = std::min(conn->buffer.size(),content_length - content_bytes_read);
-    //write to file 
+    if (is_multipart)
+        ProcessMultiPart(); 
     conn->buffer.erase(0,bytes_to_read);
     content_bytes_read += bytes_to_read;
 }
