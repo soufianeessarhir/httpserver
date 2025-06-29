@@ -26,7 +26,6 @@ public:
         READING_BOUNDARY,       
         READING_PART_HEADERS,   
         READING_PART_DATA,
-        READING_EPILOGUE,
         MULTIPART_COMPLETE,
         MULTIPART_ERROR   
     };
@@ -46,6 +45,7 @@ private:
     size_t content_length;
     size_t content_bytes_read;
     std::ofstream output_file;
+
     size_t max_body_size;
     bool is_multipart;
     std::string boundry;
@@ -59,5 +59,8 @@ private:
     void ReadTrailerHeaders();
     void ProcessMultiPart();
     bool ExtractAndValidateBoundry();
+    void GenerateUploadfile();
+    void WriteDataToFile(size_t size);
 };
+
 #endif
