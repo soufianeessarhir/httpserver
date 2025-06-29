@@ -235,9 +235,6 @@ void Post::ProcessMultiPart()
                 conn->buffer.clear();
             }
                 break;
-            case READING_EPILOGUE:
-                /* code */
-                break;
             case MULTIPART_COMPLETE:
                 /* code */
                 break;
