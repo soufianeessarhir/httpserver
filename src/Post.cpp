@@ -22,7 +22,11 @@ Post::Post(Connection *conn , TransferType type):conn(conn)
             transfer_type = Post::ERROR;
         }
         
-    }          
+    }
+    if (!is_multipart)
+    {
+        GenerateUploadfile();
+    }        
     max_body_size = conn->location->max_body_size;
 
 }
@@ -118,6 +122,15 @@ void Post::ReadChunkData()
     }
 }
 
+void Post::GenerateUploadfile()
+{
+    struct timeval tm;
+    std::stringstream oss; 
+    gettimeofday(&tm,NULL);
+    oss << tm.tv_sec << &tm << tm.tv_usec << &oss;
+    
+
+}
 void Post::ReadTrailerHeaders()
 {
     // should be protected for size limits
@@ -127,6 +140,7 @@ void Post::ReadTrailerHeaders()
         conn->buffer.erase(0,CRLF + 2);
         chunk_state = Post::CHUNK_COMPLETE;
     }
+
 }
 
 void Post::ProcessChunck()

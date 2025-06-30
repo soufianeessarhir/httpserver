@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/20 11:51:04 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/30 16:44:59 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,7 +182,11 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 		conn->response = new Response(405);
 		return false;
 	}
-	// 
+	if (!conn->location->upload_set || !conn->location->upload)
+	{
+		//unothorized
+		return false;
+	}
 	std::string encoding = conn->request->GetHeader("transfer-encoding");
 	if (!encoding.empty())
 	{
