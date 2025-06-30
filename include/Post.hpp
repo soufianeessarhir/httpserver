@@ -4,6 +4,8 @@
 #include <fstream>
 #include "Connection.hpp"
 #include "MultiPart.hpp"
+#include "sys/time.h"
+#include <sstream>
 class Connection;
 class Post
 {
