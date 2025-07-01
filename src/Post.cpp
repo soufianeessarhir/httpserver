@@ -1,5 +1,7 @@
 #include "Post.hpp"
 
+const std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap();
+
 Post::Post(Connection *conn , TransferType type):conn(conn)
 {
     if (type ==  CONTENT_LENGTH)
@@ -128,6 +130,12 @@ void Post::GenerateUploadfile()
     std::stringstream oss; 
     gettimeofday(&tm,NULL);
     oss << tm.tv_sec << &tm << tm.tv_usec << &oss;
+    std::string ct = conn->request->GetHeader("content-ype");
+    if (ct.empty())
+    {
+        transfer_type = Post::ERROR;
+        return;
+    }
     
 
 }
