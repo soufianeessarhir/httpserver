@@ -63,6 +63,56 @@ private:
     bool ExtractAndValidateBoundry();
     void GenerateUploadfile();
     void WriteDataToFile(size_t size);
+
+private:
+      static std::map<std::string, std::string> createMimeExtMap() {
+        std::map<std::string, std::string> mime_ext;
+        // text
+        mime_ext["text/plain"] = ".txt";
+        mime_ext["text/html"] = ".html";
+        mime_ext["text/css"] = ".css";
+        mime_ext["text/javascript"] = ".js";
+        mime_ext["text/csv"] = ".csv";
+        mime_ext["text/xml"] = ".xml";
+        
+        // Application 
+        mime_ext["application/json"] = ".json";
+        mime_ext["application/pdf"] = ".pdf";
+        mime_ext["application/zip"] = ".zip";
+        mime_ext["application/x-tar"] = ".tar";
+        mime_ext["application/x-gzip"] = ".gz";
+        mime_ext["application/xml"] = ".xml";
+        mime_ext["application/octet-stream"] = ".bin";
+        
+        // Image 
+        mime_ext["image/jpeg"] = ".jpg";
+        mime_ext["image/png"] = ".png";
+        mime_ext["image/gif"] = ".gif";
+        mime_ext["image/svg+xml"] = ".svg";
+        mime_ext["image/webp"] = ".webp";
+        mime_ext["image/bmp"] = ".bmp";
+        mime_ext["image/x-icon"] = ".ico";
+        
+        // Audio 
+        mime_ext["audio/mpeg"] = ".mp3";
+        mime_ext["audio/ogg"] = ".ogg";
+        mime_ext["audio/wav"] = ".wav";
+        
+        // Video 
+        mime_ext["video/mp4"] = ".mp4";
+        mime_ext["video/ogg"] = ".ogv";
+        mime_ext["video/webm"] = ".webm";
+        mime_ext["video/x-msvideo"] = ".avi";
+        
+        // Font 
+        mime_ext["font/woff"] = ".woff";
+        mime_ext["font/woff2"] = ".woff2";
+        mime_ext["font/ttf"] = ".ttf";
+        mime_ext["font/otf"] = ".otf";
+        return mime_ext;
+    }
+    static const std::map<std::string, std::string> mime_ext;
+    
 };
 
 #endif
