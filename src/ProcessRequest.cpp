@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/30 16:44:59 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/02 13:41:50 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,6 +122,12 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	// conn->response = new Response(conn->request,conn->server);
 	if (conn->request->GetMethod() == "POST")
 	{
+		if (!conn->request->CheckField("content-type"))
+		{
+			conn->response = new Response(400);
+			conn->state = Connection::SENDING_RESPONSE;
+			return;
+		}
 		ProcessPostRequest(conn);
 	}
 	else if (conn->request->GetMethod() == "GET")
@@ -182,6 +188,7 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 		conn->response = new Response(405);
 		return false;
 	}
+	
 	if (!conn->location->upload_set || !conn->location->upload)
 	{
 		//unothorized

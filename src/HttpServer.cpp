@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/20 17:50:08 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/02 10:23:44 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,7 +224,7 @@ void		HttpServer::run()
 {
 	for(;;)
 	{
-		int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, 500);
+		int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, 5000);
 		if (event_count == -1)
 		    throw HttpServerError("Epoll wait failed");
 		for (int i = 0; i < event_count; ++i)

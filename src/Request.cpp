@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/16 18:16:25 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/02 13:39:14 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,14 @@ size_t          Request::GetContentLenght()const
     long long val =  std::strtol((*it).second.c_str(),&endptr,10);
     return val;
     
+}
+
+bool Request::CheckField(const std::string &field)
+{
+    std::map<std::string, std::string>::const_iterator it = headers.find(field);
+    if (it != headers.end())
+        return (true);
+    return false;
 }
 
 int         Request::GetStatus()const

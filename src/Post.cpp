@@ -8,6 +8,20 @@ Post::Post(Connection *conn , TransferType type):conn(conn)
     {
         content_length = conn->request->GetContentLenght();
         content_bytes_read = 0;
+        std::string media_type = conn->request->GetHeader("content-type");
+        size_t semi_colon = media_type.find(';');
+        if (semi_colon != std::string::npos)
+        {
+            media_type = media_type.substr(0,semi_colon);
+        }
+        std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
+        if (it == mime_ext.end())
+        {
+            //unsupporeted media type error
+            transfer_type = Post::ERROR;
+            return;
+        }
+        GenerateUploadfile(media_type); 
     }
     else
     {
@@ -25,10 +39,7 @@ Post::Post(Connection *conn , TransferType type):conn(conn)
         }
         
     }
-    if (!is_multipart)
-    {
-        GenerateUploadfile();
-    }        
+     
     max_body_size = conn->location->max_body_size;
 
 }
@@ -124,20 +135,12 @@ void Post::ReadChunkData()
     }
 }
 
-void Post::GenerateUploadfile()
+void Post::GenerateUploadfile(const std::string &ext)
 {
     struct timeval tm;
     std::stringstream oss; 
     gettimeofday(&tm,NULL);
-    oss << tm.tv_sec << &tm << tm.tv_usec << &oss;
-    std::string ct = conn->request->GetHeader("content-ype");
-    if (ct.empty())
-    {
-        transfer_type = Post::ERROR;
-        return;
-    }
-    
-
+    oss << tm.tv_sec << &tm << tm.tv_usec << &oss<<ext;
 }
 void Post::ReadTrailerHeaders()
 {
