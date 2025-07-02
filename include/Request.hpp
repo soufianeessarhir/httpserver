@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/26 11:26:46 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/02 13:39:08 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,8 @@ public:
     bool            GetIsComplet()const;
 
     std::string    GetMethod();
+
+    bool            CheckField(const std::string &);
     
 
 private:

@@ -61,7 +61,7 @@ private:
     void ReadTrailerHeaders();
     void ProcessMultiPart();
     bool ExtractAndValidateBoundry();
-    void GenerateUploadfile();
+    void GenerateUploadfile(const std::string &ext);
     void WriteDataToFile(size_t size);
 
 private:
