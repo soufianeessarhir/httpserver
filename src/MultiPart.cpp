@@ -36,5 +36,30 @@ bool MultiPart::ProcessMultiPartHeaders(std::string data)
         Request::ToCanonical(name);
         headers[name] = value;
     }
+    
+
+    return true;
+}
+
+bool MultiPart::ConfigureMultipart()
+{
+    std::string content_type = headers["content-disposition"];
+    size_t name = content_type.find("name");
+    if (name == std::string::npos)
+    {
+        return false;
+    }
+    size_t fname = content_type.find("filename=\"");
+    if (fname != std::string::npos)
+    {
+        size_t next_q = content_type.find(fname,'"');
+        if (next_q == std::string::npos)
+            return false;
+        filename =  content_type.substr(fname,next_q - fname);
+    }
+    if (filename.empty())
+        is_file_upload = false;
+    else
+        is_file_upload = true;
     return true;
 }

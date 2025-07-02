@@ -44,6 +44,19 @@ Post::Post(Connection *conn , TransferType type):conn(conn)
 
 }
 
+void Post::WriteDataToFile(size_t size)
+{
+    if (!is_multipart)
+    {
+        
+    }
+    else
+    {
+
+    }
+    (void)size;
+}
+
 bool Post::ExtractAndValidateBoundry()
 {
     std::string ct = conn->request->GetHeader("content-type");
@@ -239,6 +252,13 @@ void Post::ProcessMultiPart()
                     {
                         multipart_state = Post::MULTIPART_ERROR;
                         contunue = true;
+                        break;
+                    }
+                    if (parts.back().headers.find("content-disposition") == parts.back().headers.end())
+                    {
+                        multipart_state = Post::MULTIPART_ERROR;
+                        contunue = true;
+                        break;
                     }
                     conn->buffer.erase(0 , CRLFCRLF + 4);
                     multipart_state = Post::READING_PART_DATA;
