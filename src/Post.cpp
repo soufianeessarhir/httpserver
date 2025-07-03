@@ -280,12 +280,12 @@ void Post::ProcessMultiPart()
                 size_t del =  conn->buffer.find(delimiter);
                 if (del !=  std::string::npos)
                 {
-                    // process sub-data
+                    WriteDataToFile(del);
                     conn->buffer.erase(0,del + delimiter.length() - 1);
                     multipart_state =  Post::READING_BOUNDARY;
                     contunue = true;
                 }
-                //process data
+                WriteDataToFile(conn->buffer.size());
                 conn->buffer.clear();
             }
                 break;
@@ -302,7 +302,10 @@ void Post::ProcessContentLength()
 {
     size_t bytes_to_read = std::min(conn->buffer.size(),content_length - content_bytes_read);
     if (is_multipart)
-        ProcessMultiPart(); 
+	{
+        ProcessMultiPart();
+	}
+	WriteDataToFile(bytes_to_read); 
     conn->buffer.erase(0,bytes_to_read);
     content_bytes_read += bytes_to_read;
 }
