@@ -1,4 +1,5 @@
 #include "Post.hpp"
+#include "MultiPart.hpp"
 
 const std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap();
 
@@ -255,6 +256,13 @@ void Post::ProcessMultiPart()
                         break;
                     }
                     if (parts.back().headers.find("content-disposition") == parts.back().headers.end())
+                    {
+                        multipart_state = Post::MULTIPART_ERROR;
+                        contunue = true;
+                        break;
+                    }
+                    parts.back().filename = conn->location->upload_store;
+                    if (!parts.back().ConfigureMultipart())
                     {
                         multipart_state = Post::MULTIPART_ERROR;
                         contunue = true;
