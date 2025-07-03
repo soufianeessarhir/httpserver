@@ -1,3 +1,4 @@
+
 #include "MultiPart.hpp"
 
 bool MultiPart::ProcessMultiPartHeaders(std::string data)
@@ -45,21 +46,30 @@ bool MultiPart::ConfigureMultipart()
 {
     std::string content_type = headers["content-disposition"];
     size_t name = content_type.find("name");
+    std::string tmp;
     if (name == std::string::npos)
     {
         return false;
     }
-    size_t fname = content_type.find("filename=\"");
+    size_t fname = content_type.find("tmp=\"");
     if (fname != std::string::npos)
     {
         size_t next_q = content_type.find(fname,'"');
         if (next_q == std::string::npos)
             return false;
-        filename =  content_type.substr(fname,next_q - fname);
+        tmp =  content_type.substr(fname,next_q - fname);
+        //need to prarse the filename
+        filename += tmp;
     }
-    if (filename.empty())
+    if (tmp.empty())
         is_file_upload = false;
     else
+    {
+		output_file = new std::ofstream;
+        output_file->open(filename.c_str());
+        if (output_file->fail())
+            return false;
         is_file_upload = true;
+    }
     return true;
 }
