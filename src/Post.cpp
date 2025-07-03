@@ -22,7 +22,7 @@ Post::Post(Connection *conn , TransferType type):conn(conn)
             transfer_type = Post::ERROR;
             return;
         }
-        GenerateUploadfile(media_type); 
+        GenerateUploadfile(media_type);
     }
     else
     {
@@ -155,6 +155,7 @@ void Post::GenerateUploadfile(const std::string &ext)
     std::stringstream oss; 
     gettimeofday(&tm,NULL);
     oss << tm.tv_sec << &tm << tm.tv_usec << &oss<<ext;
+	output_file.open(oss.str().c_str());
 }
 void Post::ReadTrailerHeaders()
 {
