@@ -1,0 +1,239 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ProcessRequest.cpp                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
+/*   Updated: 2025/06/18 13:29:31 by eaboudi          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "HttpServer.hpp"
+
+
+void		HttpServer::ProcessRequestLine(Connection *conn)
+{
+	size_t end = conn->buffer.find("\r\n");
+	if (end  != std::string::npos)
+	{
+		std::string line = conn->buffer.substr(0,end);
+		if (line.empty())
+        {
+            conn->buffer.erase(0, end + 2);
+            return;
+        }
+        
+		bool IsValid = conn->request->ParseRequestLine(line);
+		if (IsValid)
+		{
+			conn->buffer.erase(0,end + 2);
+			conn->state = Connection::READING_HEADERS;
+			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
+		}
+		else
+		{
+			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
+			conn->response =  new Response(conn->request->GetStatus(), Error);
+			conn->state =  Connection::SENDING_RESPONSE;
+		}
+	}
+}
+
+void		HttpServer::ProcessHeaders(Connection *conn)
+{
+			size_t end = conn->buffer.find("\r\n\r\n");
+			if (end != std::string::npos)
+			{
+				bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
+				conn->buffer.erase(0,end + 4);
+				if (IsValid)
+				{
+					conn->state = Connection::PROCESSING;
+				}
+				else
+				{
+					conn->response = new Response(conn->request->GetStatus(), Error);
+					conn->state = Connection::SENDING_RESPONSE;
+				}
+			}
+}
+
+void 		HttpServer::ProcessRequest(Connection *conn)
+{
+	std::string host = conn->request->GetHeader("host");
+	std::string hostname = host;
+    size_t colon_pos = host.find(':');
+    if (colon_pos != std::string::npos) 
+	{
+        hostname = host.substr(0, colon_pos);
+    }
+	struct sockaddr_in server_addr;
+	socklen_t addr_len = sizeof(server_addr);
+	if(getsockname(conn->fd, (struct sockaddr*)&server_addr, &addr_len) == -1) {
+		return;
+	}
+	int port = ntohs(server_addr.sin_port);
+	std::string ip = inet_ntoa(server_addr.sin_addr);
+	Server* default_server = NULL;
+    Server* matched_server = NULL;
+    
+    for (size_t i = 0; i < servers.size(); ++i) 
+	{
+        bool port_matches = false;
+        for (size_t j = 0; j < servers[i].listen.size(); ++j) 
+		{
+            if (port == servers[i].listen[j].second && 
+                (servers[i].listen[j].first == ip || 
+                 servers[i].listen[j].first == "0.0.0.0")) 
+			{
+                port_matches = true;
+                break;
+            }
+        }
+        if (!port_matches) continue;
+        if (!default_server) 
+		{
+            default_server = &servers[i]; 
+        }
+        for (size_t k = 0; k < servers[i].server_names.size(); ++k) {
+            if (servers[i].server_names[k] == hostname) {
+                matched_server = &servers[i];
+                break;
+            }
+        }
+        if (matched_server) break;
+    }
+    conn->server = matched_server ? matched_server : default_server;
+    if (!conn->server) 
+	{
+        conn->response = new Response(500, Error);
+        conn->state = Connection::SENDING_RESPONSE;
+        return;
+    }
+	
+	if(!MatchLocation(conn))
+	{
+		conn->response = new Response(404, Error);
+		conn->state = Connection::SENDING_RESPONSE;
+		return;
+	}
+	FillLocationMisseddata(conn);
+	// conn->response = new Response(conn->request,conn->server);
+	if (conn->request->GetMethod() == "POST")
+	{
+		ProcessPostRequest(conn);
+	}
+	else if (conn->request->GetMethod() == "GET")
+	{
+		std::cout << "GET request received1" << std::endl;
+		conn->response->SetMethod(GET);
+	}
+	else if (conn->request->GetMethod() == "DELETE")
+	{
+		conn->response->SetMethod(DELETE);
+	}
+	// else
+	// {
+	// 	conn->response = new Response(501, Error);
+	// 	conn->state = Connection::SENDING_RESPONSE;
+	// 	return;
+	// }
+}
+bool HttpServer::MatchLocation(Connection *conn)
+{
+    std::string target = conn->request->GetUri();
+    size_t query_pos = target.find('?');
+    if (query_pos != std::string::npos) {
+        target = target.substr(0, query_pos);
+    }
+    std::map<std::string, LocationData>::iterator it = conn->server->locations.find(target);
+    if (it != conn->server->locations.end()) {
+        conn->location = &it->second;
+        return true;
+    }
+    
+    while (!target.empty()) {
+        size_t last_slash = target.find_last_of('/');
+        
+        if (last_slash == std::string::npos) {
+            break;
+        }
+        if (last_slash == 0) {
+            target = "/";
+        } else {
+            target = target.substr(0, last_slash);
+        }
+        it = conn->server->locations.find(target);
+        if (it != conn->server->locations.end()) {
+            conn->location = &it->second;
+            return true;
+        }
+        if (target == "/") {
+            break;
+        }
+    }
+    it = conn->server->locations.find("/");
+    if (it != conn->server->locations.end()) {
+        conn->location = &it->second;
+        return true;
+    }
+    return false;
+}
+
+
+bool		HttpServer::ProcessPostRequest(Connection *conn)
+{
+	if (conn->location->methods.find("POST") == conn->location->methods.end())
+	{
+		conn->response = new Response(405, Error);
+		return false;
+	}	
+	return true;
+}
+
+void 		HttpServer::FillLocationMisseddata(Connection *conn)
+{
+	// if (!conn->location)
+	// {
+	// 	return;
+	// }
+	if (conn->location->root.empty())
+	{
+		conn->location->root = conn->server->root;
+	}
+	if (conn->location->index.empty() && !conn->server->index.empty())
+	{
+		conn->location->index = conn->server->index;
+	}
+	if (!conn->location->has_redirect && conn->server->has_redirect)
+	{
+		conn->location->has_redirect = conn->server->has_redirect;
+		conn->location->redirect.first = conn->server->redirect.first;
+		conn->location->redirect.second = conn->server->redirect.second;
+	}
+	if (!conn->location->autoindex_set && conn->server->autoindex_set)
+	{
+		conn->location->autoindex = conn->server->autoindex;
+		conn->location->autoindex_set = true;
+	}
+	if (conn->location->cgi.empty() && !conn->server->cgi.empty())
+	{
+		//maybe i should merge them
+		conn->location->cgi = conn->server->cgi;
+	}
+	if (!conn->location->upload_set && conn->server->upload_set)
+	{
+		conn->location->upload = conn->server->upload;
+		conn->location->upload_store = conn->server->upload_store;
+	}
+	if (conn->location->error_pages.empty() && !conn->server->error_pages.empty())
+	{
+		conn->location->error_pages = conn->server->error_pages;
+	}
+	if (conn->location->max_body_size == 0 && conn->server->max_body_size > 0)
+	{
+		conn->location->max_body_size = conn->server->max_body_size;
+	}
+}
