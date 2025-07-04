@@ -49,13 +49,12 @@ void Post::WriteDataToFile(size_t size)
 {
     if (!is_multipart)
     {
-        
+        return ;
     }
     else
     {
-
+       output_file.write(conn->buffer.data(),size);
     }
-    (void)size;
 }
 
 bool Post::ExtractAndValidateBoundry()
@@ -246,29 +245,32 @@ void Post::ProcessMultiPart()
             case READING_PART_HEADERS:
             {
                 // here should be a header size  limit check
+				filename.clear();
+                headers.clear();
                 size_t CRLFCRLF = conn->buffer.find("\r\n\r\n");
                 if (CRLFCRLF != std::string::npos)
                 {
-                    parts.push_back(MultiPart());
-                    if(!parts.back().ProcessMultiPartHeaders(conn->buffer.substr(0,CRLFCRLF))) 
+                    if(!ProcessMultiPartHeaders(conn->buffer.substr(0,CRLFCRLF))) 
                     {
                         multipart_state = Post::MULTIPART_ERROR;
                         contunue = true;
                         break;
                     }
-                    if (parts.back().headers.find("content-disposition") == parts.back().headers.end())
+                    if (headers.find("content-disposition") == headers.end())
                     {
                         multipart_state = Post::MULTIPART_ERROR;
                         contunue = true;
                         break;
                     }
-                    parts.back().filename = conn->location->upload_store;
-                    if (!parts.back().ConfigureMultipart())
+                    filename = conn->location->upload_store;
+                    if (!ConfigureMultipart())
                     {
                         multipart_state = Post::MULTIPART_ERROR;
                         contunue = true;
                         break;
                     }
+                    if (is_file_upload)
+                        parts.push_back(MultiPart(filename));
                     conn->buffer.erase(0 , CRLFCRLF + 4);
                     multipart_state = Post::READING_PART_DATA;
                     contunue = true;
@@ -316,4 +318,73 @@ Post::~Post()
     {
         output_file.close();
     }
+}
+
+
+
+bool Post::ProcessMultiPartHeaders(std::string data)
+{
+    std::istringstream iss(data);
+    std::string line;
+    while (std::getline(iss,line))
+    {
+        if (!line.empty() && line[line.size() - 1] == '\r') {
+            line.erase(line.size() - 1);
+        }
+        if (headers.size() == 0)
+        {
+            if (line.empty() || Request::OnlySpaces(line))
+            {
+                return false;
+            }
+        }
+        if (line.empty())
+        {
+            return true;
+        }
+        size_t del = line.find(':');
+        if(del ==  std::string::npos)
+        {
+            return false;
+        }
+        std::string name = line.substr(0,del);
+        if (name.empty() || Request::Haswhitespace(name)) //[sessarhi] maybe i need to check for emply fileds | values
+        {
+
+            return false;
+        }
+        std::string value = line.substr(del + 1);
+        Request::trim(value);
+        Request::ToCanonical(name);
+        headers[name] = value;
+    }
+    
+
+    return true;
+}
+
+bool Post::ConfigureMultipart()
+{
+    std::string content_type = headers["content-disposition"];
+    size_t name = content_type.find("name");
+    std::string tmp;
+    if (name == std::string::npos)
+    {
+        return false;
+    }
+    size_t fname = content_type.find("tmp=\"");
+    if (fname != std::string::npos)
+    {
+        size_t next_q = content_type.find(fname,'"');
+        if (next_q == std::string::npos)
+            return false;
+        tmp =  content_type.substr(fname,next_q - fname);
+        //need to prarse the filename
+        filename += tmp;
+    }
+    if (tmp.empty())
+        is_file_upload = false;
+    else
+        is_file_upload = true;
+    return true;
 }
