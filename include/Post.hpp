@@ -38,6 +38,7 @@ public:
     TransferType transfer_type;
 
 private:
+	std::map<std::string, std::string> headers;
     ChunkState chunk_state;
     Connection *conn;
     std::string chunk_size_buffer;
@@ -51,6 +52,9 @@ private:
     size_t max_body_size;
     bool is_multipart;
     std::string boundry;
+	// std::string name;
+	std::string filename;
+	bool is_file_upload;
     std::vector<MultiPart> parts;
     MultiPaertState multipart_state;
 
@@ -63,6 +67,8 @@ private:
     bool ExtractAndValidateBoundry();
     void GenerateUploadfile(const std::string &ext);
     void WriteDataToFile(size_t size);
+	bool ProcessMultiPartHeaders(std::string data);
+    bool ConfigureMultipart();
 
 private:
       static std::map<std::string, std::string> createMimeExtMap() {
