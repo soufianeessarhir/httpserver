@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 12:29:42 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/05 13:58:16 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,12 +132,11 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	}
 	else if (conn->request->GetMethod() == "GET")
 	{
-		std::cout << "GET request received1" << std::endl;
-		conn->response->SetMethod(GET);
+		conn->response = new Response(200, GET);
 	}
 	else if (conn->request->GetMethod() == "DELETE")
 	{
-		conn->response->SetMethod(DELETE);
+		// conn->response = new Response(200, DELETE);
 	}
 	// else
 	// {
