@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/14 10:22:32 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/05 16:53:01 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,21 +48,23 @@ public:
     
     bool            KeepAlive()const;
     
-    void            ToCanonical(std::string &);
+    static void     ToCanonical(std::string &);
 
-    void            trim(std::string &);
+    static void     trim(std::string &);
 
     bool            ParseUri();
 
     bool            Decode();
 
-    bool            OnlySpaces(std::string&);
+    static bool     OnlySpaces(std::string&);
 
-    bool            Haswhitespace(std::string&);
+    static bool     Haswhitespace(std::string&);
 
     void            NormalizePath();
 
     void            RemoveFromOutputpath(std::string &);
+
+
 
     
     std::string     GetUri();
@@ -78,6 +80,8 @@ public:
     bool            GetIsComplet()const;
 
     std::string    GetMethod();
+
+    bool            CheckField(const std::string &);
     
 
 private:

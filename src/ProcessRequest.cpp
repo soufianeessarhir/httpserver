@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 15:15:36 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/05 16:51:30 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,8 +86,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		{
             if (port == servers[i].listen[j].second && 
                 (servers[i].listen[j].first == ip || 
-                 servers[i].listen[j].first == "0.0.0.0")) 
-			{
+                 servers[i].listen[j].first == "0.0.0.0")) {
                 port_matches = true;
                 break;
             }
@@ -123,28 +122,28 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	// conn->response = new Response(conn->request,conn->server);
 	if (conn->request->GetMethod() == "POST")
 	{
+		if (!conn->request->CheckField("content-type"))
+		{
+			conn->response = new Response(400, Error);
+			conn->state = Connection::SENDING_RESPONSE;
+			return;
+		}
 		ProcessPostRequest(conn);
 	}
 	else if (conn->request->GetMethod() == "GET")
 	{
-		if (conn->location->methods.find("GET") == conn->location->methods.end())
-		{
-			conn->response = new Response(405, Error);
-			conn->state = Connection::SENDING_RESPONSE;
-			return;
-		}
 		conn->response = new Response(200, GET);
 	}
 	else if (conn->request->GetMethod() == "DELETE")
 	{
-		conn->response->SetMethod(DELETE);
+		// conn->response = new Response(200, DELETE);
 	}
-	else
-	{
-		conn->response = new Response(501, Error);
-		conn->state = Connection::SENDING_RESPONSE;
-		return;
-	}
+	// else
+	// {
+	// 	conn->response = new Response(501, Error);
+	// 	conn->state = Connection::SENDING_RESPONSE;
+	// 	return;
+	// }
 }
 bool HttpServer::MatchLocation(Connection *conn)
 {
@@ -192,9 +191,40 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 {
 	if (conn->location->methods.find("POST") == conn->location->methods.end())
 	{
-		conn->response = new Response(405, Error);
+		conn->response = new Response(405 , Error);
 		return false;
-	}	
+	}
+	
+	if (!conn->location->upload_set || !conn->location->upload)
+	{
+		//unothorized
+		return false;
+	}
+	std::string encoding = conn->request->GetHeader("transfer-encoding");
+	if (!encoding.empty())
+	{
+		size_t last_space = encoding.find_last_of(' ');
+		if (last_space != std::string::npos)
+		{
+			encoding = encoding.substr(last_space);
+		}
+		if (encoding != "chunked")
+		{
+			conn->response = new Response(400 , Error);
+			return false;
+		}
+		conn->post = new Post(conn,Post::CHUNKED);
+	}
+	else if (!conn->request->GetHeader("content-length").empty())
+	{
+		conn->post = new Post(conn,Post::CONTENT_LENGTH);
+	}
+	else
+	{
+		conn->response = new Response(411 , Error);
+		return false;
+	}
+	
 	return true;
 }
 

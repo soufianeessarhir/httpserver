@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:31:30 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/18 13:11:04 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/05 16:49:29 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@
 #include "Request.hpp"
 #include "GetMethodResponse.hpp"
 #include "Connection.hpp"
+#include <sys/socket.h>
+#include <unistd.h>
 class Connection;
 #define HttpVersion "HTTP/1.1 "
 std::map<int, std::string> createErrorPhrase(void);
