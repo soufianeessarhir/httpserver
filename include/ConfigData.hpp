@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:14:10 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/01 18:20:01 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/16 19:53:02 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,12 +23,15 @@ struct CommonConfig
     std::string index;
     bool has_redirect;
     std::pair<int, std::string> redirect;
+    bool autoindex_set /*= false*/;
     bool autoindex;
     std::map<std::string, std::string> cgi;
+    bool upload_set /*= false*/;
     bool upload;
     std::string upload_store;
 	std::vector<std::pair<std::vector<int>, std::string> > error_pages;
-    size_t max_body_size;
+    size_t max_body_size /*0*/;
+    CommonConfig():root(""),index(""),has_redirect(false),autoindex_set(false),upload_set(false),upload_store(""),max_body_size(0){}
 };
 
 struct LocationData : public CommonConfig 

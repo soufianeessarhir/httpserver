@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/04 11:01:43 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/06/14 10:22:32 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,8 +60,12 @@ public:
 
     bool            Haswhitespace(std::string&);
 
+    void            NormalizePath();
+
+    void            RemoveFromOutputpath(std::string &);
+
     
-    std::string     GetUri()const;
+    std::string     GetUri();
 
     const char*     GetBody()const;
     
@@ -72,6 +76,8 @@ public:
     int             GetStatus()const;
     
     bool            GetIsComplet()const;
+
+    std::string    GetMethod();
     
 
 private:
