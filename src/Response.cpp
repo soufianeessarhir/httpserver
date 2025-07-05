@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/18 13:08:25 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/04 17:49:42 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,8 @@ void Response::SetMethod(Methods method)
 void Response::ErrorResponse(Connection *Conn)
 {
     // Build the status line
-    std::stringstream BuildStatusLine(HttpVersion);
+    std::stringstream BuildStatusLine;
+    BuildStatusLine << "HTTP/1.1 ";
     std::map<int, std::string>::const_iterator it = ErrorPhrase.find(StatusCode);
     if (it != ErrorPhrase.end())
         BuildStatusLine << StatusCode << " " << it->second << "\r\n";
@@ -110,8 +111,8 @@ void Response::ErrorResponse(Connection *Conn)
     }
     StatusLineError = BuildStatusLine.str();
     std::string Headers = "Content-Type: text/html\r\n";
-    Headers += "Content-Length: 0\r\n";
-    Headers += "Connection: close\r\n\r\n";
+    Headers += "Content-Length: 0\r\n\r\n";
+    // Headers += "Connection: close\r\n\r\n";
     std::string ResponseData = StatusLineError + Headers;
     ssize_t BytesSent = send(Conn->fd, ResponseData.c_str(), ResponseData.size(), MSG_DONTWAIT);
     if (BytesSent < 0)

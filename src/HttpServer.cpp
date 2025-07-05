@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/29 11:07:50 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/04 17:58:22 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -278,6 +278,7 @@ void		HttpServer::ProcessClientsRoundRobin()
 		}
 		else if (client_ev.events & EPOLLOUT)
 		{
+			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 			HandlOutgoingData(client_ev.data.fd);
 		}
 		if (conn->state != Connection::COMPLETE)
@@ -290,25 +291,18 @@ void		HttpServer::ProcessClientsRoundRobin()
 void        HttpServer::HandlOutgoingData(int fd)
 {
     Connection *conn = clients[fd];
-    if (conn->response->GetMethod() == Error)
-	{
-		conn->response->ErrorResponse(conn);
-		conn->state = Connection::COMPLETE;
-		return;
-	}
-	// else if (conn->response->GetMethod() != GET)
+    // if (conn->response->GetMethod() == Error)
 	// {
-		conn->response->GET = new GetMethodResponse(conn->request->GetStatus(), "/home/eaboudi/Desktop/httpserver/src/index.html");
-		conn->response->GET->SendStatusLine(conn);
-		conn->response->GET->SendHeaders(conn);
-		if (conn->response->GET->GetStatusCode() == 200)
-		{
-			conn->response->GET->SendBody(conn);
-			if (conn->response->GET->GetBody().empty())
-				conn->state = Connection::COMPLETE; // No body to send
-		}
+	// 	conn->response->ErrorResponse(conn);
+	// 	conn->state = Connection::COMPLETE;
+	// 	return;
 	// }
-	// SetSocketForRead(conn);
+	if (conn->response->GetMethod() != GET)
+	{
+		std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
+		excuteGetMethod(conn);
+	}
+	SetSocketForRead(conn);
 }
 
 void		HttpServer::cleanup()
