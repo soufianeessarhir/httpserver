@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 16:36:40 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/05 17:19:30 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -368,6 +368,7 @@ void Parser::CgiDirective( std::map<std::string, std::string> &cgi)
 void Parser::UploadDirective(bool &upload,std::string &upload_store)
 {
 	currentToken = lexer.getNextToken();
+	std::cout << currentToken.value << std::endl;
 	if (currentToken.type != TOKEN_PATH && currentToken.type != TOKEN_IDENTIFIER)
 		throw ParseException("Expected path after 'upload_store'");
 	upload = true;
