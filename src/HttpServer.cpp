@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/04 20:26:00 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/05 12:23:35 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,13 +167,14 @@ void		HttpServer::HandlIncommingData(int fd)
 		switch (conn->state)
 		{
 			case Connection::READING_REQUEST_LINE:
+			
 				if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
 				{
-					conn->response = new Response(414); //[sessarhi] uri too large response
+					conn->response = new Response(414, Error); //[sessarhi] uri too large response
 					SetSocketForWrite(conn);
 				}
 				ProcessRequestLine(conn);
-				if (conn->state == Connection::READING_HEADERS || conn->state == Connection::SENDING_RESPONSE)
+				if (conn->state == Connection::READING_HEADERS  || conn->state == Connection::SENDING_RESPONSE)
 					continue_processing = true;
 				break;
 				
@@ -181,7 +182,7 @@ void		HttpServer::HandlIncommingData(int fd)
 			
 				if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
 				{
-					conn->response = new Response(431); //[sessarhi] header field too large response
+					conn->response = new Response(431, Error); //[sessarhi] header field too large response
 					SetSocketForWrite(conn);
 					conn->state = Connection::SENDING_RESPONSE;
 				}
@@ -289,27 +290,21 @@ void		HttpServer::ProcessClientsRoundRobin()
 	}
 }
 
-
 void        HttpServer::HandlOutgoingData(int fd)
 {
     Connection *conn = clients[fd];
-    // if (!conn || !conn->response)
-    // {
-	// 	std::cout << "3\n";
+    // if (conn->response->GetMethod() == Error)
+	// {
+	// 	conn->response->ErrorResponse(conn);
+	// 	conn->state = Connection::COMPLETE;
 	// 	return;
-    // }
-	// std::cout<< conn->response->GET<<std::endl;
-    conn->response->GET = new GetMethodResponse(conn->request->GetStatus(), "/home/eaboudi/Desktop/httpserver/src/index.html");
-    conn->response->GET->SendStatusLine(conn);
-    conn->response->GET->SendHeaders(conn);
-    if (conn->response->GET->GetStatusCode() == 200)
-    {
-        conn->response->GET->SendBody(conn);
-        if (conn->response->GET->GetBody().empty())
-            conn->state = Connection::COMPLETE; // No body to send
-    }
-    else
-        conn->state = Connection::COMPLETE; // Error response sent
+	// }
+	if (conn->response->GetMethod() != GET)
+	{
+		std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
+		excuteGetMethod(conn);
+	}
+	SetSocketForRead(conn);
 }
 
 void		HttpServer::cleanup()

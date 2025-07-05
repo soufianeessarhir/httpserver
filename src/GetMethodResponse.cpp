@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   GetMethodResponse.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/06/11 23:13:24 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/05 12:19:44 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,9 @@ std::map<std::string, std::string> CreateMimeTypes()
     return mimeTypes;
 }
 
+
 const std::map<std::string, std::string> GetMethodResponse::MimeTypes = CreateMimeTypes();
+const std::map<int, std::string> GetMethodResponse::ErrorPhrase = createErrorPhrase();
 
 void    GetMethodResponse::SetContentType()
 {
@@ -74,12 +76,26 @@ void    GetMethodResponse::SetContentType()
 }
 
 GetMethodResponse::GetMethodResponse(int statusCode, std::string filePath)
-    : BaseResponse(statusCode), FilePath(filePath), IsBinaryFile(false)
+    : StatusCode(statusCode), FilePath(filePath), IsBinaryFile(false)
 {
+    std::cout << "constructor status code: " << statusCode << std::endl;
+    SetStatusLine();
     SetContentType();
     SetBody();
     SetHeaders();
-    SetStatusLine();
+}
+
+void GetMethodResponse::SetStatusLine()
+{
+    std::cout << "SetStatusLine called with StatusCode: " << StatusCode << std::endl;
+    std::stringstream BuildStatusLine;
+    BuildStatusLine << "HTTP/1.1 ";
+    std::map<int, std::string>::const_iterator it = ErrorPhrase.find(StatusCode);
+    if (it != ErrorPhrase.end())
+        BuildStatusLine << StatusCode << " " << it->second << "\r\n";
+    else
+        BuildStatusLine << StatusCode << " OK\r\n";
+    StatusLine = BuildStatusLine.str();
 }
 
 void    GetMethodResponse::SetBody()
@@ -90,7 +106,8 @@ void    GetMethodResponse::SetBody()
         InFile.open(FilePath.c_str(), std::ios::binary);
     else
         InFile.open(FilePath.c_str());
-    if (!InFile)
+    std::cout << "Opening file: " << FilePath << std::endl;
+    if (!InFile.good())
     {
         StatusCode = 404;
         Body.clear();
@@ -128,5 +145,123 @@ void    GetMethodResponse::SetHeaders()
 GetMethodResponse::~GetMethodResponse()
 {
     
+}
+
+void GetMethodResponse::SendStatusLine(Connection *Conn)
+{
+    ssize_t BytesWriten = 0;
+    while (BytesSent < static_cast<ssize_t>(StatusLine.size()))
+    {
+        BytesWriten = send(Conn->fd, StatusLine.c_str() + BytesSent, 
+                            StatusLine.size() - BytesSent, 0);
+        if (BytesWriten < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                Conn->state = Connection::SENDING_RESPONSE;
+                return; // Wait for next round
+            }
+            else
+            {
+                perror("send");
+                Conn->state = Connection::COMPLETE; // Error handling
+                return;
+            }
+        }
+        else
+            BytesSent += BytesWriten;
+    }
+    if (BytesSent >= static_cast<ssize_t>(StatusLine.size()))
+        BytesSent = 0;
+}
+
+const std::string& GetMethodResponse::GetBody() const
+{
+    return Body;
+}
+const std::string& GetMethodResponse::GetContentType() const
+{
+    return ContentType;
+}
+
+int GetMethodResponse::GetStatusCode() const
+{
+    return StatusCode;
+}
+
+void GetMethodResponse::SendHeaders(Connection *Conn)
+{
+    ssize_t BytesWriten = 0;
+    std::string HeadersStr;
+    std::map<std::string, std::string>::const_iterator it;
+    for (it = Headers.begin(); it != Headers.end(); ++it)
+        HeadersStr += it->first + ": " + it->second;
+    HeadersStr += "\r\n";
+    while (BytesSent < static_cast<ssize_t>(HeadersStr.size()))
+    {
+        BytesWriten = send(Conn->fd, HeadersStr.c_str() + BytesSent, 
+                            HeadersStr.size() - BytesSent, 0);
+        if (BytesWriten < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                Conn->state = Connection::SENDING_RESPONSE;
+                return; // Wait for next round
+            }
+            else
+            {
+                perror("send");
+                Conn->state = Connection::COMPLETE; // Error handling
+                return;
+            }
+        }
+        else
+            BytesSent += BytesWriten;
+    }
+    if (BytesSent >= static_cast<ssize_t>(HeadersStr.size()))
+        BytesSent = 0;
+}
+
+void GetMethodResponse::SendBody(Connection *Conn)
+{
+    ssize_t BytesWriten = 0;
+    while (BytesSent < static_cast<ssize_t>(Body.size()))
+    {
+        BytesWriten = send(Conn->fd, Body.c_str() + BytesSent, 
+                            Body.size() - BytesSent, 0);
+        if (BytesWriten < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                Conn->state = Connection::SENDING_RESPONSE;
+                return; // Wait for next round
+            }
+            else
+            {
+                perror("send");
+                Conn->state = Connection::COMPLETE; // Error handling
+                return;
+            }
+        }
+        else
+            BytesSent += BytesWriten;
+    }
+    if (BytesSent >= static_cast<ssize_t>(Body.size()))
+        BytesSent = 0;
+}
+
+void    excuteGetMethod(Connection *conn)
+{
+    conn->response->GET = new GetMethodResponse(200, "/home/eaboudi/Desktop/Mywebser/src/index.html");
+    std::cout << "Status Code: " << conn->response->GET->GetStatusCode() << std::endl;
+    conn->response->GET->SetStatusLine();
+    conn->response->GET->SendStatusLine(conn);
+    conn->response->GET->SendHeaders(conn);
+	if (conn->response->GET->GetStatusCode() == 200)
+    {
+		conn->response->GET->SendBody(conn);
+		if (conn->response->GET->GetBody().empty())
+			conn->state = Connection::COMPLETE; // No body to send
+	}
 }
 

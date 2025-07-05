@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/02 13:41:50 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/05 12:29:42 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 		else
 		{
 			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
-			conn->response =  new Response(conn->request->GetStatus());
+			conn->response =  new Response(conn->request->GetStatus(), Error);
 			conn->state =  Connection::SENDING_RESPONSE;
 		}
 	}
@@ -54,7 +54,7 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 				}
 				else
 				{
-					conn->response = new Response(conn->request->GetStatus());
+					conn->response = new Response(conn->request->GetStatus(), Error);
 					conn->state = Connection::SENDING_RESPONSE;
 				}
 			}
@@ -107,14 +107,14 @@ void 		HttpServer::ProcessRequest(Connection *conn)
     conn->server = matched_server ? matched_server : default_server;
     if (!conn->server) 
 	{
-        conn->response = new Response(500);
+        conn->response = new Response(500, Error);
         conn->state = Connection::SENDING_RESPONSE;
         return;
     }
 	
 	if(!MatchLocation(conn))
 	{
-		conn->response = new Response(404);
+		conn->response = new Response(404, Error);
 		conn->state = Connection::SENDING_RESPONSE;
 		return;
 	}
@@ -124,7 +124,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	{
 		if (!conn->request->CheckField("content-type"))
 		{
-			conn->response = new Response(400);
+			conn->response = new Response(400, Error);
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
@@ -132,12 +132,19 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	}
 	else if (conn->request->GetMethod() == "GET")
 	{
-		
+		std::cout << "GET request received1" << std::endl;
+		conn->response->SetMethod(GET);
 	}
 	else if (conn->request->GetMethod() == "DELETE")
 	{
-		
+		conn->response->SetMethod(DELETE);
 	}
+	// else
+	// {
+	// 	conn->response = new Response(501, Error);
+	// 	conn->state = Connection::SENDING_RESPONSE;
+	// 	return;
+	// }
 }
 bool HttpServer::MatchLocation(Connection *conn)
 {
@@ -185,7 +192,7 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 {
 	if (conn->location->methods.find("POST") == conn->location->methods.end())
 	{
-		conn->response = new Response(405);
+		conn->response = new Response(405 , Error);
 		return false;
 	}
 	
@@ -204,7 +211,7 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 		}
 		if (encoding != "chunked")
 		{
-			conn->response = new Response(400);
+			conn->response = new Response(400 , Error);
 			return false;
 		}
 		conn->post = new Post(conn,Post::CHUNKED);
@@ -215,7 +222,7 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 	}
 	else
 	{
-		conn->response = new Response(411);
+		conn->response = new Response(411 , Error);
 		return false;
 	}
 	
