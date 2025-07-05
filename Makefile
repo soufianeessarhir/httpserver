@@ -1,9 +1,10 @@
 Name=webserv
-CXX=c++ -g -fsanitize=address 
+CXX=c++ -g  #-fsanitize=address 
 CXXFLAGS=-Wall -Wextra -Werror -std=c++98 
 
 SRCS= webserv.cpp src/HttpServer.cpp  src/Lexer.cpp  src/Parser.cpp\
-	 src/Connection.cpp src/Request.cpp src/Response.cpp
+	  src/Connection.cpp src/Request.cpp src/Response.cpp\
+	  src/GetMethodResponse.cpp src/ProcessRequest.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 
