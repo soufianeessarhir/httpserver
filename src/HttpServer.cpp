@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/02 10:23:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/04 20:26:00 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -298,7 +298,7 @@ void        HttpServer::HandlOutgoingData(int fd)
 	// 	std::cout << "3\n";
 	// 	return;
     // }
-	std::cout<< conn->response->GET<<std::endl;
+	// std::cout<< conn->response->GET<<std::endl;
     conn->response->GET = new GetMethodResponse(conn->request->GetStatus(), "/home/eaboudi/Desktop/httpserver/src/index.html");
     conn->response->GET->SendStatusLine(conn);
     conn->response->GET->SendHeaders(conn);

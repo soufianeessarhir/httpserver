@@ -66,9 +66,10 @@ private:
     void ProcessMultiPart();
     bool ExtractAndValidateBoundry();
     void GenerateUploadfile(const std::string &ext);
-    void WriteDataToFile(size_t size);
 	bool ProcessMultiPartHeaders(std::string data);
     bool ConfigureMultipart();
+    void WriteDataToFile(size_t size);
+    void SetUpFilePart();
 
 private:
       static std::map<std::string, std::string> createMimeExtMap() {
