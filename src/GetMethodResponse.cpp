@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   GetMethodResponse.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/05 12:19:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/05 16:50:04 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "GetMethodResponse.hpp"
 #include <sstream>
+#include <sys/stat.h>
 
 std::map<std::string, std::string> CreateMimeTypes()
 {
@@ -79,10 +80,10 @@ GetMethodResponse::GetMethodResponse(int statusCode, std::string filePath)
     : StatusCode(statusCode), FilePath(filePath), IsBinaryFile(false)
 {
     std::cout << "constructor status code: " << statusCode << std::endl;
-    SetStatusLine();
     SetContentType();
     SetBody();
     SetHeaders();
+    SetStatusLine();
 }
 
 void GetMethodResponse::SetStatusLine()
@@ -100,32 +101,46 @@ void GetMethodResponse::SetStatusLine()
 
 void    GetMethodResponse::SetBody()
 {
-    // if [sofyan] didn't check all of the cases of file reading. I'll do it here
-    std::ifstream InFile;
-    if (IsBinaryFile)
-        InFile.open(FilePath.c_str(), std::ios::binary);
-    else
-        InFile.open(FilePath.c_str());
-    std::cout << "Opening file: " << FilePath << std::endl;
-    if (!InFile.good())
+    struct stat FileState;
+    if (stat(FilePath.c_str(), &FileState) == -1)
     {
         StatusCode = 404;
         Body.clear();
         return;
     }
-    InFile.seekg(0, std::ios::end);
-    std::streampos fileSize = InFile.tellg();
-    if (fileSize == std::streampos(-1))
+    if (!S_ISREG(FileState.st_mode))
     {
-        // Handle error - file size couldn't be determined
-        StatusCode = 500;
+        StatusCode = 403; // Forbidden if not a regular file
+        Body.clear();
         return;
     }
-    InFile.seekg(0, std::ios::beg);
-    Body.assign(std::istreambuf_iterator<char>(InFile),
-            std::istreambuf_iterator<char>());
+    
+    std::ifstream InFile;
+    std::ios_base::openmode FileMode(std::ios::in);
+    if (IsBinaryFile)
+        FileMode |= std::ios::binary;
+    InFile.open(FilePath.c_str(), FileMode);
+    if (!InFile.is_open())
+    {
+        StatusCode = 403;
+        Body.clear();
+        return;
+    }
+    ContentLength = FileState.st_size;
+    Body.resize(ContentLength);
+    if (ContentLength > 0)
+    {
+        InFile.read(&Body[0], ContentLength);
+        if (!InFile)
+        {
+            StatusCode = 500;
+            Body.clear();
+            return;
+        }
+    }
+    else
+        Body.clear();
     InFile.close();
-    ContentLength = Body.size();
     StatusCode = 200;
 }
 
@@ -252,7 +267,7 @@ void GetMethodResponse::SendBody(Connection *Conn)
 
 void    excuteGetMethod(Connection *conn)
 {
-    conn->response->GET = new GetMethodResponse(200, "/home/eaboudi/Desktop/Mywebser/src/index.html");
+    conn->response->GET = new GetMethodResponse(conn->request->GetStatus(), conn->request->GetUri());
     std::cout << "Status Code: " << conn->response->GET->GetStatusCode() << std::endl;
     conn->response->GET->SetStatusLine();
     conn->response->GET->SendStatusLine(conn);
