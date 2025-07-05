@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 13:58:16 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/05 16:25:12 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,11 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 		{
 			conn->buffer.erase(0,end + 2);
 			conn->state = Connection::READING_HEADERS;
-			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
+			// std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 		}
 		else
 		{
-			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
+			// std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 			conn->response =  new Response(conn->request->GetStatus(), Error);
 			conn->state =  Connection::SENDING_RESPONSE;
 		}
@@ -128,7 +128,12 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
-		ProcessPostRequest(conn);
+		if (!ProcessPostRequest(conn))
+		{
+			conn->response = new Response(400, Error);
+			conn->state = Connection::SENDING_RESPONSE;
+			return;
+		}
 	}
 	else if (conn->request->GetMethod() == "GET")
 	{
@@ -195,7 +200,7 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 		return false;
 	}
 	
-	if (!conn->location->upload_set || !conn->location->upload)
+	if (!conn->location->upload)
 	{
 		//unothorized
 		return false;
@@ -258,7 +263,7 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 		//maybe i should merge them
 		conn->location->cgi = conn->server->cgi;
 	}
-	if (!conn->location->upload_set && conn->server->upload_set)
+	if (!conn->location->upload && conn->server->upload)
 	{
 		conn->location->upload = conn->server->upload;
 		conn->location->upload_store = conn->server->upload_store;

@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 12:23:35 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/05 15:05:10 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -196,7 +196,8 @@ void		HttpServer::HandlIncommingData(int fd)
 				ProcessRequest(conn);
 				if (conn->request->ExpectBody())
 				{
-					conn->state = Connection::READING_BODY;
+					if (conn->state == Connection::PROCESSING)
+						conn->state = Connection::READING_BODY;
 					continue_processing = true;
 				}
 				else
