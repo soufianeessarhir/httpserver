@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/04 17:09:39 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/05 15:15:36 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,19 +127,24 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	}
 	else if (conn->request->GetMethod() == "GET")
 	{
-		std::cout << "GET request received1" << std::endl;
-		conn->response->SetMethod(GET);
+		if (conn->location->methods.find("GET") == conn->location->methods.end())
+		{
+			conn->response = new Response(405, Error);
+			conn->state = Connection::SENDING_RESPONSE;
+			return;
+		}
+		conn->response = new Response(200, GET);
 	}
 	else if (conn->request->GetMethod() == "DELETE")
 	{
 		conn->response->SetMethod(DELETE);
 	}
-	// else
-	// {
-	// 	conn->response = new Response(501, Error);
-	// 	conn->state = Connection::SENDING_RESPONSE;
-	// 	return;
-	// }
+	else
+	{
+		conn->response = new Response(501, Error);
+		conn->state = Connection::SENDING_RESPONSE;
+		return;
+	}
 }
 bool HttpServer::MatchLocation(Connection *conn)
 {
