@@ -1,29 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   GetMethodResponse.hpp                              :+:      :+:    :+:   */
+/*   BaseResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/05 16:48:21 by eaboudi          ###   ########.fr       */
+/*   Created: 2025/06/11 11:40:30 by eaboudi           #+#    #+#             */
+/*   Updated: 2025/06/14 10:35:56 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef GETMETHODRESPONSE_HPP
-#define GETMETHODRESPONSE_HPP
+#ifndef BASE_RESPONSE_HPP
+#define BASE_RESPONSE_HPP
 
-
-// #include "Response.hpp"
-#include <fstream>
 
 #include "Connection.hpp"
 
 
 class Connection;
-class GetMethodResponse
+
+class BaseResponse
 {
-    private:
+    protected:
         int             StatusCode;
         std::string     StatusLine;
         std::string     Body;
@@ -32,16 +30,15 @@ class GetMethodResponse
         std::map<std::string, std::string> Headers;
         static const std::map<int, std::string> ErrorPhrase;
         ssize_t       BytesSent;
-        std::string     FilePath;
-        static const    std::map<std::string, std::string>  MimeTypes;
-        bool            IsBinaryFile;
+
     public:
-        GetMethodResponse(int statusCode, std::string filePath);
-        ~GetMethodResponse();
-    
-        void SetHeaders();
-        void SetBody();
-        void SetContentType();
+        BaseResponse();
+        BaseResponse(int statusCode);
+        virtual ~BaseResponse();
+
+        virtual void SetHeaders() = 0;
+        virtual void SetBody() = 0;
+        virtual void SetContentType() = 0;
         void SetStatusLine();
 
         const std::string& GetBody() const;
@@ -53,8 +50,6 @@ class GetMethodResponse
         void    SendBody(Connection *Conn);
 };
 
-
-std::map<std::string, std::string> CreateMimeTypes();
-void    excuteGetMethod(Connection *conn);
+std::map<int, std::string> createErrorPhrase();
 
 #endif

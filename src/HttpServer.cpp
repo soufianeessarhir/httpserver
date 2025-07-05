@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/04 17:58:22 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/05 16:50:39 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -174,7 +174,7 @@ void		HttpServer::HandlIncommingData(int fd)
 					SetSocketForWrite(conn);
 				}
 				ProcessRequestLine(conn);
-				if (conn->state == Connection::READING_HEADERS)
+				if (conn->state == Connection::READING_HEADERS  || conn->state == Connection::SENDING_RESPONSE)
 					continue_processing = true;
 				break;
 				
@@ -204,7 +204,10 @@ void		HttpServer::HandlIncommingData(int fd)
 				break;
 				
 			case Connection::READING_BODY:
-			
+				if(conn->post->transfer_type == Post::CHUNKED)
+					conn->post->ProcessChunck();
+				else
+					conn->post->ProcessContentLength();
 				break;
 				
 			case Connection::SENDING_RESPONSE:
@@ -222,7 +225,7 @@ void		HttpServer::run()
 {
 	for(;;)
 	{
-		int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, 500);
+		int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, 5000);
 		if (event_count == -1)
 		    throw HttpServerError("Epoll wait failed");
 		for (int i = 0; i < event_count; ++i)
