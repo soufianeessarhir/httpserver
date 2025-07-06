@@ -381,7 +381,7 @@ void Post::GenerateUploadfile(const std::string &ext)
     gettimeofday(&tm,NULL);
     oss << tm.tv_sec << &tm << tm.tv_usec << &oss<<ext;
     filename = conn->location->upload_store + oss.str();
-    output_file.open(filename.c_str(),std::ios::binary | std::ios::app);
+    output_file.open(filename.c_str(),std::ios::binary | std::ios::app |  std::ios::out);
    
 }
 Post::~Post()
