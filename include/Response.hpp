@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:31:30 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 16:49:29 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/06 12:02:24 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ class Response
         ~Response();
         GetMethodResponse *GET;
         int GetStatusCode() const;
-        int GetMethod() const;
+        Methods GetMethod() const;
         void    SetMethod(Methods method);
         void    ErrorResponse(Connection *Conn);
         static const std::map<int, std::string> ErrorPhrase;
@@ -52,6 +52,7 @@ class Response
         Methods Method;
         int StatusCode;
         std::string StatusLineError;
+        bool UseCgi;
     
 };
 
