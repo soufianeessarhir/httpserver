@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 16:58:31 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/06 15:38:27 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -240,13 +240,9 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 	// 	return;
 	// }
 	if (conn->location->root.empty())
-	{
 		conn->location->root = conn->server->root;
-	}
 	if (conn->location->index.empty() && !conn->server->index.empty())
-	{
 		conn->location->index = conn->server->index;
-	}
 	if (!conn->location->has_redirect && conn->server->has_redirect)
 	{
 		conn->location->has_redirect = conn->server->has_redirect;
@@ -269,11 +265,9 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 		conn->location->upload_store = conn->server->upload_store;
 	}
 	if (conn->location->error_pages.empty() && !conn->server->error_pages.empty())
-	{
 		conn->location->error_pages = conn->server->error_pages;
-	}
 	if (conn->location->max_body_size == 0 && conn->server->max_body_size > 0)
-	{
 		conn->location->max_body_size = conn->server->max_body_size;
-	}
+	if (*(--conn->location->upload_store.end()) != '/')
+		conn->location->upload_store.push_back('/');
 }

@@ -3,7 +3,7 @@
 
 const std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap();
 
-Post::Post(Connection *conn , TransferType type):conn(conn)
+Post::Post(Connection *conn , TransferType type):conn(conn),is_multipart(false)
 {
     if (type ==  CONTENT_LENGTH)
     {
@@ -45,17 +45,6 @@ Post::Post(Connection *conn , TransferType type):conn(conn)
 
 }
 
-void Post::WriteDataToFile(size_t size)
-{
-    if (!is_multipart)
-    {
-        return ;
-    }
-    else
-    {
-       output_file.write(conn->buffer.data(),size);
-    }
-}
 
 bool Post::ExtractAndValidateBoundry()
 {
@@ -148,16 +137,6 @@ void Post::ReadChunkData()
     }
 }
 
-void Post::GenerateUploadfile(const std::string &ext)
-{
-    struct timeval tm;
-    std::stringstream oss; 
-    gettimeofday(&tm,NULL);
-    oss << tm.tv_sec << &tm << tm.tv_usec << &oss<<ext;
-    filename = conn->location->upload_store + oss.str();
-	output_file.open(filename.c_str());
-   
-}
 void Post::ReadTrailerHeaders()
 {
     // should be protected for size limits
@@ -167,7 +146,7 @@ void Post::ReadTrailerHeaders()
         conn->buffer.erase(0,CRLF + 2);
         chunk_state = Post::CHUNK_COMPLETE;
     }
-
+    
 }
 
 void Post::ProcessChunck()
@@ -179,24 +158,24 @@ void Post::ProcessChunck()
         switch (chunk_state)
         {
             case Post::READING_CHUNK_SIZE:
-                ReadChunkSize();
-                contunue = chunk_state != Post::READING_CHUNK_SIZE;
-                break;
+            ReadChunkSize();
+            contunue = chunk_state != Post::READING_CHUNK_SIZE;
+            break;
             case Post::READING_CHUNK_DATA:
-                ReadChunkData();
-                contunue = chunk_state != Post::Post::READING_CHUNK_DATA;
-                break;
+            ReadChunkData();
+            contunue = chunk_state != Post::Post::READING_CHUNK_DATA;
+            break;
             case Post::READING_TRAILER_HEADERS:
-                ReadTrailerHeaders();
-                contunue = chunk_state != Post::READING_TRAILER_HEADERS;
-                break;
+            ReadTrailerHeaders();
+            contunue = chunk_state != Post::READING_TRAILER_HEADERS;
+            break;
             case Post::CHUNK_COMPLETE:
-                conn->state = Connection::SENDING_RESPONSE;
-                break;
+            conn->state = Connection::SENDING_RESPONSE;
+            break;
             case Post::CHUNK_ERROR:
-                //the status code should be set here
-                conn->state = Connection::SENDING_RESPONSE;
-                break;
+            //the status code should be set here
+            conn->state = Connection::SENDING_RESPONSE;
+            break;
         }
     }
 }
@@ -272,13 +251,13 @@ void Post::ProcessMultiPart()
                         break;
                     }
                     if (is_file_upload)
-                        parts.push_back(MultiPart(filename));
+                    parts.push_back(MultiPart(filename));
                     conn->buffer.erase(0 , CRLFCRLF + 4);
                     multipart_state = Post::READING_PART_DATA;
                     contunue = true;
                 }
             }
-                break;
+            break;
             case READING_PART_DATA:
             {
                 size_t del =  conn->buffer.find(delimiter);
@@ -292,14 +271,14 @@ void Post::ProcessMultiPart()
                 WriteDataToFile(conn->buffer.size());
                 conn->buffer.clear();
             }
-                break;
+            break;
             case MULTIPART_COMPLETE:
-                /* code */
-                break;
+            /* code */
+            break;
             case MULTIPART_ERROR:
-                /* code */
-                break;
-            }
+            /* code */
+            break;
+        }
     }
 }
 void Post::ProcessContentLength()
@@ -314,13 +293,6 @@ void Post::ProcessContentLength()
     content_bytes_read += bytes_to_read;
 }
 
-Post::~Post()
-{
-    if (output_file.is_open())
-    {
-        output_file.close();
-    }
-}
 
 
 
@@ -389,4 +361,33 @@ bool Post::ConfigureMultipart()
     else
         is_file_upload = true;
     return true;
+}
+void Post::WriteDataToFile(size_t size)
+{
+    if (is_multipart)
+    {
+        return ;
+    }
+    else
+    {
+       output_file.write(conn->buffer.data(),size);
+    }
+}
+
+void Post::GenerateUploadfile(const std::string &ext)
+{
+    struct timeval tm;
+    std::stringstream oss; 
+    gettimeofday(&tm,NULL);
+    oss << tm.tv_sec << &tm << tm.tv_usec << &oss<<ext;
+    filename = conn->location->upload_store + oss.str();
+    output_file.open(filename.c_str(),std::ios::binary | std::ios::app);
+   
+}
+Post::~Post()
+{
+    if (output_file.is_open())
+    {
+        output_file.close();
+    }
 }
