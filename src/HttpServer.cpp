@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 16:58:10 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/06 20:42:19 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,13 +135,19 @@ void		HttpServer::HandleNewConnection(int fd)
 			else
 				throw HttpServerError("Accept failed");
 		}
-		SetSocketToNonblocking(client_fd);
 		Connection *conn = new Connection(client_fd);
+		struct sockaddr_in *s = (struct sockaddr_in *)&client_sock;
+		char ipstr[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
+		conn->ip = ipstr; 
+		conn->port = ntohs(s->sin_port);
+		std::cout << conn->port << " "<< conn->ip<< std::endl;
+		SetSocketToNonblocking(client_fd);
 		clients[client_fd] = conn;
 		ev.events = EPOLLIN | EPOLLET;
 		ev.data.fd = client_fd;
 		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
-			throw HttpServerError("Epoll control failed");
+		throw HttpServerError("Epoll control failed");
 	}
 }
 
