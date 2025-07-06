@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 16:51:55 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/06 11:14:49 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,7 @@ int Response::GetStatusCode() const
     return StatusCode;
 }
 
-int Response::GetMethod() const
+Methods Response::GetMethod() const
 {
     return Method;
 }
