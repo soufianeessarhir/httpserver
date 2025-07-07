@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/06 10:09:23 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/07 09:54:50 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 #include "Response.hpp"
 #include "ConfigData.hpp"
 #include "Post.hpp"
+#include <string>
+#include <map>
 
 class Request;
 class Response;
@@ -48,6 +50,8 @@ public:
     std::string     buffer;
     __ssize_t       BytesSent;
     time_t          LastAct;
+    std::string     ip;
+    int     port;
 };
 
 #endif
