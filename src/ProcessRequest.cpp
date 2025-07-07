@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 16:51:30 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/07 08:06:46 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,11 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 		{
 			conn->buffer.erase(0,end + 2);
 			conn->state = Connection::READING_HEADERS;
-			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
+			// std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 		}
 		else
 		{
-			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
+			// std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 			conn->response =  new Response(conn->request->GetStatus(), Error);
 			conn->state =  Connection::SENDING_RESPONSE;
 		}
@@ -128,10 +128,21 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
-		ProcessPostRequest(conn);
+		if (!ProcessPostRequest(conn))
+		{
+			conn->response = new Response(400, Error);
+			conn->state = Connection::SENDING_RESPONSE;
+			return;
+		}
 	}
 	else if (conn->request->GetMethod() == "GET")
 	{
+		if (conn->location->methods.find("GET") == conn->location->methods.end())
+		{
+			conn->response = new Response(405, Error);
+			conn->state = Connection::SENDING_RESPONSE;
+			return;
+		}
 		conn->response = new Response(200, GET);
 	}
 	else if (conn->request->GetMethod() == "DELETE")
@@ -195,7 +206,7 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 		return false;
 	}
 	
-	if (!conn->location->upload_set || !conn->location->upload)
+	if (!conn->location->upload)
 	{
 		//unothorized
 		return false;
@@ -235,13 +246,9 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 	// 	return;
 	// }
 	if (conn->location->root.empty())
-	{
 		conn->location->root = conn->server->root;
-	}
 	if (conn->location->index.empty() && !conn->server->index.empty())
-	{
 		conn->location->index = conn->server->index;
-	}
 	if (!conn->location->has_redirect && conn->server->has_redirect)
 	{
 		conn->location->has_redirect = conn->server->has_redirect;
@@ -258,17 +265,15 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 		//maybe i should merge them
 		conn->location->cgi = conn->server->cgi;
 	}
-	if (!conn->location->upload_set && conn->server->upload_set)
+	if (!conn->location->upload && conn->server->upload)
 	{
 		conn->location->upload = conn->server->upload;
 		conn->location->upload_store = conn->server->upload_store;
 	}
 	if (conn->location->error_pages.empty() && !conn->server->error_pages.empty())
-	{
 		conn->location->error_pages = conn->server->error_pages;
-	}
 	if (conn->location->max_body_size == 0 && conn->server->max_body_size > 0)
-	{
 		conn->location->max_body_size = conn->server->max_body_size;
-	}
+	if (*(--conn->location->upload_store.end()) != '/')
+		conn->location->upload_store.push_back('/');
 }

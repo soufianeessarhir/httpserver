@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 16:51:39 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/05 17:28:29 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ size_t          Request::GetContentLenght()const
 {
     errno = 0;
     char *endptr;
-    std::map<std::string,std::string>::const_iterator it = headers.find("contentlenght");
+    std::map<std::string,std::string>::const_iterator it = headers.find("content-length");
     if (it == headers.end())
         return 0;
     long long val =  std::strtol((*it).second.c_str(),&endptr,10);
