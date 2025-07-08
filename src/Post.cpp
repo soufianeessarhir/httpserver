@@ -306,9 +306,12 @@ void Post::ProcessContentLength()
 	{
         ProcessMultiPart();
 	}
-	WriteDataToFile(bytes_to_read); 
-    conn->buffer.erase(0,bytes_to_read);
-    content_bytes_read += bytes_to_read;
+    else
+    {
+        WriteDataToFile(bytes_to_read); 
+        conn->buffer.erase(0,bytes_to_read);
+        content_bytes_read += bytes_to_read;
+    }
     if (content_bytes_read >= content_length)
     {
         output_file.close();
