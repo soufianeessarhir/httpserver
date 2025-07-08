@@ -42,7 +42,7 @@ Post::Post(Connection *conn , TransferType type):conn(conn),is_multipart(false)
         if (content_type.find("multipart/form-data") != std::string::npos)
         {
             is_multipart = true;
-            multipart_state= Post::READING_PREAMBLE;
+            multipart_state = Post::READING_PREAMBLE;
             if (!ExtractAndValidateBoundry())
             {
                 transfer_type = Post::ERROR;
@@ -68,7 +68,7 @@ bool Post::ExtractAndValidateBoundry()
     size_t BNDR = ct.find("boundary");
     if (BNDR==std::string::npos)
         return false;
-    size_t begin = BNDR + 9;
+    size_t begin = BNDR + 8;
     for (;begin < ct.length() && isspace(ct[begin]);++begin);
     if (ct[begin] != '=')
     return false;
@@ -89,7 +89,7 @@ bool Post::ExtractAndValidateBoundry()
         for (end=begin;end < ct.length()&&
         ct[end] != ' ' && ct[end] != '\t' && 
         ct[end] != ';' && ct[end] != '\r' && ct[end] != '\n';++end );
-        if (end >= ct.length())
+        if (end > ct.length())
             return false;
         boundry = origin.substr(begin, end - begin);
     }
@@ -97,7 +97,7 @@ bool Post::ExtractAndValidateBoundry()
         return false;
     const std::string illegal = "\'()+_,-./:=?";
     for (std::string::iterator it = boundry.begin();it !=  boundry.end();++it)
-        if (!isalnum(*it) && illegal.find(*it)!=std::string::npos)
+        if (!isalnum(*it) && illegal.find(*it) == std::string::npos)
             return false;
     return true;
 }
@@ -262,7 +262,12 @@ void Post::ProcessMultiPart()
                         break;
                     }
                     if (is_file_upload)
-                    parts.push_back(MultiPart(filename));
+                    {
+                        output_file.open(filename.c_str(),std::ios::out | std::ios::app);
+                        parts.push_back(MultiPart(filename));
+                    }
+                    std::cout<<filename<<std::endl;
+
                     conn->buffer.erase(0 , CRLFCRLF + 4);
                     multipart_state = Post::READING_PART_DATA;
                     contunue = true;
@@ -278,12 +283,14 @@ void Post::ProcessMultiPart()
                     conn->buffer.erase(0,del + delimiter.length() - 1);
                     multipart_state =  Post::READING_BOUNDARY;
                     contunue = true;
+                    break;
                 }
                 WriteDataToFile(conn->buffer.size());
                 conn->buffer.clear();
             }
             break;
             case MULTIPART_COMPLETE:
+                output_file.close();
             /* code */
             break;
             case MULTIPART_ERROR:
@@ -362,10 +369,11 @@ bool Post::ConfigureMultipart()
     {
         return false;
     }
-    size_t fname = content_type.find("tmp=\"");
+    size_t fname = content_type.find("filename=\"");
     if (fname != std::string::npos)
     {
-        size_t next_q = content_type.find(fname,'"');
+        fname += 10;
+        size_t next_q = content_type.find('"' ,fname);
         if (next_q == std::string::npos)
             return false;
         tmp =  content_type.substr(fname,next_q - fname);
@@ -380,14 +388,14 @@ bool Post::ConfigureMultipart()
 }
 void Post::WriteDataToFile(size_t size)
 {
-    if (is_multipart)
-    {
-        return ;
-    }
-    else
-    {
+    // if (is_multipart)
+    // {
+    //     return ;
+    // }
+    // else
+    // {
        output_file.write(conn->buffer.data(),size);
-    }
+    // }
 }
 
 void Post::GenerateUploadfile(const std::string &ext)
