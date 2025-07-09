@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/06 20:42:54 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/08 22:06:44 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ public:
     __ssize_t       BytesSent;
     time_t          LastAct;
     std::string     ip;
-    int     port;
+    int             port;
 };
 
 #endif
