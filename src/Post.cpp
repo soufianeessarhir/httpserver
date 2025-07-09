@@ -266,7 +266,7 @@ void Post::ProcessMultiPart()
                         output_file.open(filename.c_str(),std::ios::out | std::ios::app);
                         parts.push_back(MultiPart(filename));
                     }
-                    std::cout<<filename<<std::endl;
+                    // std::cout<<filename<<std::endl;
 
                     conn->buffer.erase(0 , CRLFCRLF + 4);
                     multipart_state = Post::READING_PART_DATA;
