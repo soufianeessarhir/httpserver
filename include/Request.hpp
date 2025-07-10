@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 08:51:22 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/10 15:31:04 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,11 +66,7 @@ public:
 
     void            RemoveFromOutputpath(std::string &);
 
-    void            CheckCgiExist(); //add by eaboudi
 
-    bool            UseCgi; // added by eaboudi
-
-    CGI             *CgiObj; // added by eaboudi
 
     
 
@@ -78,6 +74,8 @@ public:
 
     
     std::string     GetUri();
+
+    void            SetUri(std::string NewUri);
 
     const char*     GetBody()const;
     

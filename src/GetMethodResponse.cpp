@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/08 17:39:09 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/10 15:35:15 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -263,21 +263,13 @@ void GetMethodResponse::SendBody(Connection *Conn)
         BytesSent = 0;
 }
 
-std::string    ParsPath(std::string Path)
-{
-    std::string Result;
-    
-    size_t Pos(Path.find('?'));
-    if (Pos != Path.npos)
-        Result = Path.substr(0, Pos);
-    return Result;
-    
-}
 void    excuteGetMethod(Connection *conn)
 {
     std::string Path = conn->request->GetUri();
-    if (Path.find('?') != Path.npos)
-        Path = ParsPath(conn->request->GetUri());
+    // if (conn->request->UseCgi == true)
+    // {
+    //     conn->request->CgiObj->BuildEnv();
+    // }
     conn->response->GET = new GetMethodResponse(conn->request->GetStatus(), Path);
     conn->response->GET->SetStatusLine();
     conn->response->GET->SendStatusLine(conn);
