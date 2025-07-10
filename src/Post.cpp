@@ -5,16 +5,29 @@ const std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap
 
 Post::Post(Connection *conn , TransferType type):conn(conn),is_multipart(false)
 {
+    std::string content_type = conn->request->GetHeader("content-type");
     if (type ==  CONTENT_LENGTH)
     {
         content_length = conn->request->GetContentLenght();
         content_bytes_read = 0;
-        std::string media_type = conn->request->GetHeader("content-type");
-        size_t semi_colon = media_type.find(';');
+        if (content_type.find("multipart/form-data") != std::string::npos)
+        {
+            is_multipart = true;
+            multipart_state= Post::READING_PREAMBLE;
+            if (!ExtractAndValidateBoundry())
+            {
+                transfer_type = Post::ERROR;
+            }
+            return;
+        }
+        std::string media_type;
+        size_t semi_colon = content_type.find(';');
         if (semi_colon != std::string::npos)
         {
-            media_type = media_type.substr(0,semi_colon);
+            media_type = content_type.substr(0,semi_colon);
         }
+        else 
+            media_type = content_type;
         std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
         if (it == mime_ext.end())
         {
@@ -26,21 +39,19 @@ Post::Post(Connection *conn , TransferType type):conn(conn),is_multipart(false)
     }
     else
     {
+        if (content_type.find("multipart/form-data") != std::string::npos)
+        {
+            is_multipart = true;
+            multipart_state = Post::READING_PREAMBLE;
+            if (!ExtractAndValidateBoundry())
+            {
+                transfer_type = Post::ERROR;
+            }
+            return;
+        }
         chunk_state = READING_CHUNK_SIZE;
         chunk_bytes_read = 0;
     }
-    std::string content_type = conn->request->GetHeader("content-Type");
-    if (content_type.find("multipart/form-data") != std::string::npos)
-    {
-        is_multipart = true;
-        multipart_state= Post::READING_PREAMBLE;
-        if (!ExtractAndValidateBoundry())
-        {
-            transfer_type = Post::ERROR;
-        }
-        
-    }
-     
     max_body_size = conn->location->max_body_size;
 
 }
@@ -57,7 +68,7 @@ bool Post::ExtractAndValidateBoundry()
     size_t BNDR = ct.find("boundary");
     if (BNDR==std::string::npos)
         return false;
-    size_t begin = BNDR + 9;
+    size_t begin = BNDR + 8;
     for (;begin < ct.length() && isspace(ct[begin]);++begin);
     if (ct[begin] != '=')
     return false;
@@ -78,7 +89,7 @@ bool Post::ExtractAndValidateBoundry()
         for (end=begin;end < ct.length()&&
         ct[end] != ' ' && ct[end] != '\t' && 
         ct[end] != ';' && ct[end] != '\r' && ct[end] != '\n';++end );
-        if (end >= ct.length())
+        if (end > ct.length())
             return false;
         boundry = origin.substr(begin, end - begin);
     }
@@ -86,7 +97,7 @@ bool Post::ExtractAndValidateBoundry()
         return false;
     const std::string illegal = "\'()+_,-./:=?";
     for (std::string::iterator it = boundry.begin();it !=  boundry.end();++it)
-        if (!isalnum(*it) && illegal.find(*it)!=std::string::npos)
+        if (!isalnum(*it) && illegal.find(*it) == std::string::npos)
             return false;
     return true;
 }
@@ -251,7 +262,12 @@ void Post::ProcessMultiPart()
                         break;
                     }
                     if (is_file_upload)
-                    parts.push_back(MultiPart(filename));
+                    {
+                        output_file.open(filename.c_str(),std::ios::out | std::ios::app);
+                        parts.push_back(MultiPart(filename));
+                    }
+                    // std::cout<<filename<<std::endl;
+
                     conn->buffer.erase(0 , CRLFCRLF + 4);
                     multipart_state = Post::READING_PART_DATA;
                     contunue = true;
@@ -267,12 +283,14 @@ void Post::ProcessMultiPart()
                     conn->buffer.erase(0,del + delimiter.length() - 1);
                     multipart_state =  Post::READING_BOUNDARY;
                     contunue = true;
+                    break;
                 }
                 WriteDataToFile(conn->buffer.size());
                 conn->buffer.clear();
             }
             break;
             case MULTIPART_COMPLETE:
+                output_file.close();
             /* code */
             break;
             case MULTIPART_ERROR:
@@ -288,9 +306,17 @@ void Post::ProcessContentLength()
 	{
         ProcessMultiPart();
 	}
-	WriteDataToFile(bytes_to_read); 
-    conn->buffer.erase(0,bytes_to_read);
-    content_bytes_read += bytes_to_read;
+    else
+    {
+        WriteDataToFile(bytes_to_read); 
+        conn->buffer.erase(0,bytes_to_read);
+        content_bytes_read += bytes_to_read;
+    }
+    if (content_bytes_read >= content_length)
+    {
+        output_file.close();
+        conn->state = Connection::SENDING_RESPONSE;
+    }
 }
 
 
@@ -346,10 +372,11 @@ bool Post::ConfigureMultipart()
     {
         return false;
     }
-    size_t fname = content_type.find("tmp=\"");
+    size_t fname = content_type.find("filename=\"");
     if (fname != std::string::npos)
     {
-        size_t next_q = content_type.find(fname,'"');
+        fname += 10;
+        size_t next_q = content_type.find('"' ,fname);
         if (next_q == std::string::npos)
             return false;
         tmp =  content_type.substr(fname,next_q - fname);
@@ -364,14 +391,14 @@ bool Post::ConfigureMultipart()
 }
 void Post::WriteDataToFile(size_t size)
 {
-    if (is_multipart)
-    {
-        return ;
-    }
-    else
-    {
+    // if (is_multipart)
+    // {
+    //     return ;
+    // }
+    // else
+    // {
        output_file.write(conn->buffer.data(),size);
-    }
+    // }
 }
 
 void Post::GenerateUploadfile(const std::string &ext)
@@ -381,7 +408,7 @@ void Post::GenerateUploadfile(const std::string &ext)
     gettimeofday(&tm,NULL);
     oss << tm.tv_sec << &tm << tm.tv_usec << &oss<<ext;
     filename = conn->location->upload_store + oss.str();
-    output_file.open(filename.c_str(),std::ios::binary | std::ios::app);
+    output_file.open(filename.c_str(),std::ios::binary | std::ios::app |  std::ios::out);
    
 }
 Post::~Post()
