@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/06 20:42:19 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/08 14:30:51 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,9 +139,8 @@ void		HttpServer::HandleNewConnection(int fd)
 		struct sockaddr_in *s = (struct sockaddr_in *)&client_sock;
 		char ipstr[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
-		conn->ip = ipstr; 
+		conn->ip = ipstr;
 		conn->port = ntohs(s->sin_port);
-		std::cout << conn->port << " "<< conn->ip<< std::endl;
 		SetSocketToNonblocking(client_fd);
 		clients[client_fd] = conn;
 		ev.events = EPOLLIN | EPOLLET;
@@ -288,7 +287,6 @@ void		HttpServer::ProcessClientsRoundRobin()
 		}
 		else if (client_ev.events & EPOLLOUT)
 		{
-			std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 			HandlOutgoingData(client_ev.data.fd);
 		}
 		if (conn->state != Connection::COMPLETE)
@@ -301,15 +299,14 @@ void		HttpServer::ProcessClientsRoundRobin()
 void        HttpServer::HandlOutgoingData(int fd)
 {
     Connection *conn = clients[fd];
-    // if (conn->response->GetMethod() == Error)
-	// {
-	// 	conn->response->ErrorResponse(conn);
-	// 	conn->state = Connection::COMPLETE;
-	// 	return;
-	// }
-	if (conn->response->GetMethod() != GET)
+    if (conn->response->GetMethod() == Error)
 	{
-		std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
+		conn->response->ErrorResponse(conn);
+		conn->state = Connection::COMPLETE;
+		return;
+	}
+	if (conn->response->GetMethod() == GET)
+	{
 		excuteGetMethod(conn);
 	}
 	SetSocketForRead(conn);
@@ -331,3 +328,4 @@ HttpServer::~HttpServer()
 		close(epoll_fd);
 	}
 }
+

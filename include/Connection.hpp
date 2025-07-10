@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/08 22:06:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/10 11:24:10 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,15 @@
 #include "Response.hpp"
 #include "ConfigData.hpp"
 #include "Post.hpp"
+#include <string>
+#include <map>
 
 class Request;
 class Response;
 class Server;
 class Post;
+
+
 class Connection
 {
 
