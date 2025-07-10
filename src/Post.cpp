@@ -380,13 +380,25 @@ bool Post::ConfigureMultipart()
         if (next_q == std::string::npos)
             return false;
         tmp =  content_type.substr(fname,next_q - fname);
-        //need to prarse the filename
+        if (!CheckFileName(tmp))
+            return false;
         filename += tmp;
     }
     if (tmp.empty())
         is_file_upload = false;
     else
         is_file_upload = true;
+    return true;
+}
+
+bool Post::CheckFileName(std::string &filename)
+{
+    const std::string ilegal="()<>@,;:\\\"/[]?=";
+    for (size_t i = 0; i < ilegal.size();++i)
+    {
+        if (filename.find(ilegal[i]) != std::string::npos)
+            return false;
+    }
     return true;
 }
 void Post::WriteDataToFile(size_t size)
