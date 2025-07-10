@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/10 10:17:01 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/10 11:23:02 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,13 @@
 #define             CGI_HPP
 
 #include <netinet/in.h>
-#include "Connection.hpp"
+// #include "Connection.hpp"
 #include <arpa/inet.h>
 #include <sys/stat.h>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
 
 // class Connection;
 
