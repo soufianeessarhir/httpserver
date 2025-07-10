@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 11:24:10 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/10 15:31:32 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,8 @@ public:
         SENDING_RESPONSE,
         COMPLETE
     };
+    bool            UseCgi; // added by eaboudi
+    CGI             *CgiObj; // added by eaboudi
     
     State           state;
     int             fd;
@@ -55,5 +57,7 @@ public:
     std::string     ip;
     int             port;
 };
+
+void    CheckCgiExist(Connection *conn);
 
 #endif
