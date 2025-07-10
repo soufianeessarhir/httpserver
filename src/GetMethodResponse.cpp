@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/05 16:50:04 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/08 17:39:09 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,6 @@ void    GetMethodResponse::SetContentType()
 GetMethodResponse::GetMethodResponse(int statusCode, std::string filePath)
     : StatusCode(statusCode), FilePath(filePath), IsBinaryFile(false)
 {
-    std::cout << "constructor status code: " << statusCode << std::endl;
     SetContentType();
     SetBody();
     SetHeaders();
@@ -88,7 +87,6 @@ GetMethodResponse::GetMethodResponse(int statusCode, std::string filePath)
 
 void GetMethodResponse::SetStatusLine()
 {
-    std::cout << "SetStatusLine called with StatusCode: " << StatusCode << std::endl;
     std::stringstream BuildStatusLine;
     BuildStatusLine << "HTTP/1.1 ";
     std::map<int, std::string>::const_iterator it = ErrorPhrase.find(StatusCode);
@@ -265,10 +263,22 @@ void GetMethodResponse::SendBody(Connection *Conn)
         BytesSent = 0;
 }
 
+std::string    ParsPath(std::string Path)
+{
+    std::string Result;
+    
+    size_t Pos(Path.find('?'));
+    if (Pos != Path.npos)
+        Result = Path.substr(0, Pos);
+    return Result;
+    
+}
 void    excuteGetMethod(Connection *conn)
 {
-    conn->response->GET = new GetMethodResponse(conn->request->GetStatus(), conn->request->GetUri());
-    std::cout << "Status Code: " << conn->response->GET->GetStatusCode() << std::endl;
+    std::string Path = conn->request->GetUri();
+    if (Path.find('?') != Path.npos)
+        Path = ParsPath(conn->request->GetUri());
+    conn->response->GET = new GetMethodResponse(conn->request->GetStatus(), Path);
     conn->response->GET->SetStatusLine();
     conn->response->GET->SendStatusLine(conn);
     conn->response->GET->SendHeaders(conn);

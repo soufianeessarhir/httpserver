@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/07 09:54:50 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/09 09:24:40 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@ class Request;
 class Response;
 class Server;
 class Post;
+
+
 class Connection
 {
 
@@ -51,7 +53,7 @@ public:
     __ssize_t       BytesSent;
     time_t          LastAct;
     std::string     ip;
-    int     port;
+    int             port;
 };
 
 #endif
