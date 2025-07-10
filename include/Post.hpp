@@ -69,7 +69,7 @@ private:
 	bool ProcessMultiPartHeaders(std::string data);
     bool ConfigureMultipart();
     void WriteDataToFile(size_t size);
-    void SetUpFilePart();
+    bool CheckFileName(std::string &);
 
 private:
       static std::map<std::string, std::string> createMimeExtMap() {
