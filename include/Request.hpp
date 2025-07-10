@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 16:53:01 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/10 08:51:22 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,9 @@
 
 #include            <iostream>
 
+#include            "CGI.hpp" // added by eaboudi
 
+#define CGiDir "/home/eaboudi/Desktop/httpserver/bin" // added by eaboudi
 class Request
 {
 
@@ -63,6 +65,14 @@ public:
     void            NormalizePath();
 
     void            RemoveFromOutputpath(std::string &);
+
+    void            CheckCgiExist(); //add by eaboudi
+
+    bool            UseCgi; // added by eaboudi
+
+    CGI             *CgiObj; // added by eaboudi
+
+    
 
 
 
