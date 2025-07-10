@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/07 08:02:29 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/08 14:30:51 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -299,15 +299,14 @@ void		HttpServer::ProcessClientsRoundRobin()
 void        HttpServer::HandlOutgoingData(int fd)
 {
     Connection *conn = clients[fd];
-    // if (conn->response->GetMethod() == Error)
-	// {
-	// 	conn->response->ErrorResponse(conn);
-	// 	conn->state = Connection::COMPLETE;
-	// 	return;
-	// }
-	if (conn->response->GetMethod() != GET)
+    if (conn->response->GetMethod() == Error)
 	{
-		std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
+		conn->response->ErrorResponse(conn);
+		conn->state = Connection::COMPLETE;
+		return;
+	}
+	if (conn->response->GetMethod() == GET)
+	{
 		excuteGetMethod(conn);
 	}
 	SetSocketForRead(conn);

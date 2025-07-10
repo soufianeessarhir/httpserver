@@ -1,0 +1,7 @@
+Content-Type: text/plain
+
+=== Simple CGI Test ===
+QUERY_STRING: Name=eaboudi
+REQUEST_METHOD: GET
+REMOTE_ADDR: 198.124.0.0
+SERVER_PROTOCOL: HTTP/1.1

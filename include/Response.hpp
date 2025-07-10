@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:31:30 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/06 12:02:24 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/08 22:05:49 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,11 +48,12 @@ class Response
         void    SetMethod(Methods method);
         void    ErrorResponse(Connection *Conn);
         static const std::map<int, std::string> ErrorPhrase;
+        void    CheckCgiExist();
     private:
         Methods Method;
         int StatusCode;
         std::string StatusLineError;
-        bool UseCgi;
+        
     
 };
 

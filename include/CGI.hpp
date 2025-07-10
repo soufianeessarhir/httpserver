@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/07 09:57:12 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/10 10:17:01 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,15 +16,25 @@
 #include <netinet/in.h>
 #include "Connection.hpp"
 #include <arpa/inet.h>
+#include <sys/stat.h>
 
-class Connection;
+// class Connection;
+
+typedef struct  s_ExecuteCgiParams
+{
+    int Child;
+    int Pipe[2];
+    int TmpFd;
+}t_ExecuteCgiParams;
 class CGI
 {
     // private:
     public:
         std::string     SCRIPT_PATH;
+        std::string     SCRIPT_NAME;
         std::string     QUERY_STRING;
-        Methods         METHOD;
+        std::string     PATH_INFO;
+        std::string     REQUEST_METHOD;
         std::string     CONTENT_TYPE;
         ssize_t         CONTENT_LENGTH;
         std::string     BODY;
@@ -33,12 +43,18 @@ class CGI
         std::string     SERVER_PORT;
         std::string     REMOTE_ADDR;
         int             REMOTE_PORT;
-        std::map<std::string, std::string> QUERY_PARAMS;
+        char            **Env;
+        t_ExecuteCgiParams Vars;
+        // add time to check timeout
         
         
-        CGI(Connection *Conn);
+        CGI();
         ~CGI();
         void            ParseQueryString();
+        void            SplitQueryPrams();
+        void            DecodeUri();
+        void            ExecuteCgi();
+        void            BuildEnv();
 };
 
 #endif

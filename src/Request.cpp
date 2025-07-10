@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/05 17:28:29 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/10 09:06:12 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,6 +122,59 @@ bool        Request::OnlySpaces(std::string &line)
     return true;
 }
 
+void Request::CheckCgiExist() // add by eaboudi
+{
+    std::string Path = uri;
+    std::string QueryString;
+    size_t Pos = Path.find('?');
+    if (Pos != std::string::npos)
+    {
+        QueryString = Path.substr(Pos + 1);
+        Path = Path.substr(0, Pos);
+    }
+    Pos = Path.find('.');
+    if (Pos != Path.npos)
+    {
+        std::string PathInfo;
+        if (Path.find('/', Pos) != Path.npos)
+        {
+            while(Path[Pos] != '/')
+                Pos++;
+            PathInfo = Path.substr(Pos);
+        }
+        else
+            Pos = Path.size() - 1;
+        std::string CheckDir = Path.substr(0, Pos);
+        Pos = CheckDir.find_last_of('/');
+        std::string ScriptName = CheckDir.substr(Pos + 1);
+        CheckDir = CheckDir.substr(0, Pos);
+        std::string CgiDir = "/cgi-bin";
+        if (CheckDir.compare(0, CgiDir.size(), CgiDir) == 0)
+        {
+            CheckDir += '/';
+            std::string ScriptPath = CheckDir;
+            CheckDir += ScriptName;
+            struct stat FileState;
+            if (stat(CheckDir.c_str() + 1, &FileState) == 0)
+            {
+                if (S_ISREG(FileState.st_mode))
+                {
+                    UseCgi = true;
+                    CgiObj = new CGI;
+                    CgiObj->QUERY_STRING = QueryString;
+                    CgiObj->REQUEST_METHOD = method;
+                    CgiObj->SCRIPT_PATH = ScriptPath;
+                    CgiObj->SCRIPT_NAME = ScriptPath + ScriptName;
+                    CgiObj->PATH_INFO = PathInfo;
+                    return ;
+                } 
+            }
+        }
+    }
+    uri = Path;
+    CgiObj = false;
+}
+
 bool        Request::ParseRequestLine(std::string& data)
 {
     
@@ -166,9 +219,9 @@ bool        Request::ParseRequestLine(std::string& data)
         return false;
     }
     if (!ParseUri())
-        return false; 
+        return false;
+    CheckCgiExist(); //added by eaboudi
     return true;
-    
 }
 
 bool            Request::Haswhitespace(std::string& FieldName)
