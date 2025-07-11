@@ -34,50 +34,56 @@ char**    BuildEnv()
 
 void    ExecuteCgi()
 {
-    int Pipe[2];
     std::string FileName = "CGI-SCRIPTS/test";
-    std::fstream TmpFile(FileName, std::ios::in | std::ios::out);
+    int fd = open(FileName.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
     char **Env = BuildEnv();
-    // pipe(Pipe);
+    
     int Child = fork();
     if (Child == -1)
     {
         perror("fork");
+        close(fd);
         return;
     }
-    int fd = open(FileName.c_str(), O_CREAT | O_RDWR, 0666);
+    
     if (Child == 0)
     {
-        // close(Pipe[0]);
-        // close
+        // Child process: redirect stdout to file and execute CGI
         dup2(fd, STDOUT_FILENO);
         close(fd);
-        char *argv[] = { (char*)"CGI-SCRIPTS/cgi.sh", NULL};
-        if (access("CGI-SCRIPTS/cgi.sh", X_OK) == -1)
-            perror("access");
-        if (execve("CGI-SCRIPTS/cgi.sh", argv, Env) == -1)
+        
+        char *argv[] = {(char*)"CGI-SCRIPTS/cgi.sh", NULL};
+        if (execv("CGI-SCRIPTS/cgi.sh", argv) == -1)
         {
-            perror("execve");
+            perror("execv");
             exit(EXIT_FAILURE);
         }
     }
     else
     {
-        // close(Pipe[1]);
-
-        char buff[4096];
-        ssize_t byteread;
-        std::string output;
-        while((byteread = read(fd, buff, sizeof(buff))) > 0)
-        {
-            output.append(buff, byteread);
-        }
-        // close(Pipe[0]);
+        // Parent process: close write fd and wait for child
         close(fd);
+        
         int status;
         waitpid(Child, &status, 0);
+        
+        // Now read the output from the file
+        int read_fd = open(FileName.c_str(), O_RDONLY);
+        if (read_fd != -1)
+        {
+            char buff[4096];
+            ssize_t byteread;
+            std::string output;
+            
+            while((byteread = read(read_fd, buff, sizeof(buff))) > 0)
+            {
+                output.append(buff, byteread);
+            }
+            close(read_fd);
+            std::cout << output << std::endl;
+        }
+        
         delete[] Env;
-        std::cout << output << std::endl;
     }
 }
 

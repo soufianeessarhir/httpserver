@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/11 10:36:36 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/11 16:18:03 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -311,7 +311,12 @@ void        HttpServer::HandlOutgoingData(int fd)
 	{
 		excuteGetMethod(conn);
 	}
-	SetSocketForRead(conn);
+	if ( conn->state == Connection::COMPLETE )
+	{
+		SetSocketForRead(conn);
+		conn->state = Connection::READING_REQUEST_LINE;
+		
+	}
 }
 
 void		HttpServer::cleanup()
