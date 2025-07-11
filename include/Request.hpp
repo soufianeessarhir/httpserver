@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 08:51:22 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/11 10:09:04 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ class Request
 
 public:
 
-    Request():IsComplete(false), body(NULL){}
+    Request():RequestStatusCode(0) ,IsComplete(false){}
     
     ~Request(){}
     
@@ -46,7 +46,6 @@ public:
     
     size_t          GetContentLenght()const;
     
-    void            SetBody(std::string &);
     
     bool            KeepAlive()const;
     
@@ -79,8 +78,6 @@ public:
     
     std::string     GetUri();
 
-    const char*     GetBody()const;
-    
     std::string     GetHeader(std::string )const;
     
     std::string     GetVersion()const;
@@ -99,8 +96,6 @@ private:
     int                                 RequestStatusCode;
 
     bool                                IsComplete;
-
-    const char*                         body;
     
     std::string                         method;
     

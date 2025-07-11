@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 14:26:27 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/10 21:01:43 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,6 +141,7 @@ void		HttpServer::HandleNewConnection(int fd)
 		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
 		conn->ip = ipstr;
 		conn->port = ntohs(s->sin_port);
+		std::cout<< " " << ipstr << " " << conn->port<< std::endl;
 		SetSocketToNonblocking(client_fd);
 		clients[client_fd] = conn;
 		ev.events = EPOLLIN | EPOLLET;

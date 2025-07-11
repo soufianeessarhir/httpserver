@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 14:45:08 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/11 10:08:33 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 
 std::string Request::GetUri() {return uri;}
 
-const char* Request::GetBody()const{return body;}
 
 std::string Request::GetHeader(std::string name)const
 {
@@ -63,10 +62,6 @@ std::string     Request::GetMethod()
     return method;
 }
 
-void        Request::SetBody(std::string &data)
-{
-    body = data.c_str();
-}
 
 bool        Request::ParseHeaders(std::string data)
 {
