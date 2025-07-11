@@ -6,13 +6,14 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/10 15:35:15 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/11 10:23:26 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "GetMethodResponse.hpp"
 #include <sstream>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 std::map<std::string, std::string> CreateMimeTypes()
 {
@@ -79,10 +80,10 @@ void    GetMethodResponse::SetContentType()
 GetMethodResponse::GetMethodResponse(int statusCode, std::string filePath)
     : StatusCode(statusCode), FilePath(filePath), IsBinaryFile(false)
 {
-    SetContentType();
-    SetBody();
-    SetHeaders();
-    SetStatusLine();
+    // SetContentType();
+    // SetBody();
+    // SetHeaders();
+    // SetStatusLine();
 }
 
 void GetMethodResponse::SetStatusLine()
@@ -97,60 +98,12 @@ void GetMethodResponse::SetStatusLine()
     StatusLine = BuildStatusLine.str();
 }
 
-void    GetMethodResponse::SetBody()
-{
-    struct stat FileState;
-    if (stat(FilePath.c_str(), &FileState) == -1)
-    {
-        StatusCode = 404;
-        Body.clear();
-        return;
-    }
-    if (!S_ISREG(FileState.st_mode))
-    {
-        StatusCode = 403; // Forbidden if not a regular file
-        Body.clear();
-        return;
-    }
-    
-    std::ifstream InFile;
-    std::ios_base::openmode FileMode(std::ios::in);
-    if (IsBinaryFile)
-        FileMode |= std::ios::binary;
-    InFile.open(FilePath.c_str(), FileMode);
-    if (!InFile.is_open())
-    {
-        StatusCode = 403;
-        Body.clear();
-        return;
-    }
-    ContentLength = FileState.st_size;
-    Body.resize(ContentLength);
-    if (ContentLength > 0)
-    {
-        InFile.read(&Body[0], ContentLength);
-        if (!InFile)
-        {
-            StatusCode = 500;
-            Body.clear();
-            return;
-        }
-    }
-    else
-        Body.clear();
-    InFile.close();
-    StatusCode = 200;
-}
 
 void    GetMethodResponse::SetHeaders()
 {
     std::ostringstream oss;
     oss << ContentLength;
     Headers["Content-Length"] = oss.str() + "\r\n";
-    // std::to_string is not used for compatibility with older C++ standards
-    std::ostringstream cl_oss;
-    cl_oss << ContentLength;
-    Headers["Content-Length"] = cl_oss.str() + "\r\n";
     Headers["Content-Type"] = ContentType + "\r\n";
     // Headers["Connection"] = "close"; add it if we need it
 }
@@ -163,10 +116,12 @@ GetMethodResponse::~GetMethodResponse()
 void GetMethodResponse::SendStatusLine(Connection *Conn)
 {
     ssize_t BytesWriten = 0;
-    while (BytesSent < static_cast<ssize_t>(StatusLine.size()))
+    size_t TotalSent = 0;
+    
+    while (TotalSent < StatusLine.size())
     {
-        BytesWriten = send(Conn->fd, StatusLine.c_str() + BytesSent, 
-                            StatusLine.size() - BytesSent, 0);
+        BytesWriten = send(Conn->fd, StatusLine.c_str() + TotalSent, 
+                          StatusLine.size() - TotalSent, 0);
         if (BytesWriten < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -174,18 +129,21 @@ void GetMethodResponse::SendStatusLine(Connection *Conn)
                 Conn->state = Connection::SENDING_RESPONSE;
                 return; // Wait for next round
             }
+            else if (errno == EPIPE || errno == ECONNRESET)
+            {
+                // Client disconnected - clean up and exit
+                Conn->state = Connection::COMPLETE;
+                return;
+            }
             else
             {
-                perror("send");
-                Conn->state = Connection::COMPLETE; // Error handling
+                perror("send status line");
+                Conn->state = Connection::COMPLETE;
                 return;
             }
         }
-        else
-            BytesSent += BytesWriten;
+        TotalSent += BytesWriten;
     }
-    if (BytesSent >= static_cast<ssize_t>(StatusLine.size()))
-        BytesSent = 0;
 }
 
 const std::string& GetMethodResponse::GetBody() const
@@ -205,62 +163,122 @@ int GetMethodResponse::GetStatusCode() const
 void GetMethodResponse::SendHeaders(Connection *Conn)
 {
     ssize_t BytesWriten = 0;
+    size_t TotalSent = 0;
     std::string HeadersStr;
+    
     std::map<std::string, std::string>::const_iterator it;
     for (it = Headers.begin(); it != Headers.end(); ++it)
         HeadersStr += it->first + ": " + it->second;
     HeadersStr += "\r\n";
-    while (BytesSent < static_cast<ssize_t>(HeadersStr.size()))
+    
+    while (TotalSent < HeadersStr.size())
     {
-        BytesWriten = send(Conn->fd, HeadersStr.c_str() + BytesSent, 
-                            HeadersStr.size() - BytesSent, 0);
+        BytesWriten = send(Conn->fd, HeadersStr.c_str() + TotalSent, 
+                          HeadersStr.size() - TotalSent, 0);
         if (BytesWriten < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 Conn->state = Connection::SENDING_RESPONSE;
-                return; // Wait for next round
+                return;
+            }
+            else if (errno == EPIPE || errno == ECONNRESET)
+            {
+                Conn->state = Connection::COMPLETE;
+                return;
             }
             else
             {
-                perror("send");
-                Conn->state = Connection::COMPLETE; // Error handling
+                perror("send headers");
+                Conn->state = Connection::COMPLETE;
                 return;
             }
         }
-        else
-            BytesSent += BytesWriten;
+        TotalSent += BytesWriten;
     }
-    if (BytesSent >= static_cast<ssize_t>(HeadersStr.size()))
-        BytesSent = 0;
 }
 
-void GetMethodResponse::SendBody(Connection *Conn)
+bool    GetMethodResponse::CheckForSending()
 {
-    ssize_t BytesWriten = 0;
-    while (BytesSent < static_cast<ssize_t>(Body.size()))
+    struct stat FileState;
+    if (stat(FilePath.c_str(), &FileState) == -1 || !S_ISREG(FileState.st_mode))
     {
-        BytesWriten = send(Conn->fd, Body.c_str() + BytesSent, 
-                            Body.size() - BytesSent, 0);
-        if (BytesWriten < 0)
+        StatusCode = 404;
+        return false;
+    }
+    CheckProg.FileFd = open(FilePath.c_str(), O_RDONLY);
+    if (CheckProg.FileFd == -1)
+    {
+        StatusCode = 403;
+        return false;
+    }
+    CheckProg.FileOffset = 0;
+    CheckProg.FileSize = FileState.st_size;
+    CheckProg.BuffSize = 0;
+    CheckProg.BuffOffs = 0;
+    ContentLength = FileState.st_size;
+    return true;
+}
+
+void GetMethodResponse::SetAndSendBody(Connection* conn) 
+{
+    if (CheckForSending() == false)
+        return ;
+    SetHeaders();
+    SendHeaders(conn);
+    char Buff[BUFFER_SIZE];
+    while (true) 
+    {
+        // Step 1: If buffer is empty, read more from file
+        if (CheckProg.BuffOffs >= CheckProg.BuffSize)
+        {
+            ssize_t bytes_read = read(CheckProg.FileFd, Buff, BUFFER_SIZE);
+            if (bytes_read < 0) 
+            {
+                perror("read");
+                conn->state = Connection::COMPLETE;
+                close(CheckProg.FileFd);
+                return;
+            }
+            else if (bytes_read == 0)
+            {
+                // EOF reached
+                conn->state = Connection::COMPLETE;
+                close(CheckProg.FileFd);
+                return;
+            }
+            CheckProg.BuffSize = bytes_read;
+            CheckProg.BuffOffs = 0;
+        }
+
+        // Step 2: Send from buffer
+        ssize_t bytes_sent = send(conn->fd,
+                                  Buff + CheckProg.BuffOffs,
+                                  CheckProg.BuffSize - CheckProg.BuffOffs,
+                                  0);
+        if (bytes_sent < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
-                Conn->state = Connection::SENDING_RESPONSE;
-                return; // Wait for next round
-            }
-            else
-            {
-                perror("send");
-                Conn->state = Connection::COMPLETE; // Error handling
+                // Try again later when socket is writable
                 return;
             }
+            // else
+            // {
+            //     perror("send");
+            //     conn->state = Connection::COMPLETE;
+            //     close(CheckProg.FileFd);
+            //     return;
+            // }
         }
-        else
-            BytesSent += BytesWriten;
+
+        CheckProg.BuffOffs += bytes_sent;
     }
-    if (BytesSent >= static_cast<ssize_t>(Body.size()))
-        BytesSent = 0;
+}
+
+void    GetMethodResponse::SetContentLenght(int i)
+{
+    ContentLength = i;
 }
 
 void    excuteGetMethod(Connection *conn)
@@ -270,13 +288,19 @@ void    excuteGetMethod(Connection *conn)
     // {
     //     conn->request->CgiObj->BuildEnv();
     // }
-    conn->response->GET = new GetMethodResponse(conn->request->GetStatus(), Path);
+    conn->response->GET = new GetMethodResponse(conn->response->GetStatusCode(), Path);
     conn->response->GET->SetStatusLine();
     conn->response->GET->SendStatusLine(conn);
-    conn->response->GET->SendHeaders(conn);
-	if (conn->response->GET->GetStatusCode() == 200)
+    if (conn->response->GET->GetStatusCode() != 200)
+    {    
+        conn->response->GET->SetContentLenght(0);
+        conn->response->GET->SetHeaders();
+        conn->response->GET->SendHeaders(conn);
+    }
+	else
     {
-		conn->response->GET->SendBody(conn);
+        // conn->response->GET->SendBody(conn);
+        conn->response->GET->SetAndSendBody(conn);
 		if (conn->response->GET->GetBody().empty())
 			conn->state = Connection::COMPLETE; // No body to send
 	}

@@ -301,7 +301,7 @@ void Post::ProcessMultiPart()
 }
 void Post::ProcessContentLength()
 {
-    size_t bytes_to_read = std::min(conn->buffer.size(),content_length - content_bytes_read);
+    size_t bytes_to_read = std::min(conn->buffer.size(),content_length - content_bytes_read + 1);
     if (is_multipart)
 	{
         ProcessMultiPart();
