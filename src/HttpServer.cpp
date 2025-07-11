@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/11 10:36:36 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/11 16:20:24 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,13 +304,15 @@ void        HttpServer::HandlOutgoingData(int fd)
     if (conn->response->GetMethod() == Error)
 	{
 		conn->response->ErrorResponse(conn);
-		conn->state = Connection::COMPLETE;
+		// conn->state = Connection::COMPLETE;
+		//close the connection and cleanup
 		return;
 	}
 	if (conn->response->GetMethod() == GET)
 	{
 		excuteGetMethod(conn);
 	}
+	
 	SetSocketForRead(conn);
 }
 

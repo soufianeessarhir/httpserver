@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/11 10:36:24 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/11 16:41:19 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,7 @@ void GetMethodResponse::SendStatusLine(Connection *Conn)
     while (TotalSent < StatusLine.size())
     {
         BytesWriten = send(Conn->fd, StatusLine.c_str() + TotalSent, 
-                          StatusLine.size() - TotalSent, 0);
+                          StatusLine.size() - TotalSent, MSG_NOSIGNAL);
         if (BytesWriten < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -174,7 +174,7 @@ void GetMethodResponse::SendHeaders(Connection *Conn)
     while (TotalSent < HeadersStr.size())
     {
         BytesWriten = send(Conn->fd, HeadersStr.c_str() + TotalSent, 
-                          HeadersStr.size() - TotalSent, 0);
+                          HeadersStr.size() - TotalSent, MSG_NOSIGNAL);
         if (BytesWriten < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -255,7 +255,7 @@ void GetMethodResponse::SetAndSendBody(Connection* conn)
         ssize_t bytes_sent = send(conn->fd,
                                   Buff + CheckProg.BuffOffs,
                                   CheckProg.BuffSize - CheckProg.BuffOffs,
-                                  0);
+                                  MSG_NOSIGNAL);
         if (bytes_sent < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
