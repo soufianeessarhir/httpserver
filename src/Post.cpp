@@ -219,6 +219,7 @@ void Post::ProcessMultiPart()
                     conn->buffer.erase(close_del + (delimiter + "--").length() - 1);
                     multipart_state = Post::MULTIPART_COMPLETE;
                     contunue = true;
+                    break;
                 }
                 size_t CRLF = conn->buffer.find("\r\n");
                 if(CRLF != std::string::npos)
@@ -227,6 +228,7 @@ void Post::ProcessMultiPart()
                     {
                         multipart_state = Post::MULTIPART_ERROR;
                         contunue = true;
+                        break;
                     }
                     conn->buffer.erase(0,CRLF + 2);
                     multipart_state = Post::READING_PART_HEADERS;
@@ -286,10 +288,13 @@ void Post::ProcessMultiPart()
                     break;
                 }
                 WriteDataToFile(conn->buffer.size());
+                multipart_state =  Post::READING_BOUNDARY;
+                contunue = true;
                 conn->buffer.clear();
             }
             break;
             case MULTIPART_COMPLETE:
+                conn->state = Connection::SENDING_RESPONSE;
                 output_file.close();
             /* code */
             break;
