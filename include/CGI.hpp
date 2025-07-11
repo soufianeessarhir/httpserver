@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/10 11:23:02 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/10 14:09:43 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #define             CGI_HPP
 
 #include <netinet/in.h>
+#include <unistd.h>
 // #include "Connection.hpp"
 #include <arpa/inet.h>
 #include <sys/stat.h>
@@ -34,29 +35,26 @@ class CGI
 {
     // private:
     public:
-        std::string     SCRIPT_PATH;
-        std::string     SCRIPT_NAME;
-        std::string     QUERY_STRING;
-        std::string     PATH_INFO;
-        std::string     REQUEST_METHOD;
-        std::string     CONTENT_TYPE;
-        ssize_t         CONTENT_LENGTH;
-        std::string     BODY;
-        std::string     SERVER_PROTOCOL;
-        std::string     SERVER_NAME;
-        std::string     SERVER_PORT;
-        std::string     REMOTE_ADDR;
-        int             REMOTE_PORT;
+        std::string     SCRIPT_PATH; //done
+        std::string     SCRIPT_NAME; //done
+        std::string     QUERY_STRING; //done
+        std::string     PATH_INFO; //done
+        std::string     REQUEST_METHOD;//done
+        std::string     CONTENT_TYPE; //done for GET
+        ssize_t         CONTENT_LENGTH; // done for GET
+        std::string     SERVER_PROTOCOL; //done
+        std::string     SERVER_NAME;//done
+        std::string     SERVER_PORT; //done
+        std::string     REMOTE_ADDR; //done
+        int             REMOTE_PORT; //done
         char            **Env;
         t_ExecuteCgiParams Vars;
+
         // add time to check timeout
         
         
         CGI();
         ~CGI();
-        void            ParseQueryString();
-        void            SplitQueryPrams();
-        void            DecodeUri();
         void            ExecuteCgi();
         void            BuildEnv();
 };

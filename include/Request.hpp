@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/11 10:09:04 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/11 10:35:38 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,11 +65,7 @@ public:
 
     void            RemoveFromOutputpath(std::string &);
 
-    void            CheckCgiExist(); //add by eaboudi
 
-    bool            UseCgi; // added by eaboudi
-
-    CGI             *CgiObj; // added by eaboudi
 
     
 
@@ -78,6 +74,10 @@ public:
     
     std::string     GetUri();
 
+    void            SetUri(std::string NewUri);
+
+    const char*     GetBody()const;
+    
     std::string     GetHeader(std::string )const;
     
     std::string     GetVersion()const;

@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 14:43:59 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/11 10:36:03 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,6 +119,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		return;
 	}
 	FillLocationMisseddata(conn);
+	CheckCgiExist(conn); //added by eaboudi
 	if (conn->request->GetMethod() == "POST")
 	{
 		if (!conn->request->CheckField("content-type"))
@@ -142,7 +143,6 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
-		//check CGI
 		conn->response = new Response(200, GET);
 	}
 	else if (conn->request->GetMethod() == "DELETE")

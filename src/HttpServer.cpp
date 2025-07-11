@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 21:01:43 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/11 10:36:36 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,7 +147,7 @@ void		HttpServer::HandleNewConnection(int fd)
 		ev.events = EPOLLIN | EPOLLET;
 		ev.data.fd = client_fd;
 		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
-		throw HttpServerError("Epoll control failed");
+			throw HttpServerError("Epoll control failed");
 	}
 }
 
@@ -299,7 +299,8 @@ void		HttpServer::ProcessClientsRoundRobin()
 
 void        HttpServer::HandlOutgoingData(int fd)
 {
-    Connection *conn = clients[fd];
+    
+	Connection *conn = clients[fd];
     if (conn->response->GetMethod() == Error)
 	{
 		conn->response->ErrorResponse(conn);
