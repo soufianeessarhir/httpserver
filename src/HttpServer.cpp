@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/11 16:20:24 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/11 20:09:20 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,10 +157,14 @@ void		HttpServer::HandlIncommingData(int fd)
 	if (!conn)
 		return ;
 	ssize_t rd_bytes = 0;
+	ssize_t buffer_size = 0;
 	char buf[READ_BUFFER_SIZE];
 	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT)) > 0 ;)
 	{
 		conn->buffer.append(buf,rd_bytes);
+		buffer_size += rd_bytes;
+		if (buffer_size >= READ_BUFFER_SIZE)
+			break;
 	}
 	if (rd_bytes == 0) {
 		//[sessarhi] Connection should closed closed
