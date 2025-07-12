@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   GetMethodResponse.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/12 12:04:17 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/12 19:27:29 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,11 +110,11 @@ void    GetMethodResponse::SetHeaders(bool CloseConn)
         Headers["Content-Length"] = oss.str() + "\r\n";
         return ;
     }
-    ContentType = "text/html";
+    ContentType = "text/html\r\n";
     ContentLength = 0;
     Headers["Content-Type"] = ContentType + "\r\n";
     Headers["Content-Length"] = "0\r\n";
-    Headers["Connection"] = "close";
+    Headers["Connection"] = "close\r\n";
 }
 
 GetMethodResponse::~GetMethodResponse()
