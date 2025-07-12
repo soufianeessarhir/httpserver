@@ -265,6 +265,8 @@ void Post::ProcessMultiPart()
                     }
                     if (is_file_upload)
                     {
+                        if (output_file.is_open())
+                            output_file.close();
                         output_file.open(filename.c_str(),std::ios::out | std::ios::app);
                         parts.push_back(MultiPart(filename));
                     }
