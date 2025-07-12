@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/11 10:35:38 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/11 11:41:15 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@
 
 #include            "CGI.hpp" // added by eaboudi
 
-#define CGiDir "/home/eaboudi/Desktop/httpserver/bin" // added by eaboudi
+#define CGiDir "/home/eaboudi/Desktop/httpserver/CGI-SCRIPTS" // added by eaboudi
 class Request
 {
 

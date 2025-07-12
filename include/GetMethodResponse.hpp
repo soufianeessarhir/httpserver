@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/11 10:24:34 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/12 11:53:11 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,16 @@ struct  SendFile
     size_t  BuffSize;
     size_t  BuffOffs;
     Prog    Flag;
+    char    Buff[BUFFER_SIZE];
 };
 
+enum    State
+{
+    SENDING_STATUSLINE,
+    SENDING_HEADERS,
+    SENDING_BODY,
+    SENDING_COMPLETE
+};
 
 class Connection;
 class GetMethodResponse
@@ -58,19 +66,19 @@ class GetMethodResponse
         GetMethodResponse(int statusCode, std::string filePath);
         ~GetMethodResponse();
     
-        void SetHeaders();
+        void SetHeaders(bool CloseConn);
         void SetContentType();
         void SetStatusLine();
 
         const std::string& GetBody() const;
         const std::string& GetContentType() const;
         int GetStatusCode() const;
-        void   SetContentLenght(int i);
 
         void    SendStatusLine(Connection *Conn);
         void    SendHeaders(Connection *Conn);
 
         SendFile    CheckProg;
+        State       ResponseStat;
 
         void    SetAndSendBody(Connection *conn);
         bool    CheckForSending();
