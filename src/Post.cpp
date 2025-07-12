@@ -209,8 +209,8 @@ void Post::ProcessMultiPart()
                     multipart_state = Post::READING_BOUNDARY;
                     contunue = true;
                 }
+                break;
             }
-            break;
             case READING_BOUNDARY:
             {
                 size_t close_del = conn->buffer.find(delimiter + "--");
@@ -221,17 +221,17 @@ void Post::ProcessMultiPart()
                     contunue = true;
                     break;
                 }
-                size_t CRLF = conn->buffer.find("\r\n");
+                size_t CRLF = conn->buffer.find(delimiter + "\r\n");
                 if(CRLF != std::string::npos)
                 {
-                    if (conn->buffer.substr(0,CRLF) != delimiter)
-                    {
-                        multipart_state = Post::MULTIPART_ERROR;
-                        contunue = true;
-                        break;
-                    }
-                    conn->buffer.erase(0,CRLF + 2);
+                    conn->buffer.erase(0,(delimiter + "\r\n").size());
                     multipart_state = Post::READING_PART_HEADERS;
+                    contunue = true;
+                    break;
+                }
+                if (conn->buffer.size() > (delimiter + "\r\n").size())
+                {
+                    multipart_state = Post::MULTIPART_ERROR;
                     contunue = true;
                 }
             }
@@ -281,25 +281,25 @@ void Post::ProcessMultiPart()
                 size_t del =  conn->buffer.find(delimiter);
                 if (del !=  std::string::npos)
                 {
-                    WriteDataToFile(del);
-                    conn->buffer.erase(0,del + delimiter.length() - 1);
+                    if (is_file_upload)
+                        WriteDataToFile(del);
+                    conn->buffer.erase(0,del);
                     multipart_state =  Post::READING_BOUNDARY;
                     contunue = true;
                     break;
                 }
+                if (is_file_upload)
                 WriteDataToFile(conn->buffer.size());
-                multipart_state =  Post::READING_BOUNDARY;
-                contunue = true;
                 conn->buffer.clear();
+                break;
             }
-            break;
             case MULTIPART_COMPLETE:
                 conn->state = Connection::SENDING_RESPONSE;
                 output_file.close();
             /* code */
             break;
             case MULTIPART_ERROR:
-            /* code */
+                conn->state = Connection::SENDING_RESPONSE;
             break;
         }
     }
@@ -363,8 +363,6 @@ bool Post::ProcessMultiPartHeaders(std::string data)
         Request::ToCanonical(name);
         headers[name] = value;
     }
-    
-
     return true;
 }
 
