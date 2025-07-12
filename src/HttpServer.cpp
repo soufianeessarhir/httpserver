@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/11 20:09:20 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/12 11:36:18 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -268,37 +268,36 @@ void		HttpServer::run()
 
 void		HttpServer::ProcessClientsRoundRobin()
 {
-	if (active_clients.empty())
-		return;
+    if (active_clients.empty())
+        return;
     int clients_count =  std::min(active_clients.size(),(size_t)CLIENT_PER_CYCLE);
-	for (;clients_count--;)
-	{
-		struct  epoll_event client_ev = active_clients.front();
-		active_clients.pop_front();
-		if (clients.find(client_ev.data.fd) == clients.end())
-		{
-			active_clients.pop_front();
-			continue;
-		}
-		Connection *conn = clients[client_ev.data.fd];
-		if (client_ev.events & EPOLLIN)
-		{
-			HandlIncommingData(client_ev.data.fd);
-			if (conn->state == Connection::SENDING_RESPONSE)
-			{
-				client_ev.events = EPOLLOUT;
-			}
-				
-		}
-		else if (client_ev.events & EPOLLOUT)
-		{
-			HandlOutgoingData(client_ev.data.fd);
-		}
+    for (;clients_count--;)
+    {
+        struct  epoll_event client_ev = active_clients.front();
+        active_clients.pop_front();
+        if (clients.find(client_ev.data.fd) == clients.end())
+        {
+            active_clients.pop_front();
+            continue;
+        }
+        Connection *conn = clients[client_ev.data.fd];
+        if (client_ev.events & EPOLLIN)
+        {
+            HandlIncommingData(client_ev.data.fd);
+            if (conn->state == Connection::SENDING_RESPONSE)
+            {
+                client_ev.events = EPOLLOUT;
+            }
+        }
+        else if (client_ev.events & EPOLLOUT)
+        {
+            HandlOutgoingData(client_ev.data.fd);
+        }
 		if (conn->state != Connection::COMPLETE)
 		{
 			active_clients.push_back(client_ev);
 		}
-	}
+    }
 }
 
 void        HttpServer::HandlOutgoingData(int fd)
@@ -316,8 +315,11 @@ void        HttpServer::HandlOutgoingData(int fd)
 	{
 		excuteGetMethod(conn);
 	}
-	
-	SetSocketForRead(conn);
+	if ( conn->state == Connection::COMPLETE )
+	{
+		SetSocketForRead(conn);
+		conn->state = Connection::READING_REQUEST_LINE;
+	}
 }
 
 void		HttpServer::cleanup()

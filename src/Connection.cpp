@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 15:38:51 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/11 11:46:11 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
         Pos = CheckDir.find_last_of('/');
         std::string ScriptName = CheckDir.substr(Pos + 1);
         CheckDir = CheckDir.substr(0, Pos);
-        std::string CgiDir = "/CGI-SCRIPTS";
+        std::string CgiDir = CGiDir;
         if (CheckDir.compare(0, CgiDir.size(), CgiDir) == 0)
         {
             CheckDir += '/';
@@ -73,7 +73,6 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
             }
         }
     }
-    std::cout << "New Uri: " << Path << std::endl;
     conn->request->SetUri(Path);
     conn->UseCgi = false;
 }
