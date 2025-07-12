@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/12 10:56:37 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/12 11:53:11 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,14 +66,13 @@ class GetMethodResponse
         GetMethodResponse(int statusCode, std::string filePath);
         ~GetMethodResponse();
     
-        void SetHeaders();
+        void SetHeaders(bool CloseConn);
         void SetContentType();
         void SetStatusLine();
 
         const std::string& GetBody() const;
         const std::string& GetContentType() const;
         int GetStatusCode() const;
-        void   SetContentLenght(int i);
 
         void    SendStatusLine(Connection *Conn);
         void    SendHeaders(Connection *Conn);

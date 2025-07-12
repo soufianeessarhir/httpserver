@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/12 11:28:20 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/12 12:04:17 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ GetMethodResponse::GetMethodResponse(int statusCode, std::string filePath)
     : StatusCode(statusCode), FilePath(filePath), IsBinaryFile(false)
 {
     ResponseStat = SENDING_STATUSLINE;
-    // SetContentType();
+    SetContentType();
     // SetBody();
     // SetHeaders();
     // SetStatusLine();
@@ -100,13 +100,21 @@ void GetMethodResponse::SetStatusLine()
 }
 
 
-void    GetMethodResponse::SetHeaders()
+void    GetMethodResponse::SetHeaders(bool CloseConn)
 {
-    std::ostringstream oss;
-    oss << ContentLength;
-    Headers["Content-Length"] = oss.str() + "\r\n";
+    if (!CloseConn)
+    {
+        std::ostringstream oss;
+        oss << ContentLength;
+        Headers["Content-Type"] = ContentType + "\r\n";
+        Headers["Content-Length"] = oss.str() + "\r\n";
+        return ;
+    }
+    ContentType = "text/html";
+    ContentLength = 0;
     Headers["Content-Type"] = ContentType + "\r\n";
-    // Headers["Connection"] = "close"; add it if we need it
+    Headers["Content-Length"] = "0\r\n";
+    Headers["Connection"] = "close";
 }
 
 GetMethodResponse::~GetMethodResponse()
@@ -212,15 +220,15 @@ bool    GetMethodResponse::CheckForSending()
     {
         StatusCode = 403;
         return false;
-        CheckProg.FileOffset = 0;
-        CheckProg.FileSize = FileState.st_size;
-        CheckProg.BuffSize = 0;
-        CheckProg.BuffOffs = 0;
-        // Allocate buffer if not already done
-        // if (!CheckProg.Buff)
-        //     CheckProg.Buff = new char[BUFFER_SIZE];
-        ContentLength = FileState.st_size;
     }
+    CheckProg.FileOffset = 0;
+    CheckProg.FileSize = FileState.st_size;
+    CheckProg.BuffSize = 0;
+    CheckProg.BuffOffs = 0;
+    // Allocate buffer if not already done
+    // if (!CheckProg.Buff)
+    //     CheckProg.Buff = new char[BUFFER_SIZE];
+    ContentLength = FileState.st_size;
     return true;
 }
 void GetMethodResponse::SetAndSendBody(Connection* conn) 
@@ -239,7 +247,7 @@ void GetMethodResponse::SetAndSendBody(Connection* conn)
         else if (bytes_read == 0)
         {
             ResponseStat = SENDING_COMPLETE;
-            // conn->state = Connection::COMPLETE;
+            conn->state = Connection::COMPLETE;
             close(CheckProg.FileFd);
             return;
         }
@@ -267,10 +275,6 @@ void GetMethodResponse::SetAndSendBody(Connection* conn)
     CheckProg.BuffOffs += bytes_sent;
 }
 
-void    GetMethodResponse::SetContentLenght(int i)
-{
-    ContentLength = i;
-}
 void    excuteGetMethod(Connection *conn)
 {
     if (!conn->response->GET)
@@ -286,9 +290,8 @@ void    excuteGetMethod(Connection *conn)
             conn->response->GET->SetStatusLine();
             conn->response->GET->SendStatusLine(conn);
             if (conn->response->GET->GetStatusCode() != 200)
-            {    
-                conn->response->GET->SetContentLenght(0);
-                conn->response->GET->SetHeaders();
+            {
+                conn->response->GET->SetHeaders(true);
                 conn->response->GET->SendHeaders(conn);
                 conn->response->GET->ResponseStat = SENDING_COMPLETE;
             }
@@ -298,7 +301,7 @@ void    excuteGetMethod(Connection *conn)
         }
         case SENDING_HEADERS :
         {
-            conn->response->GET->SetHeaders();
+            conn->response->GET->SetHeaders(false);
             conn->response->GET->SendHeaders(conn);
             conn->response->GET->ResponseStat = SENDING_BODY;
             break ;
