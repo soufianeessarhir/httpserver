@@ -3,7 +3,7 @@
 
 const std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap();
 
-Post::Post(Connection *conn , TransferType type):conn(conn),is_multipart(false)
+Post::Post(Connection *conn , TransferType type):transfer_type(type),conn(conn),is_multipart(false)
 {
     std::string content_type = conn->request->GetHeader("content-type");
     if (type ==  CONTENT_LENGTH)
@@ -47,7 +47,6 @@ Post::Post(Connection *conn , TransferType type):conn(conn),is_multipart(false)
             {
                 transfer_type = Post::ERROR;
             }
-            return;
         }
         chunk_state = READING_CHUNK_SIZE;
         chunk_bytes_read = 0;
@@ -120,18 +119,44 @@ void Post::ReadChunkSize()
         chunk_state = Post::CHUNK_ERROR;
         return;
     }
-    if (current_chunk_size == 0)
+    if (current_chunk_size == 0 && !size_str.empty())
         chunk_state = Post::READING_TRAILER_HEADERS;
-    chunk_state = Post::READING_CHUNK_DATA;
+    else
+        chunk_state = Post::READING_CHUNK_DATA;
 }
 
 void Post::ReadChunkData()
 {
-    size_t size_to_read = std::min(conn->buffer.size(),current_chunk_size - chunk_bytes_read);
     if (is_multipart)
-        ProcessMultiPart();
-    conn->buffer.erase(0,size_to_read);
-    if (current_chunk_size == chunk_bytes_read)
+    {
+        size_t available_in_chunk = current_chunk_size - chunk_bytes_read;
+        size_t buffer_size = conn->buffer.size();
+        if (buffer_size > available_in_chunk)
+        {
+            std::string temp_buffer = conn->buffer.substr(0, available_in_chunk);
+            std::string remaining_buffer = conn->buffer.substr(available_in_chunk);
+            conn->buffer = temp_buffer;
+            ProcessMultiPart();
+            size_t consumed = temp_buffer.size() - conn->buffer.size();
+            chunk_bytes_read += consumed;
+            conn->buffer += remaining_buffer;
+        }
+        else
+        {
+            size_t initial_size = conn->buffer.size();
+            ProcessMultiPart();
+            size_t consumed = initial_size - conn->buffer.size();
+            chunk_bytes_read += consumed;
+        }
+    }
+    else 
+    {
+        size_t size_to_read = std::min(conn->buffer.size(),current_chunk_size - chunk_bytes_read);
+        WriteDataToFile(size_to_read);
+        conn->buffer.erase(0,size_to_read);
+        chunk_bytes_read += size_to_read;
+    }
+    if (current_chunk_size <= chunk_bytes_read)
     {
         size_t CRLF = conn->buffer.find("\r\n");
         if (CRLF != std::string::npos)
@@ -291,7 +316,7 @@ void Post::ProcessMultiPart()
                     break;
                 }
                 if (is_file_upload)
-                WriteDataToFile(conn->buffer.size());
+                    WriteDataToFile(conn->buffer.size());
                 conn->buffer.clear();
                 break;
             }
