@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/13 17:36:34 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/13 19:43:56 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <fstream>
 
 #include "Connection.hpp"
+#include <cstddef>
 
 #define BUFFER_SIZE 5000
 

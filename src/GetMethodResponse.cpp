@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/13 19:25:14 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/13 19:43:29 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,9 +112,11 @@ void    GetMethodResponse::SetHeaders(bool CloseConn)
         return ;
     }
     ContentType = "text/html\r\n";
+    ContentType = "text/html\r\n";
     ContentLength = 0;
     Headers["Content-Type"] = ContentType + "\r\n";
     Headers["Content-Length"] = "0\r\n";
+    Headers["Connection"] = "close\r\n";
     Headers["Connection"] = "close\r\n";
 }
 
