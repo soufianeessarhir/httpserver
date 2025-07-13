@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/12 12:04:17 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/13 19:25:14 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,13 +108,14 @@ void    GetMethodResponse::SetHeaders(bool CloseConn)
         oss << ContentLength;
         Headers["Content-Type"] = ContentType + "\r\n";
         Headers["Content-Length"] = oss.str() + "\r\n";
+        Headers["Connection"] = "keep-alive\r\n";
         return ;
     }
-    ContentType = "text/html";
+    ContentType = "text/html\r\n";
     ContentLength = 0;
     Headers["Content-Type"] = ContentType + "\r\n";
     Headers["Content-Length"] = "0\r\n";
-    Headers["Connection"] = "close";
+    Headers["Connection"] = "close\r\n";
 }
 
 GetMethodResponse::~GetMethodResponse()
@@ -296,14 +297,18 @@ void    excuteGetMethod(Connection *conn)
                 conn->response->GET->ResponseStat = SENDING_COMPLETE;
             }
             else
-                conn->response->GET->ResponseStat = SENDING_HEADERS;
+            {
+                conn->response->GET->SetHeaders(false);
+                conn->response->GET->SendHeaders(conn);
+                conn->response->GET->ResponseStat = SENDING_BODY;
+            }
             break;
         }
         case SENDING_HEADERS :
         {
-            conn->response->GET->SetHeaders(false);
-            conn->response->GET->SendHeaders(conn);
-            conn->response->GET->ResponseStat = SENDING_BODY;
+            // conn->response->GET->SetHeaders(false);
+            // conn->response->GET->SendHeaders(conn);
+            // conn->response->GET->ResponseStat = SENDING_BODY;
             break ;
         }
         case SENDING_BODY :

@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/12 11:53:11 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/13 17:36:34 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 
 #include "Connection.hpp"
 
-#define BUFFER_SIZE 8192
+#define BUFFER_SIZE 5000
 
 enum    Prog
 {
