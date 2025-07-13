@@ -32,49 +32,51 @@ char**    BuildEnv()
     return Env;
 }
 
-void    ExecuteCgi()
+void ExecuteCgi()
 {
     std::string FileName = "CGI-SCRIPTS/test";
     int fd = open(FileName.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
+    if (fd == -1) 
+    {
+        perror("open");
+        return;
+    }
     char **Env = BuildEnv();
-    
     int Child = fork();
-    if (Child == -1)
+    if (Child == -1) 
     {
         perror("fork");
         close(fd);
+        delete[] Env;
         return;
     }
     
     if (Child == 0)
     {
-        // Child process: redirect stdout to file and execute CGI
-        dup2(fd, STDOUT_FILENO);
-        close(fd);
-        
-        char *argv[] = {(char*)"CGI-SCRIPTS/cgi.sh", NULL};
-        if (execv("CGI-SCRIPTS/cgi.sh", argv) == -1)
+        if (dup2(fd, STDOUT_FILENO) == -1)
         {
-            perror("execv");
+            perror("dup2");
             exit(EXIT_FAILURE);
         }
+        close(fd);
+        char *argv[] = {(char*)"CGI-SCRIPTS/cgi.sh", NULL};
+        execve("CGI-SCRIPTS/cgi.sh", argv, Env);
+        perror("execve");
+        exit(EXIT_FAILURE);
     }
     else
     {
-        // Parent process: close write fd and wait for child
         close(fd);
         
         int status;
         waitpid(Child, &status, 0);
         
-        // Now read the output from the file
         int read_fd = open(FileName.c_str(), O_RDONLY);
-        if (read_fd != -1)
+        if (read_fd != -1) 
         {
             char buff[4096];
             ssize_t byteread;
             std::string output;
-            
             while((byteread = read(read_fd, buff, sizeof(buff))) > 0)
             {
                 output.append(buff, byteread);
@@ -82,12 +84,9 @@ void    ExecuteCgi()
             close(read_fd);
             std::cout << output << std::endl;
         }
-        
         delete[] Env;
     }
 }
-
-
 
 int main()
 {
