@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 15:31:32 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/14 14:14:24 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 
 class Request;
 class Response;
-class Server;
+// class Server;
 class Post;
 
 
@@ -52,7 +52,6 @@ public:
     LocationData    *location;
     Post            *post;
     std::string     buffer;
-    __ssize_t       BytesSent;
     time_t          LastAct;
     std::string     ip;
     int             port;

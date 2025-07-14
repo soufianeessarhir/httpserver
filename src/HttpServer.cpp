@@ -6,30 +6,158 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/13 13:22:46 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/14 15:25:02 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
 
-bool		HttpServer::CheckForEventFd(std::deque<struct  epoll_event>&,int fd)
+
+#ifdef __linux__
+    #define READ_EVENT EPOLLIN
+    #define WRITE_EVENT EPOLLOUT
+    #define ERROR_EVENT EPOLLERR
+    #define HUP_EVENT EPOLLHUP
+    #define EDGE_TRIGGERED EPOLLET
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+    #define READ_EVENT EVFILT_READ
+    #define WRITE_EVENT EVFILT_WRITE
+    #define ERROR_EVENT 0
+    #define HUP_EVENT 0
+    #define EDGE_TRIGGERED EV_CLEAR
+#endif
+
+bool HttpServer::CheckForEventFd(int fd)
 {
-	for (std::deque<struct  epoll_event>::iterator it = active_clients.begin()
-			;it != active_clients.end();++it)
-	{
-		if ((*it).data.fd == fd)
-			return true;
-	}
-	return false;
+    for (std::deque<PlatformEvent>::iterator it = active_clients.begin();
+         it != active_clients.end(); ++it)
+    {
+        if (it->fd == fd)
+            return true;
+    }
+    return false;
 }
 
-HttpServer::HttpServer(std::vector<Server> &srvs):servers(srvs)
+HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs)
 {
-	epoll_fd = epoll_create1(0);
-	SetSocketToNonblocking(epoll_fd);
-	if (epoll_fd == -1)
-		throw HttpServerError("Epoll creation failed");
-	this->init();
+    event_fd = CreateEvent();
+    if (event_fd == -1)
+        throw HttpServerError("Event queue creation failed");
+#if defined(__APPLE__) || defined(__FreeBSD__)
+    change_count = 0;
+#endif
+
+    
+    this->init();
+}
+
+int HttpServer::CreateEvent()
+{
+#ifdef __linux__
+    return epoll_create1(0);
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+    return kqueue();
+#endif
+}
+
+int HttpServer::AddEvent(int fd, int events)
+{
+#ifdef __linux__
+    ev.events = events | EDGE_TRIGGERED;
+    ev.data.fd = fd;
+    return epoll_ctl(event_fd, EPOLL_CTL_ADD, fd, &ev);
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+    if (events & READ_EVENT) {
+        EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
+        change_count++;
+    }
+    if (events & WRITE_EVENT) {
+        EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
+        change_count++;
+    }
+    int result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
+    change_count = 0;
+    return result;
+#endif
+}
+
+int HttpServer::ModifyEvent(int fd, int events)
+{
+#ifdef __linux__
+    ev.events = events | EDGE_TRIGGERED;
+    ev.data.fd = fd;
+    return epoll_ctl(event_fd, EPOLL_CTL_MOD, fd, &ev);
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+    EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    change_count++;
+    EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    change_count++;
+    
+    if (events & READ_EVENT) {
+        EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
+        change_count++;
+    }
+    if (events & WRITE_EVENT) {
+        EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
+        change_count++;
+    }
+    
+    int result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
+    change_count = 0;
+    return result;
+#endif
+}
+
+int HttpServer::RemoveEvent(int fd)
+{
+#ifdef __linux__
+    return epoll_ctl(event_fd, EPOLL_CTL_DEL, fd, NULL);
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+    EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    change_count++;
+    EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    change_count++;
+    
+    int result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
+    change_count = 0;
+    return result;
+#endif
+}
+
+int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, int timeout)
+{
+#ifdef __linux__
+    int event_count = epoll_wait(event_fd, events, max_events, timeout);
+    for (int i = 0; i < event_count; i++) {
+        platform_events[i].fd = events[i].data.fd;
+        platform_events[i].events = events[i].events;
+        platform_events[i].data = NULL;
+    }
+    return event_count;
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+    struct timespec ts;
+    ts.tv_sec = timeout / 1000;
+    ts.tv_nsec = (timeout % 1000) * 1000000;
+    int event_count = kevent(event_fd, NULL, 0, kevents, max_events, &ts);
+    for (int i = 0; i < event_count; i++) {
+        platform_events[i].fd = kevents[i].ident;
+        platform_events[i].data = kevents[i].udata;
+        if (kevents[i].filter == EVFILT_READ) {
+            platform_events[i].events = READ_EVENT;
+        } else if (kevents[i].filter == EVFILT_WRITE) {
+            platform_events[i].events = WRITE_EVENT;
+        } else {
+            platform_events[i].events = 0;
+        }
+        if (kevents[i].flags & EV_ERROR) {
+            platform_events[i].events |= ERROR_EVENT;
+        }
+        if (kevents[i].flags & EV_EOF) {
+            platform_events[i].events |= HUP_EVENT;
+        }
+    }
+    return event_count;
+#endif
 }
 
 void		HttpServer::init()
@@ -77,45 +205,34 @@ void		HttpServer::init()
 				close(sockfd);
 				throw HttpServerError("Socket listening failed");
 			}
-			ev.events = EPOLLIN | EPOLLET;
-			ev.data.fd = sockfd;
-			if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sockfd, &ev) == -1)
-			{
-				close(sockfd);
-				throw HttpServerError("Epoll control failed");
-			}
+			if (AddEvent(sockfd, READ_EVENT) == -1)
+            {
+                close(sockfd);
+                throw HttpServerError("Event control failed");
+            }
 			server_map[sockfd] = servers[i];
 		}
 	}
 }
 
-void		HttpServer::SetSocketToNonblocking(int fd)
+void HttpServer::SetSocketToNonblocking(int fd)
 {
-	int flags = fcntl(fd, F_GETFL, 0);
-	if (flags == -1)
-		throw HttpServerError("fcntl get failed");
-	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
-		throw HttpServerError("fcntl set failed");
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1)
+        throw HttpServerError("fcntl get failed");
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+        throw HttpServerError("fcntl set failed");
 }
 void		HttpServer::SetSocketForWrite(Connection *conn)
 {
 	
-	ev.data.fd = conn->fd;
-	ev.events = EPOLLOUT | EPOLLET;
-	epoll_ctl(epoll_fd, EPOLL_CTL_MOD, conn->fd, &ev);
+	ModifyEvent(conn->fd,WRITE_EVENT);
 	conn->state = Connection::SENDING_RESPONSE;
 }
 
 void HttpServer::SetSocketForRead(Connection *conn)
 {
-    ev.data.fd = conn->fd;
-    ev.events = EPOLLIN | EPOLLET;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, conn->fd, &ev) == -1)
-    {
-        perror("epoll_ctl: change to read mode");
-        conn->state = Connection::COMPLETE;
-        return;
-    }
+    ModifyEvent(conn->fd,READ_EVENT);
     conn->state = Connection::READING_REQUEST_LINE; // For keep-alive
 }
 
@@ -144,9 +261,7 @@ void		HttpServer::HandleNewConnection(int fd)
 		std::cout<< " " << ipstr << " " << conn->port<< std::endl;
 		SetSocketToNonblocking(client_fd);
 		clients[client_fd] = conn;
-		ev.events = EPOLLIN | EPOLLET;
-		ev.data.fd = client_fd;
-		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
+		if (AddEvent(client_fd,READ_EVENT | EDGE_TRIGGERED) == -1)
 			throw HttpServerError("Epoll control failed");
 	}
 }
@@ -234,29 +349,30 @@ void		HttpServer::HandlIncommingData(int fd)
 
 void		HttpServer::run()
 {
+	PlatformEvent platform_events[MAX_EVENTS];
 	for(;;)
 	{
-		int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, 0);
-		if (event_count == -1)
-		    throw HttpServerError("Epoll wait failed");
+		int event_count = WaitForEvents(platform_events, MAX_EVENTS, 0);
+        if (event_count == -1)
+            throw HttpServerError("Event wait failed");
 		for (int i = 0; i < event_count; ++i)
 		{
-			if (server_map.find(events[i].data.fd) != server_map.end())
+			if (server_map.find(platform_events[i].fd) != server_map.end())
 			{
-				HandleNewConnection(events[i].data.fd);
+				HandleNewConnection(platform_events[i].fd);
 			}
-			else if (events[i].events & (EPOLLIN | EPOLLOUT))
+			else if (platform_events[i].events & (READ_EVENT | WRITE_EVENT))
 			{
-				if (!CheckForEventFd(active_clients,events[i].data.fd))
+				if (!CheckForEventFd(platform_events[i].fd))
 				{
-					active_clients.push_back(events[i]);
+					active_clients.push_back(platform_events[i]);
 				}
 			}
-			else if (events[i].events  & EPOLLHUP)
+			else if (platform_events[i].events  & HUP_EVENT)
 			{
 				// [sessarhi] handle errors for this fd
 			}
-			else if (events[i].events  & EPOLLERR)
+			else if (platform_events[i].events  & ERROR_EVENT)
 			{
 				
 			}
@@ -273,25 +389,25 @@ void		HttpServer::ProcessClientsRoundRobin()
     int clients_count =  std::min(active_clients.size(),(size_t)CLIENT_PER_CYCLE);
     for (;clients_count--;)
     {
-        struct  epoll_event client_ev = active_clients.front();
+        struct PlatformEvent client_ev = active_clients.front();
         active_clients.pop_front();
-        if (clients.find(client_ev.data.fd) == clients.end())
+        if (clients.find(client_ev.fd) == clients.end())
         {
             active_clients.pop_front();
             continue;
         }
-        Connection *conn = clients[client_ev.data.fd];
-        if (client_ev.events & EPOLLIN)
+        Connection *conn = clients[client_ev.fd];
+        if (client_ev.events & READ_EVENT)
         {
-            HandlIncommingData(client_ev.data.fd);
+            HandlIncommingData(client_ev.fd);
             if (conn->state == Connection::SENDING_RESPONSE)
             {
-                client_ev.events = EPOLLOUT;
+                client_ev.events = WRITE_EVENT;
             }
         }
-        else if (client_ev.events & EPOLLOUT)
+        else if (client_ev.events & WRITE_EVENT)
         {
-            HandlOutgoingData(client_ev.data.fd);
+            HandlOutgoingData(client_ev.fd);
         }
 		if (conn->state != Connection::COMPLETE)
 		{
@@ -333,9 +449,9 @@ void		HttpServer::cleanup()
 
 HttpServer::~HttpServer()
 {
-	if (epoll_fd != -1)
+	if (event_fd != -1)
 	{
-		close(epoll_fd);
+		close(event_fd);
 	}
 }
 

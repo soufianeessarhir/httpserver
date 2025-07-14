@@ -3,17 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   GetMethodResponse.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/13 19:43:56 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/14 14:23:39 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef GETMETHODRESPONSE_HPP
 #define GETMETHODRESPONSE_HPP
 
-
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
 // #include "Response.hpp"
 #include <fstream>
 
@@ -54,7 +56,7 @@ class GetMethodResponse
     private:
         int                                                 StatusCode;
         ssize_t                                             ContentLength;
-        ssize_t                                             BytesSent;
+        // ssize_t                                             BytesSent;
         std::string                                         FilePath;
         bool                                                IsBinaryFile;
         std::string                                         ContentType;
