@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/14 18:54:08 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/14 20:02:19 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,7 +178,7 @@ void		HttpServer::init()
 		{
 			int sockfd = -1;
 			memset(&hints, 0, sizeof(hints));
-			hints.ai_family = AF_INET;   // [sessarhi] mybe should modefied to AF_UNSPEC for handling both ipv4 and ipv6
+			hints.ai_family = AF_INET;
 			hints.ai_socktype = SOCK_STREAM;
 			hints.ai_flags = AI_PASSIVE;
 			std::string host = servers[i].listen[j].first.empty() ?
@@ -233,7 +233,6 @@ void HttpServer::SetSocketToNonblocking(int fd)
 }
 void		HttpServer::SetSocketForWrite(Connection *conn)
 {
-	
 	ModifyEvent(conn->fd,WRITE_EVENT);
 	conn->state = Connection::SENDING_RESPONSE;
 }
@@ -289,10 +288,10 @@ void		HttpServer::HandlIncommingData(int fd)
 		if (buffer_size >= READ_BUFFER_SIZE)
 			break;
 	}
-	// if (rd_bytes == 0) {
-	// 	//[sessarhi] Connection should closed closed
-	// 	return;
-	// }
+	if (rd_bytes == 0) {
+		//[sessarhi] Connection should closed closed
+		return;
+	}
 	bool continue_processing = true;
 	while (continue_processing)
 	{
