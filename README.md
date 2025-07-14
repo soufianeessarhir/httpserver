@@ -1,4 +1,4 @@
-ت# ABOUT THE PROJECT
+# ABOUT THE PROJECT
 - This project is about creating an HTTP server from scratch using standard C++ 98 and c networking syscalls
 
 # RESOURCE LIST
