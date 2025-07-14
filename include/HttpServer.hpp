@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/14 14:44:07 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/14 18:18:12 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 
 #ifdef __linux__
     #include <sys/epoll.h>
-#elif defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(__APPLE__)
     #include <sys/event.h>
     #include <sys/time.h>
 #endif
@@ -42,10 +42,10 @@
 
 class Connection;
 #define			MAX_EVENTS					1024
-#define			READ_BUFFER_SIZE			25000
+#define			READ_BUFFER_SIZE			64000
 #define			CLIENT_PER_CYCLE			512
 #define			MAX_REQUEST_LINE_LENGHT		8000 //RFC 9112,
-#define			MAX_header_field_LENGHT		64000
+#define			MAX_header_field_LENGHT		1024
 
 struct PlatformEvent {
     int fd;
@@ -109,7 +109,7 @@ private:
     
 #ifdef __linux__
     struct epoll_event ev, events[MAX_EVENTS];
-#elif defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(__APPLE__)
     struct kevent kevents[MAX_EVENTS];
     struct kevent change_list[MAX_EVENTS];
     int change_count;

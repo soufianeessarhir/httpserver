@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/14 15:25:02 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/14 18:54:08 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,11 @@
     #define ERROR_EVENT EPOLLERR
     #define HUP_EVENT EPOLLHUP
     #define EDGE_TRIGGERED EPOLLET
-#elif defined(__APPLE__) || defined(__FreeBSD__)
-    #define READ_EVENT EVFILT_READ
-    #define WRITE_EVENT EVFILT_WRITE
-    #define ERROR_EVENT 0
-    #define HUP_EVENT 0
+#elif defined(__APPLE__)
+    #define READ_EVENT		0x01
+    #define WRITE_EVENT 	0x02
+    #define ERROR_EVENT 	0x04
+    #define HUP_EVENT		0x08
     #define EDGE_TRIGGERED EV_CLEAR
 #endif
 
@@ -43,11 +43,9 @@ HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs)
     event_fd = CreateEvent();
     if (event_fd == -1)
         throw HttpServerError("Event queue creation failed");
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(__APPLE__)
     change_count = 0;
-#endif
-
-    
+#endif 
     this->init();
 }
 
@@ -55,7 +53,7 @@ int HttpServer::CreateEvent()
 {
 #ifdef __linux__
     return epoll_create1(0);
-#elif defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(__APPLE__)
     return kqueue();
 #endif
 }
@@ -66,12 +64,14 @@ int HttpServer::AddEvent(int fd, int events)
     ev.events = events | EDGE_TRIGGERED;
     ev.data.fd = fd;
     return epoll_ctl(event_fd, EPOLL_CTL_ADD, fd, &ev);
-#elif defined(__APPLE__) || defined(__FreeBSD__)
-    if (events & READ_EVENT) {
+#elif defined(__APPLE__)
+    if (events & READ_EVENT)
+	{
         EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
         change_count++;
     }
-    if (events & WRITE_EVENT) {
+    if (events & WRITE_EVENT)
+	{
         EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
         change_count++;
     }
@@ -87,18 +87,28 @@ int HttpServer::ModifyEvent(int fd, int events)
     ev.events = events | EDGE_TRIGGERED;
     ev.data.fd = fd;
     return epoll_ctl(event_fd, EPOLL_CTL_MOD, fd, &ev);
-#elif defined(__APPLE__) || defined(__FreeBSD__)
-    EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    change_count++;
-    EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-    change_count++;
+#elif defined(__APPLE__)
+    change_count = 0;
     
-    if (events & READ_EVENT) {
+    if (events & READ_EVENT)
+	{
         EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
         change_count++;
     }
-    if (events & WRITE_EVENT) {
+	else 
+	{
+        EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+        change_count++;
+    }
+    
+    if (events & WRITE_EVENT)
+	{
         EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
+        change_count++;
+    }
+	else
+	{
+        EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
         change_count++;
     }
     
@@ -112,7 +122,7 @@ int HttpServer::RemoveEvent(int fd)
 {
 #ifdef __linux__
     return epoll_ctl(event_fd, EPOLL_CTL_DEL, fd, NULL);
-#elif defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(__APPLE__)
     EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     change_count++;
     EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
@@ -126,6 +136,7 @@ int HttpServer::RemoveEvent(int fd)
 
 int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, int timeout)
 {
+	timeout = 0;
 #ifdef __linux__
     int event_count = epoll_wait(event_fd, events, max_events, timeout);
     for (int i = 0; i < event_count; i++) {
@@ -134,28 +145,25 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
         platform_events[i].data = NULL;
     }
     return event_count;
-#elif defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(__APPLE__)
     struct timespec ts;
     ts.tv_sec = timeout / 1000;
     ts.tv_nsec = (timeout % 1000) * 1000000;
     int event_count = kevent(event_fd, NULL, 0, kevents, max_events, &ts);
-    for (int i = 0; i < event_count; i++) {
-        platform_events[i].fd = kevents[i].ident;
-        platform_events[i].data = kevents[i].udata;
-        if (kevents[i].filter == EVFILT_READ) {
-            platform_events[i].events = READ_EVENT;
-        } else if (kevents[i].filter == EVFILT_WRITE) {
-            platform_events[i].events = WRITE_EVENT;
-        } else {
-            platform_events[i].events = 0;
-        }
-        if (kevents[i].flags & EV_ERROR) {
-            platform_events[i].events |= ERROR_EVENT;
-        }
-        if (kevents[i].flags & EV_EOF) {
-            platform_events[i].events |= HUP_EVENT;
-        }
-    }
+ for (int i = 0; i < event_count; i++)
+ {
+    platform_events[i].fd = kevents[i].ident;
+    platform_events[i].data = kevents[i].udata;
+    platform_events[i].events = 0;
+    if (kevents[i].filter == EVFILT_READ)
+        platform_events[i].events |= READ_EVENT; 
+    if (kevents[i].filter == EVFILT_WRITE)
+        platform_events[i].events |= WRITE_EVENT;
+    if (kevents[i].flags & EV_ERROR)
+        platform_events[i].events |= ERROR_EVENT;
+    if (kevents[i].flags & EV_EOF)
+        platform_events[i].events |= HUP_EVENT;
+}
     return event_count;
 #endif
 }
@@ -233,7 +241,7 @@ void		HttpServer::SetSocketForWrite(Connection *conn)
 void HttpServer::SetSocketForRead(Connection *conn)
 {
     ModifyEvent(conn->fd,READ_EVENT);
-    conn->state = Connection::READING_REQUEST_LINE; // For keep-alive
+    conn->state = Connection::READING_REQUEST_LINE;
 }
 
 void		HttpServer::HandleNewConnection(int fd)
@@ -281,10 +289,10 @@ void		HttpServer::HandlIncommingData(int fd)
 		if (buffer_size >= READ_BUFFER_SIZE)
 			break;
 	}
-	if (rd_bytes == 0) {
-		//[sessarhi] Connection should closed closed
-		return;
-	}
+	// if (rd_bytes == 0) {
+	// 	//[sessarhi] Connection should closed closed
+	// 	return;
+	// }
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -337,7 +345,6 @@ void		HttpServer::HandlIncommingData(int fd)
 				break;
 				
 			case Connection::SENDING_RESPONSE:
-			
 				SetSocketForWrite(conn);
 				break;
 			default :
