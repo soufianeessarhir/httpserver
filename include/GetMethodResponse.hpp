@@ -6,13 +6,21 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/15 08:29:01 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/15 09:57:44 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef GETMETHODRESPONSE_HPP
 #define GETMETHODRESPONSE_HPP
 
+#ifdef __linux__
+    #include <sys/socket.h>
+#elif defined(__APPLE__)
+    #ifndef MSG_NOSIGNAL
+    #define MSG_NOSIGNAL 0
+    #endif
+    #include <sys/socket.h>
+#endif
 
 // #include "Response.hpp"
 #include <fstream>
@@ -61,7 +69,7 @@ class GetMethodResponse
     private:
         int                                                 StatusCode;
         ssize_t                                             ContentLength;
-        ssize_t                                             BytesSent;
+        // ssize_t                                             BytesSent;
         std::string                                         FilePath;
         bool                                                IsBinaryFile;
         std::string                                         ContentType;
