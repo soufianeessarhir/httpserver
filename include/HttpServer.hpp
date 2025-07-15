@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/14 20:01:04 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/15 20:53:55 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ class Connection;
 #define			READ_BUFFER_SIZE			64000
 #define			CLIENT_PER_CYCLE			512
 #define			MAX_REQUEST_LINE_LENGHT		8000 //RFC 9112,
-#define			MAX_header_field_LENGHT		1024
+#define			MAX_header_field_LENGHT		8000
 
 struct PlatformEvent {
     int fd;

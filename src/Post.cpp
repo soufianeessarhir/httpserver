@@ -3,7 +3,8 @@
 
 const std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap();
 
-Post::Post(Connection *conn , TransferType type):transfer_type(type),conn(conn),is_multipart(false)
+Post::Post(Connection *conn , TransferType type):transfer_type(type)
+,conn(conn),is_multipart(false),is_initial_del(false)
 {
     std::string content_type = conn->request->GetHeader("content-type");
     if (type ==  CONTENT_LENGTH)
@@ -48,6 +49,22 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type),conn(conn),
                 transfer_type = Post::ERROR;
             }
         }
+         std::string media_type;
+        size_t semi_colon = content_type.find(';');
+        if (semi_colon != std::string::npos)
+        {
+            media_type = content_type.substr(0,semi_colon);
+        }
+        else 
+            media_type = content_type;
+        std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
+        if (it == mime_ext.end())
+        {
+            //unsupporeted media type error
+            transfer_type = Post::ERROR;
+            return;
+        }
+        GenerateUploadfile(it->second);
         chunk_state = READING_CHUNK_SIZE;
         chunk_bytes_read = 0;
     }
@@ -176,6 +193,8 @@ void Post::ReadChunkData()
 void Post::ReadTrailerHeaders()
 {
     // should be protected for size limits
+    if (output_file.is_open())
+        output_file.close();
     size_t CRLF = conn->buffer.find("\r\n");
     if (CRLF != std::string::npos)
     {
@@ -218,7 +237,7 @@ void Post::ProcessChunck()
 
 void Post::ProcessMultiPart()
 {
-    std::string delimiter = "--" + boundry;
+    std::string delimiter = "\r\n--" + boundry;
     bool contunue = true;
     while (contunue)
     {
@@ -227,17 +246,24 @@ void Post::ProcessMultiPart()
         {
             case READING_PREAMBLE:
             {
+                delimiter = "--" + boundry;
                 size_t del = conn->buffer.find(delimiter);
                 if (del != std::string::npos)
                 {
                     conn->buffer.erase(0,del);
                     multipart_state = Post::READING_BOUNDARY;
+                    is_initial_del = true;
                     contunue = true;
                 }
                 break;
             }
             case READING_BOUNDARY:
             {
+                if (is_initial_del)
+                {
+                    delimiter = "--" + boundry;
+                    is_initial_del = false;
+                }
                 size_t close_del = conn->buffer.find(delimiter + "--");
                 if (close_del !=  std::string::npos)
                 {
@@ -246,7 +272,7 @@ void Post::ProcessMultiPart()
                     contunue = true;
                     break;
                 }
-                size_t CRLF = conn->buffer.find(delimiter + "\r\n");
+                size_t  CRLF = conn->buffer.find(delimiter + "\r\n");
                 if(CRLF != std::string::npos)
                 {
                     conn->buffer.erase(0,(delimiter + "\r\n").size());
@@ -449,8 +475,10 @@ void Post::GenerateUploadfile(const std::string &ext)
     std::stringstream oss; 
     gettimeofday(&tm,NULL);
     oss << tm.tv_sec << &tm << tm.tv_usec << &oss<<ext;
+    std::cout<<filename<<std::endl;
     filename = conn->location->upload_store + oss.str();
-    output_file.open(filename.c_str(),std::ios::binary | std::ios::app |  std::ios::out);
+    output_file.open(filename.c_str(),std::ios::app |  std::ios::out);
+    // output_file.open(filename.c_str(),std::ios::out | std::ios::app);
    
 }
 Post::~Post()
