@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/14 20:02:19 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/15 20:42:43 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,13 +231,14 @@ void HttpServer::SetSocketToNonblocking(int fd)
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
         throw HttpServerError("fcntl set failed");
 }
+
 void		HttpServer::SetSocketForWrite(Connection *conn)
 {
 	ModifyEvent(conn->fd,WRITE_EVENT);
 	conn->state = Connection::SENDING_RESPONSE;
 }
 
-void HttpServer::SetSocketForRead(Connection *conn)
+void		HttpServer::SetSocketForRead(Connection *conn)
 {
     ModifyEvent(conn->fd,READ_EVENT);
     conn->state = Connection::READING_REQUEST_LINE;
@@ -292,6 +293,7 @@ void		HttpServer::HandlIncommingData(int fd)
 		//[sessarhi] Connection should closed closed
 		return;
 	}
+	// std::cout << conn->buffer <<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{

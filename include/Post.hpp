@@ -41,18 +41,16 @@ private:
 	std::map<std::string, std::string> headers;
     ChunkState chunk_state;
     Connection *conn;
-    std::string chunk_size_buffer;
     size_t current_chunk_size;
     size_t chunk_bytes_read;
-    std::string chunk_data_buffer;
     size_t content_length;
     size_t content_bytes_read;
     std::ofstream output_file;
 
     size_t max_body_size;
     bool is_multipart;
+    bool is_initial_del;
     std::string boundry;
-	// std::string name;
 	std::string filename;
 	bool is_file_upload;
     std::vector<MultiPart> parts;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 11:20:35 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/15 14:19:23 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,13 +68,6 @@ Response::Response(int errorCode, Methods _Method) : GET(NULL), Method(_Method),
 {
     
 }
-
-// Response::Response(Request *req,Server *srv)
-// {
-//     (void)req;   // [sessarhi] should be updated to generate respons from server and the request
-//     std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
-//     (void)srv;
-// }
 
 Response::~Response()
 {
