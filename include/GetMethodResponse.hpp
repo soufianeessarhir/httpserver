@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/13 19:43:56 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/15 08:29:01 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,11 @@
 #include <cstddef>
 
 #define BUFFER_SIZE 5000
+#define NOTFOUND "/Indexes/NotFound.html"
+#define FORBIDDEN "/Indexes/Forbidden.html"
+#define BADREQUEST "/Indexes/BadRequest.html"
+#define UNAUTHORIZED "/Indexes/Unauthorized.html"
+#define URITooLong   "/Indexes/URITooLong.html"
 
 enum    Prog
 {
@@ -39,6 +44,8 @@ struct  SendFile
     Prog    Flag;
     char    Buff[BUFFER_SIZE];
 };
+
+
 
 enum    State
 {

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/13 13:22:46 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/15 08:42:50 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -306,10 +306,11 @@ void        HttpServer::HandlOutgoingData(int fd)
 	Connection *conn = clients[fd];
     if (conn->response->GetMethod() == Error)
 	{
-		conn->response->ErrorResponse(conn);
+		// conn->response->ErrorResponse(conn);
 		// conn->state = Connection::COMPLETE;
+		conn->response->SetMethod(GET);
 		//close the connection and cleanup
-		return;
+		// return;
 	}
 	if (conn->response->GetMethod() == GET)
 	{

@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/10 14:29:39 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/14 23:04:31 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@ CGI::CGI()
 
 void    CGI::BuildEnv()
 {
-    std::vector<std::string> EnvString;
     EnvString.push_back("SCRIPT_PATH=" + SCRIPT_PATH);
     EnvString.push_back("SCRIPT_NAME=" + SCRIPT_NAME);
     EnvString.push_back("QUERY_STRING=" + QUERY_STRING);
@@ -38,18 +37,47 @@ void    CGI::BuildEnv()
     Env[EnvString.size()] = NULL;
 }
 
-// void    CGI::ExecuteCgi()
-// {
-//     Vars.Child = fork();
-//     if (Vars.Child == -1)
-//         return;
-//     if (Vars.Child == 0)
-//     {
-//         execve("/home/eaboudi/Desktop/httpserver/bin/cgi.sh", NULL, Env);
-//     }
-// }
+void CGI::ExecuteCgi()
+{
+    Out_File = "CGI-SCRIPTS/test";
+    SCRIPT_FDO = open(Out_File.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
+    if (SCRIPT_FDO == -1) 
+    {
+        perror("open");
+        return;
+    }
+    BuildEnv();
+    int Child = fork();
+    if (Child == -1) 
+    {
+        perror("fork");
+        close(SCRIPT_FDO);
+        return;
+    }
+
+    if (Child == 0)
+    {
+        if (dup2(SCRIPT_FDO, STDOUT_FILENO) == -1)
+        {
+            perror("dup2");
+            exit(EXIT_FAILURE);
+        }
+        close(SCRIPT_FDO);
+        char *argv[] = {(char*)"CGI-SCRIPTS/cgi.sh", NULL};
+        execve("CGI-SCRIPTS/cgi.sh", argv, Env);
+        perror("execve");
+        exit(EXIT_FAILURE);
+    }
+    else
+    {
+        close(SCRIPT_FDO);
+        int status;
+        waitpid(Child, &status, 0);
+    }
+}
 
 CGI::~CGI()
 {
     delete[] Env;
+    close(SCRIPT_FDO);
 }
