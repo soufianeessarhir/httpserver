@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/12 22:33:36 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/14 20:01:04 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,14 @@
 # define 		HTTPSERVER_HPP
 
 #include		"ConfigData.hpp"
-#include		<sys/epoll.h>
+
+#ifdef __linux__
+    #include <sys/epoll.h>
+#elif defined(__APPLE__)
+    #include <sys/event.h>
+    #include <sys/time.h>
+#endif
+
 #include		<unistd.h>
 #include		<exception>
 #include		<sys/socket.h>
@@ -23,20 +30,28 @@
 #include		<cstring>
 #include		<sstream>
 #include		<fcntl.h>
-#include			<iostream>
+#include		<iostream>
 #include		"Connection.hpp"
 #include		<errno.h>
 #include		<deque>
 #include		<algorithm>
 #include		<cstdio>
 #include 		<arpa/inet.h>
+#include		<sys/types.h>
+
+
 class Connection;
 #define			MAX_EVENTS					1024
-#define			READ_BUFFER_SIZE			25000
+#define			READ_BUFFER_SIZE			64000
 #define			CLIENT_PER_CYCLE			512
 #define			MAX_REQUEST_LINE_LENGHT		8000 //RFC 9112,
-#define			MAX_header_field_LENGHT		64000
+#define			MAX_header_field_LENGHT		1024
 
+struct PlatformEvent {
+    int fd;
+    int events;
+    void* data;
+};
 
 class HttpServer
 {
@@ -70,7 +85,7 @@ private:
 	
 	void		ProcessHeaders(Connection *);
 	
-	bool		CheckForEventFd(std::deque<struct  epoll_event>&,int fd);
+	bool		CheckForEventFd(int fd);
 	
 	void		ProcessRequest(Connection *);
 	
@@ -85,16 +100,20 @@ private:
 	void 		FillLocationMisseddata(Connection *);
 	
 	
-
-	
-
-
-
-	
-	
-	int								epoll_fd;
-	
-	struct  epoll_event 			ev, events[MAX_EVENTS];
+	int CreateEvent();
+    int AddEvent(int fd, int events);
+    int ModifyEvent(int fd, int events);
+    int RemoveEvent(int fd);
+    int WaitForEvents(PlatformEvent* events, int max_events, int timeout);
+    int event_fd;
+    
+#ifdef __linux__
+    struct epoll_event ev, events[MAX_EVENTS];
+#elif defined(__APPLE__)
+    struct kevent kevents[MAX_EVENTS];
+    struct kevent change_list[MAX_EVENTS];
+    int change_count;
+#endif
 	
 	std::vector<Server>				&servers;
 	
@@ -102,7 +121,7 @@ private:
 	
 	std::map<int , Connection* > 	clients;
 	
-	std::deque<struct epoll_event>	active_clients;
+	 std::deque<PlatformEvent> active_clients;
 	
 };
 
@@ -121,6 +140,7 @@ class HttpServerError : public std::exception
 		virtual ~HttpServerError() throw() {}
 		
 	private:
+
 		const char *message;
 };
 
