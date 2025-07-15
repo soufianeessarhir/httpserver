@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>414 - URI Too Long</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: stretch 3s ease-in-out infinite;
+        }
+
+        @keyframes stretch {
+            0%, 100% { transform: scaleX(1); }
+            50% { transform: scaleX(1.1); }
+        }
+
+        .chain-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+            animation: extend 2s ease-in-out infinite;
+        }
+
+        @keyframes extend {
+            0%, 100% { transform: scaleX(1); }
+            50% { transform: scaleX(1.3); }
+        }
+
+        .error-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .error-message {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .error-details {
+            font-size: 1rem;
+            opacity: 0.8;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .url-demo {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .url-text {
+            animation: scroll 8s linear infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .length-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .length-elements::before,
+        .length-elements::after {
+            content: '📏';
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.2;
+            animation: measure 4s ease-in-out infinite;
+        }
+
+        .length-elements::before {
+            top: 30%;
+            left: 30%;
+            animation-delay: 0s;
+        }
+
+        .length-elements::after {
+            bottom: 30%;
+            right: 30%;
+            animation-delay: 2s;
+        }
+
+        @keyframes measure {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-5deg) scale(1.1); }
+            50% { transform: rotate(5deg) scale(0.9); }
+            75% { transform: rotate(-3deg) scale(1.05); }
+        }
+
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 5rem;
+            }
+            
+            .error-title {
+                font-size: 2rem;
+            }
+            
+            .error-message {
+                font-size: 1rem;
+            }
+            
+            .container {
+                margin: 20px;
+                padding: 30px;
+            }
+            
+            .chain-icon {
+                font-size: 3rem;
+            }
+            
+            .error-details {
+                font-size: 0.9rem;
+            }
+            
+            .url-demo {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="length-elements"></div>
+    
+    <div class="container">
+        <div class="chain-icon">🔗</div>
+        <div class="error-code">414</div>
+        <h1 class="error-title">URI Too Long</h1>
+        <p class="error-message">
+            The requested URL is too long for the server to process. The URI exceeds the maximum length limit.
+        </p>
+        <div class="url-demo">
+            <div class="url-text">https://example.com/very/long/path/with/many/parameters?param1=value1&param2=value2&param3=value3...</div>
+        </div>
+        <p class="error-details">
+            Please shorten the URL or use a POST request instead.
+        </p>
+    </div>
+</body>
+</html>

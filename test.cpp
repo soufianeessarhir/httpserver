@@ -32,7 +32,7 @@ char**    BuildEnv()
     return Env;
 }
 
-void ExecuteCgi()
+void ExecuteCgi(const std::string& outputFile = "output.txt")
 {
     std::string FileName = "CGI-SCRIPTS/test";
     int fd = open(FileName.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
@@ -50,7 +50,7 @@ void ExecuteCgi()
         delete[] Env;
         return;
     }
-    
+
     if (Child == 0)
     {
         if (dup2(fd, STDOUT_FILENO) == -1)
@@ -70,20 +70,6 @@ void ExecuteCgi()
         
         int status;
         waitpid(Child, &status, 0);
-        
-        int read_fd = open(FileName.c_str(), O_RDONLY);
-        if (read_fd != -1) 
-        {
-            char buff[4096];
-            ssize_t byteread;
-            std::string output;
-            while((byteread = read(read_fd, buff, sizeof(buff))) > 0)
-            {
-                output.append(buff, byteread);
-            }
-            close(read_fd);
-            std::cout << output << std::endl;
-        }
         delete[] Env;
     }
 }

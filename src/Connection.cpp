@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/11 11:46:11 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/14 12:09:38 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
             PathInfo = Path.substr(Pos);
         }
         else
-            Pos = Path.size() - 1;
+            Pos = Path.size();
         CheckDir = Path.substr(0, Pos);
         Pos = CheckDir.find_last_of('/');
         std::string ScriptName = CheckDir.substr(Pos + 1);
@@ -52,7 +52,7 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
             std::string ScriptPath = CheckDir;
             CheckDir += ScriptName;
             struct stat FileState;
-            if (stat(CheckDir.c_str() + 1, &FileState) == 0)
+            if (stat(CheckDir.c_str(), &FileState) == 0)
             {
                 if (S_ISREG(FileState.st_mode))
                 {

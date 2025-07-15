@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>400 - Bad Request</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: glitch 2s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-2px); }
+            40% { transform: translateX(2px); }
+            60% { transform: translateX(-1px); }
+            80% { transform: translateX(1px); }
+        }
+
+        .warning-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 0.8; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .error-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .error-message {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .error-details {
+            font-size: 1rem;
+            opacity: 0.8;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .error-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .error-elements::before,
+        .error-elements::after {
+            content: '⚡';
+            position: absolute;
+            font-size: 2.5rem;
+            opacity: 0.2;
+            animation: zigzag 3s ease-in-out infinite;
+        }
+
+        .error-elements::before {
+            top: 20%;
+            left: 20%;
+            animation-delay: 0s;
+        }
+
+        .error-elements::after {
+            bottom: 20%;
+            right: 20%;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes zigzag {
+            0%, 100% { transform: translateX(0px) translateY(0px); }
+            25% { transform: translateX(-10px) translateY(-10px); }
+            50% { transform: translateX(10px) translateY(10px); }
+            75% { transform: translateX(-5px) translateY(5px); }
+        }
+
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 5rem;
+            }
+            
+            .error-title {
+                font-size: 2rem;
+            }
+            
+            .error-message {
+                font-size: 1rem;
+            }
+            
+            .container {
+                margin: 20px;
+                padding: 30px;
+            }
+            
+            .warning-icon {
+                font-size: 3rem;
+            }
+            
+            .error-details {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-elements"></div>
+    
+    <div class="container">
+        <div class="warning-icon">⚠️</div>
+        <div class="error-code">400</div>
+        <h1 class="error-title">Bad Request</h1>
+        <p class="error-message">
+            The server cannot process your request due to invalid syntax or malformed data.
+        </p>
+        <p class="error-details">
+            Please check your request format and try again.
+        </p>
+    </div>
+</body>
+</html>

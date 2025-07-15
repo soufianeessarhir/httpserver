@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/13 19:43:29 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/15 08:58:46 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -280,10 +280,31 @@ void GetMethodResponse::SetAndSendBody(Connection* conn)
 
 void    excuteGetMethod(Connection *conn)
 {
+    if (conn->UseCgi)
+    {
+        conn->CgiObj->ExecuteCgi();
+    }
     if (!conn->response->GET)
     {
-        std::string Path = conn->request->GetUri();
-        conn->response->GET = new GetMethodResponse(conn->response->GetStatusCode(), Path);
+        std::string Path;
+        if (conn->UseCgi)
+            Path = conn->CgiObj->Out_File;
+        else
+            Path = conn->request->GetUri();
+        if (conn->response->GetStatusCode() == 200)
+                conn->response->GET = new GetMethodResponse(conn->response->GetStatusCode(), Path);
+        else
+        {
+            int status(conn->response->GetStatusCode());
+            if (status == 400)
+                Path = BADREQUEST;
+            else if  (status == 401)
+                Path = UNAUTHORIZED;
+            else if (status == 403)
+                Path = FORBIDDEN;
+            else if (status == 404)
+                Path = NOTFOUND;
+        }
     }
     switch (conn->response->GET->ResponseStat)
     {   
@@ -308,9 +329,6 @@ void    excuteGetMethod(Connection *conn)
         }
         case SENDING_HEADERS :
         {
-            // conn->response->GET->SetHeaders(false);
-            // conn->response->GET->SendHeaders(conn);
-            // conn->response->GET->ResponseStat = SENDING_BODY;
             break ;
         }
         case SENDING_BODY :

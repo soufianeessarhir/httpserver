@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/10 14:09:43 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/14 09:25:49 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,13 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <iostream>
+#include <unistd.h>
+#include <cstdlib>
+#include <cstdio>
+#include <exception>
 
 // class Connection;
 
@@ -48,6 +55,9 @@ class CGI
         std::string     REMOTE_ADDR; //done
         int             REMOTE_PORT; //done
         char            **Env;
+        int             SCRIPT_FDO;
+        std::string     Out_File;
+        std::vector<std::string> EnvString;
         t_ExecuteCgiParams Vars;
 
         // add time to check timeout

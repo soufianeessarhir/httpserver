@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/10 11:20:35 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/15 08:42:04 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,10 @@ std::map<int, std::string> createErrorPhrase()
     std::map<int, std::string> m;
     m[400] = "Bad Request";
     m[401] = "Unauthorized";
-    m[402] = "Payment Required";
     m[403] = "Forbidden";
     m[404] = "Not Found";
     m[405] = "Method Not Allowed";
     m[406] = "Not Acceptable";
-    m[407] = "Proxy Authentication Required";
     m[408] = "Request Timeout";
     m[409] = "Conflict";
     m[410] = "Gone";
@@ -96,34 +94,3 @@ void Response::SetMethod(Methods method)
     Method = method;
 }
 
-void Response::ErrorResponse(Connection *Conn)
-{
-    // Build the status line
-    std::stringstream BuildStatusLine;
-    BuildStatusLine << "HTTP/1.1 ";
-    std::map<int, std::string>::const_iterator it = ErrorPhrase.find(StatusCode);
-    if (it != ErrorPhrase.end())
-        BuildStatusLine << StatusCode << " " << it->second << "\r\n";
-    else
-    {
-        BuildStatusLine << "500 Internal Server Error\r\n";
-        StatusCode = 500;
-    }
-    StatusLineError = BuildStatusLine.str();
-    std::string Headers = "Content-Type: text/html\r\n";
-    Headers += "Content-Length: 0\r\n\r\n";
-    // Headers += "Connection: close\r\n\r\n";
-    std::string ResponseData = StatusLineError + Headers;
-    ssize_t BytesSent = send(Conn->fd, ResponseData.c_str(), ResponseData.size(), MSG_DONTWAIT);
-    if (BytesSent < 0)
-    {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return;
-        else
-        {
-            perror("send");
-            Conn->state = Connection::COMPLETE; // Mark connection as complete on error
-            return;
-        }
-    }   
-}
