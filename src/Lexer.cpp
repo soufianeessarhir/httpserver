@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:11:26 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/06/06 15:41:14 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/16 17:10:20 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ Token Lexer::getNextToken()
 			return Token(TOKEN_EOF, "");
 		return getNextToken();
 	}
-	if (isalpha(RdBuf[pos]) || RdBuf[pos] == '/' || RdBuf[pos] == '_' )
+	if (isalpha(RdBuf[pos]) || RdBuf[pos] == '/' || RdBuf[pos] == '_' || RdBuf[pos] == '.')
 	{
 		size_t start = pos;
 		while (pos < RdBuf.length() && (isalnum(RdBuf[pos]) || RdBuf[pos] == '_' || RdBuf[pos] == '.' || RdBuf[pos] == '/'))
@@ -91,21 +91,6 @@ Token Lexer::getNextToken()
 		case ':':
 			pos++;
 			return Token( TOKEN_COLON, ":" );
-		case '.':
-			pos++;
-			return Token( TOKEN_DOT, "." );
-		case '/':
-			pos++;
-			return Token( TOKEN_PATH, "/" );
-		case 'k':
-			pos++;
-			return Token( TOKEN_K, "k" );
-		case 'm':
-			pos++;
-			return Token( TOKEN_M, "m" );
-		case 'g':
-			pos++;
-			return Token( TOKEN_G, "g" );			
 	}
 	return Token( TOKEN_EOF, "" );
 }

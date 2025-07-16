@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/06 15:08:18 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/16 17:12:53 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,10 @@
 
 Parser::Parser(std::ifstream &cfg, std::vector<Server> &servers)
 	: servers(servers),lexer(cfg),currentToken(TOKEN_EOF, "")
-{
-	
+{}
 
-}
-
-void Parser::Config()
+void		Parser::Config()
 {
-	
 	currentToken = lexer.getNextToken();
 	while (currentToken.type != TOKEN_EOF)
 	{
@@ -34,7 +30,7 @@ void Parser::Config()
 	}
 }
 
-void Parser::ServerBlock()
+void		Parser::ServerBlock()
 {
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_OPEN_BRACE)
@@ -45,7 +41,7 @@ void Parser::ServerBlock()
 		throw ParseException("Expected '}' at the end of server block");
 }
 
-void Parser::DirectiveList()
+void		Parser::DirectiveList()
 {
 	while (currentToken.type != TOKEN_CLOSE_BRACE && currentToken.type != TOKEN_EOF)
 	{
@@ -54,7 +50,7 @@ void Parser::DirectiveList()
 	}
 }
 
-void Parser::Directive()
+void		Parser::Directive()
 {
 	if (currentToken.value == "listen")
 		ListenDirective();
@@ -82,14 +78,12 @@ void Parser::Directive()
 		throw ParseException("Unknown directive");
 }
 
-void Parser::ListenDirective()
+void		Parser::ListenDirective()
 {
 	servers.back().listen.push_back(std::pair<std::string, int>("", -1));
 	currentToken = lexer.getNextToken();
-
 	if (currentToken.type == TOKEN_IDENTIFIER)
 	{
-		
 		Host();
 		currentToken = lexer.getNextToken();
 		if (currentToken.type == TOKEN_COLON)
@@ -107,7 +101,7 @@ void Parser::ListenDirective()
 	{
 		if (currentToken.value.find('.') != std::string::npos)
 		{
-			IpAddress();
+			Host();
 			currentToken = lexer.getNextToken();
 			if (currentToken.type == TOKEN_COLON)
 			{
@@ -130,8 +124,36 @@ void Parser::ListenDirective()
 		throw ParseException("Expected ';' after 'listen' directive");
 }
 
-void Parser::Host()
+void		Parser::Host()
 {
+	if (currentToken.value == "localhost")
+	{
+		servers.back().listen.back().first = currentToken.value;
+		return ;
+	}
+	std::string val;
+	size_t pos = 0;
+	size_t prevpos = 0;
+	for (int i = 0; i < 4;++i)
+	{
+		pos = currentToken.value.find('.',pos);
+		if (pos != std::string::npos)
+		{
+			val = currentToken.value.substr(prevpos,pos - prevpos);
+			prevpos = ++pos;
+		}
+		else if(pos == std::string::npos && i == 3)
+		{
+			val = currentToken.value.substr(prevpos);
+		}
+		else 
+			throw ParseException("Expected 'ipv4 address or localhost' in 'listen' directive");
+		errno = 0;
+		char *endptr;
+		long long port = strtol(val.c_str(), &endptr, 10);
+		if (errno == ERANGE || *endptr != '\0' || port < 0 || port > 255)
+			throw ParseException("Expected 'ipv4 address or localhost' in 'listen' directive");
+	}
 	servers.back().listen.back().first = currentToken.value;
 }
 
@@ -143,11 +165,6 @@ void Parser::Port()
 	if (errno == ERANGE || *endptr != '\0' || port < 0 || port > 65535)
 		throw ParseException("Port number out of range");
 	servers.back().listen.back().second = static_cast<int>(port);
-}
-
-void Parser::IpAddress()
-{
-	
 }
 
 void Parser::ServerNameDirective()
@@ -210,21 +227,13 @@ void Parser::ClientMaxBodySizeDirective(size_t & max_body_size)
 	if (errno == ERANGE || *endptr != '\0' || size < 0)
 		throw ParseException("Size out of range");
 	currentToken = lexer.getNextToken();
-	if (currentToken.type == TOKEN_K || currentToken.type == TOKEN_M || currentToken.type == TOKEN_G)
-	{
-		//check the value of the token and the unit here
-		max_body_size = static_cast<size_t>(size);
-		currentToken = lexer.getNextToken();
-	}
-	else
-	     max_body_size = static_cast<size_t>(size);
+	max_body_size = static_cast<size_t>(size);
 	if (currentToken.type != TOKEN_SEMICOLON)
 		throw ParseException("Expected ';' after 'client_max_body_size' directive");
 }
 
 void Parser::LocationBlock()
 {
-	// currentToken = lexer.getNextToken();
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_PATH)
 	throw ParseException("Expected location path after 'location'");
@@ -349,8 +358,8 @@ void Parser::IndexDirective(std::string &index)
 void Parser::CgiDirective( std::map<std::string, std::string> &cgi)
 {
 	currentToken = lexer.getNextToken();
-	if (currentToken.type != TOKEN_DOT)
-	throw ParseException("Expected '.' after 'cgi'");
+	if (currentToken.value[0] != '.')
+	throw ParseException("Expected '.' in  'cgi' extention");
 	std::string extension = currentToken.value;
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_IDENTIFIER)

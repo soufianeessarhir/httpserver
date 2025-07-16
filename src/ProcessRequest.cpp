@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/11 10:36:03 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/16 15:20:50 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,6 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	std::string ip = inet_ntoa(server_addr.sin_addr);
 	Server* default_server = NULL;
     Server* matched_server = NULL;
-    
     for (size_t i = 0; i < servers.size(); ++i) 
 	{
         bool port_matches = false;
