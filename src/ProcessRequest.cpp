@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/16 15:20:50 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/16 19:48:46 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,17 +24,14 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
             conn->buffer.erase(0, end + 2);
             return;
         }
-        
 		bool IsValid = conn->request->ParseRequestLine(line);
 		if (IsValid)
 		{
 			conn->buffer.erase(0,end + 2);
 			conn->state = Connection::READING_HEADERS;
-			// std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 		}
 		else
 		{
-			// std::cout <<"reach file "<<__FILE__<<" line "<<__LINE__<<std::endl;
 			conn->response =  new Response(conn->request->GetStatus(), Error);
 			conn->state =  Connection::SENDING_RESPONSE;
 		}
@@ -49,9 +46,7 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 				bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
 				conn->buffer.erase(0,end + 4);
 				if (IsValid)
-				{
 					conn->state = Connection::PROCESSING;
-				}
 				else
 				{
 					conn->response = new Response(conn->request->GetStatus(), Error);
@@ -66,14 +61,11 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	std::string hostname = host;
     size_t colon_pos = host.find(':');
     if (colon_pos != std::string::npos) 
-	{
         hostname = host.substr(0, colon_pos);
-    }
 	struct sockaddr_in server_addr;
 	socklen_t addr_len = sizeof(server_addr);
-	if(getsockname(conn->fd, (struct sockaddr*)&server_addr, &addr_len) == -1) {
+	if(getsockname(conn->fd, (struct sockaddr*)&server_addr, &addr_len) == -1)
 		return;
-	}
 	int port = ntohs(server_addr.sin_port);
 	std::string ip = inet_ntoa(server_addr.sin_addr);
 	Server* default_server = NULL;
@@ -92,9 +84,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
         }
         if (!port_matches) continue;
         if (!default_server) 
-		{
             default_server = &servers[i]; 
-        }
         for (size_t k = 0; k < servers[i].server_names.size(); ++k) {
             if (servers[i].server_names[k] == hostname) {
                 matched_server = &servers[i];
@@ -159,41 +149,37 @@ bool HttpServer::MatchLocation(Connection *conn)
 {
     std::string target = conn->request->GetUri();
     size_t query_pos = target.find('?');
-    if (query_pos != std::string::npos) {
+    if (query_pos != std::string::npos)
         target = target.substr(0, query_pos);
-    }
     std::map<std::string, LocationData>::iterator it = conn->server->locations.find(target);
     if (it != conn->server->locations.end()) {
         conn->location = &it->second;
         return true;
     }
-    
-    while (!target.empty()) {
+    while (!target.empty()) 
+	{
         size_t last_slash = target.find_last_of('/');
-        
-        if (last_slash == std::string::npos) {
+        if (last_slash == std::string::npos)
             break;
-        }
-        if (last_slash == 0) {
+        if (last_slash == 0)
             target = "/";
-        } else {
+        else
             target = target.substr(0, last_slash);
-        }
         it = conn->server->locations.find(target);
-        if (it != conn->server->locations.end()) {
+        if (it != conn->server->locations.end())
+		{
             conn->location = &it->second;
             return true;
         }
-        if (target == "/") {
+        if (target == "/")
             break;
-        }
     }
     it = conn->server->locations.find("/");
-    if (it != conn->server->locations.end()) {
+    if (it != conn->server->locations.end())
+	{
         conn->location = &it->second;
         return true;
     }
-	
     return false;
 }
 
@@ -205,7 +191,6 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 		conn->response = new Response(405 , Error);
 		return false;
 	}
-	
 	if (!conn->location->upload)
 	{
 		//unothorized
@@ -216,9 +201,7 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 	{
 		size_t last_space = encoding.find_last_of(' ');
 		if (last_space != std::string::npos)
-		{
 			encoding = encoding.substr(last_space);
-		}
 		if (encoding != "chunked")
 		{
 			conn->response = new Response(400 , Error);
@@ -227,24 +210,17 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 		conn->post = new Post(conn,Post::CHUNKED);
 	}
 	else if (!conn->request->GetHeader("content-length").empty())
-	{
 		conn->post = new Post(conn,Post::CONTENT_LENGTH);
-	}
 	else
 	{
 		conn->response = new Response(411 , Error);
 		return false;
 	}
-	
 	return true;
 }
 
 void 		HttpServer::FillLocationMisseddata(Connection *conn)
 {
-	// if (!conn->location)
-	// {
-	// 	return;
-	// }
 	if (conn->location->root.empty())
 		conn->location->root = conn->server->root;
 	if (conn->location->index.empty() && !conn->server->index.empty())
