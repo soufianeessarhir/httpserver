@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/16 14:28:23 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/16 19:57:35 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,6 +133,7 @@ int HttpServer::RemoveEvent(int fd)
 
 int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, int timeout)
 {
+	// here i should i set the timeout to infinite if the there is no work to perform or zero if there is
 	timeout = 0;
 #ifdef __linux__
     int event_count = epoll_wait(event_fd, events, max_events, timeout);
@@ -147,20 +148,20 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
     ts.tv_sec = timeout / 1000;
     ts.tv_nsec = (timeout % 1000) * 1000000;
     int event_count = kevent(event_fd, NULL, 0, kevents, max_events, &ts);
- for (int i = 0; i < event_count; i++)
- {
-    platform_events[i].fd = kevents[i].ident;
-    platform_events[i].data = kevents[i].udata;
-    platform_events[i].events = 0;
-    if (kevents[i].filter == EVFILT_READ)
-        platform_events[i].events |= READ_EVENT; 
-    if (kevents[i].filter == EVFILT_WRITE)
-        platform_events[i].events |= WRITE_EVENT;
-    if (kevents[i].flags & EV_ERROR)
-        platform_events[i].events |= ERROR_EVENT;
-    if (kevents[i].flags & EV_EOF)
-        platform_events[i].events |= HUP_EVENT;
-}
+	for (int i = 0; i < event_count; i++)
+	{
+		platform_events[i].fd = kevents[i].ident;
+		platform_events[i].data = kevents[i].udata;
+		platform_events[i].events = 0;
+		if (kevents[i].filter == EVFILT_READ)
+			platform_events[i].events |= READ_EVENT; 
+		if (kevents[i].filter == EVFILT_WRITE)
+			platform_events[i].events |= WRITE_EVENT;
+		if (kevents[i].flags & EV_ERROR)
+			platform_events[i].events |= ERROR_EVENT;
+		if (kevents[i].flags & EV_EOF)
+			platform_events[i].events |= HUP_EVENT;
+	}
     return event_count;
 #endif
 }
@@ -182,8 +183,7 @@ void		HttpServer::init()
 				"localhost" : servers[i].listen[j].first;
 			std::ostringstream port;
 			port << servers[i].listen[j].second;
-			if (getaddrinfo(host.c_str(), port.str().c_str(),
-				&hints, &res) != 0)
+			if (getaddrinfo(host.c_str(), port.str().c_str(),&hints, &res) != 0)
 			{
 				close(sockfd);
 				throw HttpServerError("Getaddrinfo failed");
@@ -251,9 +251,7 @@ void		HttpServer::HandleNewConnection(int fd)
 		if (client_fd == -1)
 		{
 			if (errno == EAGAIN || errno == EWOULDBLOCK)
-			{
 				break;
-			}
 			else
 				throw HttpServerError("Accept failed");
 		}
@@ -363,15 +361,11 @@ void		HttpServer::run()
 		for (int i = 0; i < event_count; ++i)
 		{
 			if (server_map.find(platform_events[i].fd) != server_map.end())
-			{
 				HandleNewConnection(platform_events[i].fd);
-			}
 			else if (platform_events[i].events & (READ_EVENT | WRITE_EVENT))
 			{
 				if (!CheckForEventFd(platform_events[i].fd))
-				{
 					active_clients.push_back(platform_events[i]);
-				}
 			}
 			else if (platform_events[i].events  & HUP_EVENT)
 			{
@@ -406,18 +400,12 @@ void		HttpServer::ProcessClientsRoundRobin()
         {
             HandlIncommingData(client_ev.fd);
             if (conn->state == Connection::SENDING_RESPONSE)
-            {
                 client_ev.events = WRITE_EVENT;
-            }
         }
         else if (client_ev.events & WRITE_EVENT)
-        {
             HandlOutgoingData(client_ev.fd);
-        }
 		if (conn->state != Connection::COMPLETE)
-		{
 			active_clients.push_back(client_ev);
-		}
     }
 }
 
@@ -433,9 +421,7 @@ void        HttpServer::HandlOutgoingData(int fd)
 		return;
 	}
 	if (conn->response->GetMethod() == GET)
-	{
 		excuteGetMethod(conn);
-	}
 	if ( conn->state == Connection::COMPLETE )
 	{
 		SetSocketForRead(conn);

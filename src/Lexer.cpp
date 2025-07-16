@@ -6,44 +6,42 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:11:26 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/16 17:10:20 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/16 19:42:19 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Lexer.hpp"
 
-Lexer::Lexer(std::ifstream &Conf): ConfigFile(Conf),
-		pos(0)
-{
-	
-}
+Lexer::Lexer(std::ifstream &Conf): ConfigFile(Conf),pos(0){}
 
 
-void Lexer::skipWhitespace()
+void		Lexer::skipWhitespace()
 {
 	while (pos < RdBuf.length() && isspace(RdBuf[pos]))
 		pos++;
 }
 
-void Lexer::skipComment()
+void		Lexer::skipComment()
 {
 	while (pos < RdBuf.length() && RdBuf[pos] != '\n')
 		pos++;
 }
 
-void Lexer::skipemptyLines()
+
+void		Lexer::skipemptyLines()
 {
 	while (pos < RdBuf.length() && (RdBuf[pos] == '\n'))
 		pos++;
 }
 
-void Lexer::ReadLine()
+
+void		Lexer::ReadLine()
 {
 
 	pos = 0;
 	getline(ConfigFile, RdBuf);
 }
-Token Lexer::getNextToken()
+Token		Lexer::getNextToken()
 {
 	this->skipWhitespace();
 	if (RdBuf[pos] == '#')
