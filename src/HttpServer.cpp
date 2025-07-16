@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/15 20:42:43 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/16 14:28:23 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 bool HttpServer::CheckForEventFd(int fd)
 {
     for (std::deque<PlatformEvent>::iterator it = active_clients.begin();
-         it != active_clients.end(); ++it)
+    it != active_clients.end(); ++it)
     {
         if (it->fd == fd)
             return true;
@@ -100,7 +100,6 @@ int HttpServer::ModifyEvent(int fd, int events)
         EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
         change_count++;
     }
-    
     if (events & WRITE_EVENT)
 	{
         EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
@@ -111,7 +110,6 @@ int HttpServer::ModifyEvent(int fd, int events)
         EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
         change_count++;
     }
-    
     int result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
     return result;
@@ -127,7 +125,6 @@ int HttpServer::RemoveEvent(int fd)
     change_count++;
     EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
     change_count++;
-    
     int result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
     return result;
@@ -290,7 +287,7 @@ void		HttpServer::HandlIncommingData(int fd)
 			break;
 	}
 	if (rd_bytes == 0) {
-		//[sessarhi] Connection should closed closed
+		//[sessarhi] Connection should closed
 		return;
 	}
 	// std::cout << conn->buffer <<std::endl;
@@ -401,7 +398,7 @@ void		HttpServer::ProcessClientsRoundRobin()
         active_clients.pop_front();
         if (clients.find(client_ev.fd) == clients.end())
         {
-            active_clients.pop_front();
+            // active_clients.pop_front();
             continue;
         }
         Connection *conn = clients[client_ev.fd];
