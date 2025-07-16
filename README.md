@@ -35,3 +35,4 @@
 
 - [The C10K Problem](http://www.kegel.com/c10k.html)
 - [epoll Documentation](https://man7.org/linux/man-pages/man7/epoll.7.html)
+- [epoll/kqueue](https://habr.com/en/articles/600123/)
