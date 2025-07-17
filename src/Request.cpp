@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/11 10:35:15 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/17 11:23:33 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -312,11 +312,11 @@ bool        Request::Decode()
                 RequestStatusCode = 400;
                 return false;
             }
-            std::istringstream os(tmp.substr(i +1 ,2));
+            std::istringstream os(tmp.substr(i + 1 ,2));
             int val = 0;
             os >> std::hex >> val;
             uri.push_back(static_cast<char>(val));
-            i=+2;
+            i += 2;
         }
         else
             uri.push_back(tmp[i]);
