@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:12:00 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/02 21:28:39 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/16 17:08:19 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,6 @@ enum TokenType
     TOKEN_SEMICOLON,
     TOKEN_COLON,
     TOKEN_DOT,
-    TOKEN_K,
-    TOKEN_M,
-    TOKEN_G,
     TOKEN_EOF
 };
 struct Token
