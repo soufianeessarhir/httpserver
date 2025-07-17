@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   GetMethodResponse.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/17 08:46:32 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/17 11:12:46 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -294,7 +294,7 @@ void    SetIndexCaseError(Connection *conn)
 
 void GetMethodResponse::SetPath(std::string NewPath)
 {
-    FilePath = NewPath;
+FilePath = NewPath;
 }
 
 void    excuteGetMethod(Connection *conn)

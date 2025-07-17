@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/17 09:45:55 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/17 10:14:33 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -284,10 +284,10 @@ void		HttpServer::HandlIncommingData(int fd)
 		if (buffer_size >= READ_BUFFER_SIZE)
 			break;
 	}
-	if (rd_bytes == 0) {
-		//[sessarhi] Connection should closed
-		return;
-	}
+	// if (rd_bytes == 0) {
+	// 	//[sessarhi] Connection should closed
+	// 	return;
+	// }
 	// std::cout << conn->buffer <<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
@@ -392,7 +392,7 @@ void		HttpServer::ProcessClientsRoundRobin()
         active_clients.pop_front();
         if (clients.find(client_ev.fd) == clients.end())
         {
-            // active_clients.pop_front();
+            active_clients.pop_front();
             continue;
         }
         Connection *conn = clients[client_ev.fd];
@@ -425,7 +425,7 @@ void        HttpServer::HandlOutgoingData(int fd)
 	{
 		excuteGetMethod(conn);
 	}
-	if ( conn->state == Connection::COMPLETE && conn->response->GetMethod() != Error)
+	if ( conn->state == Connection::COMPLETE)
 	{
 		SetSocketForRead(conn);
 		conn->state = Connection::READING_REQUEST_LINE;
