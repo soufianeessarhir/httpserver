@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/17 10:14:33 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/17 14:10:34 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -275,19 +275,18 @@ void		HttpServer::HandlIncommingData(int fd)
 	if (!conn)
 		return ;
 	ssize_t rd_bytes = 0;
-	ssize_t buffer_size = 0;
 	char buf[READ_BUFFER_SIZE];
-	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT)) > 0 ;)
+	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
+	conn->buffer.append(buf,rd_bytes);
+	if (rd_bytes == 0)
 	{
-		conn->buffer.append(buf,rd_bytes);
-		buffer_size += rd_bytes;
-		if (buffer_size >= READ_BUFFER_SIZE)
-			break;
+		//[sessarhi] Connection should be closed -> the client close the socket from its side
+		return;
 	}
-	// if (rd_bytes == 0) {
-	// 	//[sessarhi] Connection should closed
-	// 	return;
-	// }
+	else if (rd_bytes < 0)
+	{
+		//[sessarhi] Connection should be closed -> an error happens in read operation
+	}
 	// std::cout << conn->buffer <<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
