@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/17 08:51:40 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/17 09:45:55 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 bool HttpServer::CheckForEventFd(int fd)
 {
     for (std::deque<PlatformEvent>::iterator it = active_clients.begin();
-         it != active_clients.end(); ++it)
+    it != active_clients.end(); ++it)
     {
         if (it->fd == fd)
             return true;
@@ -100,7 +100,6 @@ int HttpServer::ModifyEvent(int fd, int events)
         EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
         change_count++;
     }
-    
     if (events & WRITE_EVENT)
 	{
         EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
@@ -111,7 +110,6 @@ int HttpServer::ModifyEvent(int fd, int events)
         EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
         change_count++;
     }
-    
     int result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
     return result;
@@ -127,7 +125,6 @@ int HttpServer::RemoveEvent(int fd)
     change_count++;
     EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
     change_count++;
-    
     int result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
     return result;
@@ -136,6 +133,7 @@ int HttpServer::RemoveEvent(int fd)
 
 int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, int timeout)
 {
+	// here i should i set the timeout to infinite if the there is no work to perform or zero if there is
 	timeout = 0;
 #ifdef __linux__
     int event_count = epoll_wait(event_fd, events, max_events, timeout);
@@ -150,20 +148,20 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
     ts.tv_sec = timeout / 1000;
     ts.tv_nsec = (timeout % 1000) * 1000000;
     int event_count = kevent(event_fd, NULL, 0, kevents, max_events, &ts);
- for (int i = 0; i < event_count; i++)
- {
-    platform_events[i].fd = kevents[i].ident;
-    platform_events[i].data = kevents[i].udata;
-    platform_events[i].events = 0;
-    if (kevents[i].filter == EVFILT_READ)
-        platform_events[i].events |= READ_EVENT; 
-    if (kevents[i].filter == EVFILT_WRITE)
-        platform_events[i].events |= WRITE_EVENT;
-    if (kevents[i].flags & EV_ERROR)
-        platform_events[i].events |= ERROR_EVENT;
-    if (kevents[i].flags & EV_EOF)
-        platform_events[i].events |= HUP_EVENT;
-}
+	for (int i = 0; i < event_count; i++)
+	{
+		platform_events[i].fd = kevents[i].ident;
+		platform_events[i].data = kevents[i].udata;
+		platform_events[i].events = 0;
+		if (kevents[i].filter == EVFILT_READ)
+			platform_events[i].events |= READ_EVENT; 
+		if (kevents[i].filter == EVFILT_WRITE)
+			platform_events[i].events |= WRITE_EVENT;
+		if (kevents[i].flags & EV_ERROR)
+			platform_events[i].events |= ERROR_EVENT;
+		if (kevents[i].flags & EV_EOF)
+			platform_events[i].events |= HUP_EVENT;
+	}
     return event_count;
 #endif
 }
@@ -185,8 +183,7 @@ void		HttpServer::init()
 				"localhost" : servers[i].listen[j].first;
 			std::ostringstream port;
 			port << servers[i].listen[j].second;
-			if (getaddrinfo(host.c_str(), port.str().c_str(),
-				&hints, &res) != 0)
+			if (getaddrinfo(host.c_str(), port.str().c_str(),&hints, &res) != 0)
 			{
 				close(sockfd);
 				throw HttpServerError("Getaddrinfo failed");
@@ -231,13 +228,14 @@ void HttpServer::SetSocketToNonblocking(int fd)
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
         throw HttpServerError("fcntl set failed");
 }
+
 void		HttpServer::SetSocketForWrite(Connection *conn)
 {
 	ModifyEvent(conn->fd,WRITE_EVENT);
 	conn->state = Connection::SENDING_RESPONSE;
 }
 
-void HttpServer::SetSocketForRead(Connection *conn)
+void		HttpServer::SetSocketForRead(Connection *conn)
 {
     ModifyEvent(conn->fd,READ_EVENT);
     conn->state = Connection::READING_REQUEST_LINE;
@@ -253,9 +251,7 @@ void		HttpServer::HandleNewConnection(int fd)
 		if (client_fd == -1)
 		{
 			if (errno == EAGAIN || errno == EWOULDBLOCK)
-			{
 				break;
-			}
 			else
 				throw HttpServerError("Accept failed");
 		}
@@ -289,9 +285,10 @@ void		HttpServer::HandlIncommingData(int fd)
 			break;
 	}
 	if (rd_bytes == 0) {
-		//[sessarhi] Connection should closed closed
+		//[sessarhi] Connection should closed
 		return;
 	}
+	// std::cout << conn->buffer <<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -364,15 +361,11 @@ void		HttpServer::run()
 		for (int i = 0; i < event_count; ++i)
 		{
 			if (server_map.find(platform_events[i].fd) != server_map.end())
-			{
 				HandleNewConnection(platform_events[i].fd);
-			}
 			else if (platform_events[i].events & (READ_EVENT | WRITE_EVENT))
 			{
 				if (!CheckForEventFd(platform_events[i].fd))
-				{
 					active_clients.push_back(platform_events[i]);
-				}
 			}
 			else if (platform_events[i].events  & HUP_EVENT)
 			{
@@ -399,7 +392,7 @@ void		HttpServer::ProcessClientsRoundRobin()
         active_clients.pop_front();
         if (clients.find(client_ev.fd) == clients.end())
         {
-            active_clients.pop_front();
+            // active_clients.pop_front();
             continue;
         }
         Connection *conn = clients[client_ev.fd];
@@ -407,18 +400,12 @@ void		HttpServer::ProcessClientsRoundRobin()
         {
             HandlIncommingData(client_ev.fd);
             if (conn->state == Connection::SENDING_RESPONSE)
-            {
                 client_ev.events = WRITE_EVENT;
-            }
         }
         else if (client_ev.events & WRITE_EVENT)
-        {
             HandlOutgoingData(client_ev.fd);
-        }
 		if (conn->state != Connection::COMPLETE)
-		{
 			active_clients.push_back(client_ev);
-		}
     }
 }
 
