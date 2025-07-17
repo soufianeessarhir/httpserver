@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/15 08:58:46 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/17 08:46:32 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,13 +75,15 @@ void    GetMethodResponse::SetContentType()
         ContentType = "application/octet-stream"; // Default type for unknown files
         IsBinaryFile = true;
     }
+    if(StatusCode != 200)
+        ContentType = "text/html";
 }
 
 GetMethodResponse::GetMethodResponse(int statusCode, std::string filePath)
     : StatusCode(statusCode), FilePath(filePath), IsBinaryFile(false)
 {
     ResponseStat = SENDING_STATUSLINE;
-    SetContentType();
+    // SetContentType();
     // SetBody();
     // SetHeaders();
     // SetStatusLine();
@@ -104,20 +106,14 @@ void    GetMethodResponse::SetHeaders(bool CloseConn)
 {
     if (!CloseConn)
     {
-        std::ostringstream oss;
-        oss << ContentLength;
-        Headers["Content-Type"] = ContentType + "\r\n";
-        Headers["Content-Length"] = oss.str() + "\r\n";
         Headers["Connection"] = "keep-alive\r\n";
-        return ;
     }
-    ContentType = "text/html\r\n";
-    ContentType = "text/html\r\n";
-    ContentLength = 0;
+    else
+        Headers["Connection"] = "close\r\n";
+    std::ostringstream oss;
+    oss << ContentLength;
+    Headers["Content-Length"] = oss.str() + "\r\n";
     Headers["Content-Type"] = ContentType + "\r\n";
-    Headers["Content-Length"] = "0\r\n";
-    Headers["Connection"] = "close\r\n";
-    Headers["Connection"] = "close\r\n";
 }
 
 GetMethodResponse::~GetMethodResponse()
@@ -210,18 +206,20 @@ void GetMethodResponse::SendHeaders(Connection *Conn)
     }
 }
 
-bool    GetMethodResponse::CheckForSending()
+bool    GetMethodResponse::CheckForSending(Connection *conn)
 {
     struct stat FileState;
     if (stat(FilePath.c_str(), &FileState) == -1 || !S_ISREG(FileState.st_mode))
     {
-        StatusCode = 404;
+        StatusCode = 404; //fix don't return
+        SetIndexCaseError(conn);
         return false;
     }
     CheckProg.FileFd = open(FilePath.c_str(), O_RDONLY);
-    if (CheckProg.FileFd == -1)
+    if (CheckProg.FileFd == -1 && conn->response->GetMethod() != Error)
     {
         StatusCode = 403;
+        SetIndexCaseError(conn);
         return false;
     }
     CheckProg.FileOffset = 0;
@@ -278,6 +276,27 @@ void GetMethodResponse::SetAndSendBody(Connection* conn)
     CheckProg.BuffOffs += bytes_sent;
 }
 
+void    SetIndexCaseError(Connection *conn)
+{
+    std::string Path;
+    int status(conn->response->GET->GetStatusCode());
+    if (status == 400)
+        Path = BADREQUEST;
+    else if  (status == 401)
+        Path = UNAUTHORIZED;
+    else if (status == 403)
+        Path = FORBIDDEN;
+    else if (status == 404)
+        Path = NOTFOUND;
+    conn->response->GET->SetPath(Path);
+    conn->response->SetMethod(Error);
+}
+
+void GetMethodResponse::SetPath(std::string NewPath)
+{
+    FilePath = NewPath;
+}
+
 void    excuteGetMethod(Connection *conn)
 {
     if (conn->UseCgi)
@@ -291,45 +310,30 @@ void    excuteGetMethod(Connection *conn)
             Path = conn->CgiObj->Out_File;
         else
             Path = conn->request->GetUri();
-        if (conn->response->GetStatusCode() == 200)
-                conn->response->GET = new GetMethodResponse(conn->response->GetStatusCode(), Path);
-        else
-        {
-            int status(conn->response->GetStatusCode());
-            if (status == 400)
-                Path = BADREQUEST;
-            else if  (status == 401)
-                Path = UNAUTHORIZED;
-            else if (status == 403)
-                Path = FORBIDDEN;
-            else if (status == 404)
-                Path = NOTFOUND;
-        }
+        conn->response->GET = new GetMethodResponse(conn->response->GetStatusCode(), Path);        
+        if (conn->response->GetMethod() == Error)
+            SetIndexCaseError(conn);
     }
     switch (conn->response->GET->ResponseStat)
     {   
         case SENDING_STATUSLINE :
         {
-            conn->response->GET->CheckForSending();
+            if (!conn->response->GET->CheckForSending(conn))
+                conn->response->GET->CheckForSending(conn);
+            conn->response->GET->SetContentType();
             conn->response->GET->SetStatusLine();
             conn->response->GET->SendStatusLine(conn);
-            if (conn->response->GET->GetStatusCode() != 200)
+            if (conn->response->GetMethod() == Error)
             {
                 conn->response->GET->SetHeaders(true);
-                conn->response->GET->SendHeaders(conn);
-                conn->response->GET->ResponseStat = SENDING_COMPLETE;
             }
             else
             {
                 conn->response->GET->SetHeaders(false);
-                conn->response->GET->SendHeaders(conn);
-                conn->response->GET->ResponseStat = SENDING_BODY;
             }
+            conn->response->GET->SendHeaders(conn);
+            conn->response->GET->ResponseStat = SENDING_BODY;
             break;
-        }
-        case SENDING_HEADERS :
-        {
-            break ;
         }
         case SENDING_BODY :
         {

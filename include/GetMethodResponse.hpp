@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/15 09:57:44 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/16 20:59:40 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,11 @@
 #include <cstddef>
 
 #define BUFFER_SIZE 5000
-#define NOTFOUND "/Indexes/NotFound.html"
-#define FORBIDDEN "/Indexes/Forbidden.html"
-#define BADREQUEST "/Indexes/BadRequest.html"
-#define UNAUTHORIZED "/Indexes/Unauthorized.html"
-#define URITooLong   "/Indexes/URITooLong.html"
+#define NOTFOUND "Indexes/NotFound.html"
+#define FORBIDDEN "Indexes/Forbidden.html"
+#define BADREQUEST "Indexes/BadRequest.html"
+#define UNAUTHORIZED "Indexes/Unauthorized.html"
+#define URITooLong   "Indexes/URITooLong.html"
 
 enum    Prog
 {
@@ -58,7 +58,6 @@ struct  SendFile
 enum    State
 {
     SENDING_STATUSLINE,
-    SENDING_HEADERS,
     SENDING_BODY,
     SENDING_COMPLETE
 };
@@ -82,13 +81,14 @@ class GetMethodResponse
         GetMethodResponse(int statusCode, std::string filePath);
         ~GetMethodResponse();
     
-        void SetHeaders(bool CloseConn);
-        void SetContentType();
-        void SetStatusLine();
-
-        const std::string& GetBody() const;
-        const std::string& GetContentType() const;
-        int GetStatusCode() const;
+        void    SetHeaders(bool CloseConn);
+        void    SetContentType();
+        void    SetStatusLine();
+        void    SetPath(std::string NewPath);
+        
+        const   std::string& GetBody() const;
+        const   std::string& GetContentType() const;
+        int     GetStatusCode() const;
 
         void    SendStatusLine(Connection *Conn);
         void    SendHeaders(Connection *Conn);
@@ -97,11 +97,12 @@ class GetMethodResponse
         State       ResponseStat;
 
         void    SetAndSendBody(Connection *conn);
-        bool    CheckForSending();
+        bool    CheckForSending(Connection *conn);
 };
 
 
 std::map<std::string, std::string> CreateMimeTypes();
 void    excuteGetMethod(Connection *conn);
+void    SetIndexCaseError(Connection *conn);
 
 #endif

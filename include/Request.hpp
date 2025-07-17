@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/11 11:41:15 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/16 10:07:34 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ class Request
 
 public:
 
-    Request():RequestStatusCode(0) ,IsComplete(false){}
+    Request():RequestStatusCode(200) ,IsComplete(false){}
     
     ~Request(){}
     
