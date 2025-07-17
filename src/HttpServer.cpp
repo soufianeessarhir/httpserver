@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/15 09:50:01 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/17 08:51:40 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -426,23 +426,24 @@ void        HttpServer::HandlOutgoingData(int fd)
 {
     
 	Connection *conn = clients[fd];
-    if (conn->response->GetMethod() == Error)
-	{
-		// conn->response->ErrorResponse(conn);
-		// conn->state = Connection::COMPLETE;
-		conn->response->SetMethod(GET);
-		//close the connection and cleanup
-		// return;
-	}
-	if (conn->response->GetMethod() == GET)
+    // if (conn->response->GetMethod() == Error)
+	// {
+	// 	// conn->response->ErrorResponse(conn);
+	// 	// conn->state = Connection::COMPLETE;
+	// 	conn->response->SetMethod(GET);
+	// 	//close the connection and cleanup
+	// 	// return;
+	// }
+	if (conn->response->GetMethod() == GET || conn->response->GetMethod() == Error)
 	{
 		excuteGetMethod(conn);
 	}
-	if ( conn->state == Connection::COMPLETE )
+	if ( conn->state == Connection::COMPLETE && conn->response->GetMethod() != Error)
 	{
 		SetSocketForRead(conn);
 		conn->state = Connection::READING_REQUEST_LINE;
 	}
+	
 }
 
 void		HttpServer::cleanup()
