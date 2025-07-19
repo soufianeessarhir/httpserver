@@ -1,19 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   GetMethodResponse.cpp                              :+:      :+:    :+:   */
+/*   MainResponse.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/17 11:36:17 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/19 08:49:59 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "GetMethodResponse.hpp"
+#include "MainResponse.hpp"
 #include <sstream>
 #include <sys/stat.h>
 #include <fcntl.h>
+class MainResponse;
 
 std::map<std::string, std::string> CreateMimeTypes()
 {
@@ -54,10 +55,10 @@ std::map<std::string, std::string> CreateMimeTypes()
 }
 
 
-const std::map<std::string, std::string> GetMethodResponse::MimeTypes = CreateMimeTypes();
-const std::map<int, std::string> GetMethodResponse::ErrorPhrase = createErrorPhrase();
+const std::map<std::string, std::string> MainResponse::MimeTypes = CreateMimeTypes();
+const std::map<int, std::string> MainResponse::ErrorPhrase = createErrorPhrase();
 
-void    GetMethodResponse::SetContentType()
+void    MainResponse::SetContentType()
 {
     std::string Extension = FilePath.substr(FilePath.find_last_of('.') + 1);
     std::map<std::string, std::string>::const_iterator it = MimeTypes.find(Extension);
@@ -79,7 +80,7 @@ void    GetMethodResponse::SetContentType()
         ContentType = "text/html";
 }
 
-GetMethodResponse::GetMethodResponse(int statusCode, std::string filePath)
+MainResponse::MainResponse(int statusCode, std::string filePath)
     : StatusCode(statusCode), FilePath(filePath), IsBinaryFile(false)
 {
     ResponseStat = SENDING_STATUSLINE;
@@ -89,7 +90,7 @@ GetMethodResponse::GetMethodResponse(int statusCode, std::string filePath)
     // SetStatusLine();
 }
 
-void GetMethodResponse::SetStatusLine()
+void MainResponse::SetStatusLine()
 {
     std::stringstream BuildStatusLine;
     BuildStatusLine << "HTTP/1.1 ";
@@ -102,7 +103,7 @@ void GetMethodResponse::SetStatusLine()
 }
 
 
-void    GetMethodResponse::SetHeaders(bool CloseConn)
+void    MainResponse::SetHeaders(bool CloseConn)
 {
     if (!CloseConn)
     {
@@ -116,12 +117,12 @@ void    GetMethodResponse::SetHeaders(bool CloseConn)
     Headers["Content-Type"] = ContentType + "\r\n";
 }
 
-GetMethodResponse::~GetMethodResponse()
+MainResponse::~MainResponse()
 {
     
 }
 
-void GetMethodResponse::SendStatusLine(Connection *Conn)
+void MainResponse::SendStatusLine(Connection *Conn)
 {
     ssize_t BytesWriten = 0;
     size_t TotalSent = 0;
@@ -154,21 +155,21 @@ void GetMethodResponse::SendStatusLine(Connection *Conn)
     }
 }
 
-const std::string& GetMethodResponse::GetBody() const
+const std::string& MainResponse::GetBody() const
 {
     return Body;
 }
-const std::string& GetMethodResponse::GetContentType() const
+const std::string& MainResponse::GetContentType() const
 {
     return ContentType;
 }
 
-int GetMethodResponse::GetStatusCode() const
+int MainResponse::GetStatusCode() const
 {
     return StatusCode;
 }
 
-void GetMethodResponse::SendHeaders(Connection *Conn)
+void MainResponse::SendHeaders(Connection *Conn)
 {
     ssize_t BytesWriten = 0;
     size_t TotalSent = 0;
@@ -206,7 +207,7 @@ void GetMethodResponse::SendHeaders(Connection *Conn)
     }
 }
 
-bool    GetMethodResponse::CheckForSending(Connection *conn)
+bool    MainResponse::CheckForSending(Connection *conn)
 {
     struct stat FileState;
     if (stat(FilePath.c_str(), &FileState) == -1 || !S_ISREG(FileState.st_mode))
@@ -232,7 +233,7 @@ bool    GetMethodResponse::CheckForSending(Connection *conn)
     ContentLength = FileState.st_size;
     return true;
 }
-void GetMethodResponse::SetAndSendBody(Connection* conn) 
+void MainResponse::SetAndSendBody(Connection* conn) 
 {
     // Make Buff a member of CheckProg so it persists between calls
     if (CheckProg.BuffOffs >= CheckProg.BuffSize)
@@ -292,7 +293,7 @@ void    SetIndexCaseError(Connection *conn)
     conn->response->SetMethod(Error);
 }
 
-void GetMethodResponse::SetPath(std::string NewPath)
+void MainResponse::SetPath(std::string NewPath)
 {
     FilePath = NewPath;
 }
@@ -310,7 +311,7 @@ void    excuteGetMethod(Connection *conn)
             Path = conn->CgiObj->Out_File;
         else
             Path = conn->request->GetUri();
-        conn->response->GET = new GetMethodResponse(conn->response->GetStatusCode(), Path);        
+        conn->response->GET = new MainResponse(conn->response->GetStatusCode(), Path);        
         if (conn->response->GetMethod() == Error)
             SetIndexCaseError(conn);
     }

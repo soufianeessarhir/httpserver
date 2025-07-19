@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   GetMethodResponse.hpp                              :+:      :+:    :+:   */
+/*   MainResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/16 20:59:40 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/19 08:53:40 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef GETMETHODRESPONSE_HPP
-#define GETMETHODRESPONSE_HPP
+#ifndef MAINRESPONSE_HPP
+#define MAINRESPONSE_HPP
 
 #ifdef __linux__
     #include <sys/socket.h>
@@ -63,7 +63,7 @@ enum    State
 };
 
 class Connection;
-class GetMethodResponse
+class MainResponse
 {
     private:
         int                                                 StatusCode;
@@ -78,8 +78,8 @@ class GetMethodResponse
         static const std::map<int, std::string>             ErrorPhrase;
         static const    std::map<std::string, std::string>  MimeTypes;
     public:
-        GetMethodResponse(int statusCode, std::string filePath);
-        ~GetMethodResponse();
+        MainResponse(int statusCode, std::string filePath);
+        ~MainResponse();
     
         void    SetHeaders(bool CloseConn);
         void    SetContentType();

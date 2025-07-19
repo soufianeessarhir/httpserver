@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:31:30 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/15 08:42:19 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/19 08:54:09 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include <sstream>
 #include "ConfigData.hpp"
 #include "Request.hpp"
-#include "GetMethodResponse.hpp"
+#include "MainResponse.hpp"
 #include "Connection.hpp"
 #include <sys/socket.h>
 #include <unistd.h>
@@ -33,7 +33,7 @@ enum Methods
     DELETE,
     Error,
 };
-class GetMethodResponse;
+class MainResponse;
 
 class Response
 {
@@ -42,7 +42,7 @@ class Response
         Response(int StatusCode, Methods _Method);
         // Response(Request *, Server *);
         ~Response();
-        GetMethodResponse *GET;
+        MainResponse *GET;
         int GetStatusCode() const;
         Methods GetMethod() const;
         void    SetMethod(Methods method);
