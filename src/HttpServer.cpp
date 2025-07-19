@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/17 09:45:55 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/18 12:31:30 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -284,10 +284,10 @@ void		HttpServer::HandlIncommingData(int fd)
 		if (buffer_size >= READ_BUFFER_SIZE)
 			break;
 	}
-	if (rd_bytes == 0) {
-		//[sessarhi] Connection should closed
-		return;
-	}
+	// if (rd_bytes == 0) {
+	// 	//[sessarhi] Connection should closed
+	// 	return;
+	// }
 	// std::cout << conn->buffer <<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
