@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/17 09:46:09 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/20 10:37:57 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,22 +24,22 @@ std::map<int, std::string> createErrorPhrase()
     m[406] = "Not Acceptable";
     m[408] = "Request Timeout";
     m[409] = "Conflict";
-    m[410] = "Gone";
+    // m[410] = "Gone";
     m[411] = "Length Required";
-    m[412] = "Precondition Failed";
+    // m[412] = "Precondition Failed";
     m[413] = "Payload Too Large";
     m[414] = "URI Too Long";
     m[415] = "Unsupported Media Type";
-    m[416] = "Range Not Satisfiable";
-    m[417] = "Expectation Failed";
-    m[418] = "I'm a teapot";
-    m[421] = "Misdirected Request";
-    m[422] = "Unprocessable Entity";
-    m[423] = "Locked";
-    m[424] = "Failed Dependency";
-    m[425] = "Too Early";
-    m[426] = "Upgrade Required";
-    m[428] = "Precondition Required";
+    // m[416] = "Range Not Satisfiable";
+    // m[417] = "Expectation Failed";
+    // m[418] = "I'm a teapot";
+    // m[421] = "Misdirected Request";
+    // m[422] = "Unprocessable Entity";
+    // m[423] = "Locked";
+    // m[424] = "Failed Dependency";
+    // m[425] = "Too Early";
+    // m[426] = "Upgrade Required";
+    // m[428] = "Precondition Required";
     m[429] = "Too Many Requests";
     m[431] = "Request Header Fields Too Large";
     m[451] = "Unavailable For Legal Reasons";
@@ -57,12 +57,17 @@ std::map<int, std::string> createErrorPhrase()
     return m;
 }
 
-Response::Response() : GET(NULL), StatusCode(0)
+void    Response::SetStatusCode(int New)
+{
+    StatusCode = New;
+}
+
+Response::Response() : GET(NULL), Error(NULL), DELETE(NULL), POST(NULL) ,StatusCode(0)
 {
     
 }
 
-Response::Response(int errorCode, Methods _Method) : GET(NULL), Method(_Method), StatusCode(errorCode)
+Response::Response(int errorCode, Methods _Method) : GET(NULL), Error(NULL), DELETE(NULL), POST(NULL) ,Method(_Method), StatusCode(errorCode)
 {
     
 }

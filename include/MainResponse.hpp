@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/19 08:53:40 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/21 10:08:56 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ class MainResponse
     private:
         int                                                 StatusCode;
         ssize_t                                             ContentLength;
-        // ssize_t                                             BytesSent;
+        // ssize_t                                          BytesSent;
         std::string                                         FilePath;
         bool                                                IsBinaryFile;
         std::string                                         ContentType;
@@ -80,8 +80,8 @@ class MainResponse
     public:
         MainResponse(int statusCode, std::string filePath);
         ~MainResponse();
-    
-        void    SetHeaders(bool CloseConn);
+        
+        void    SetHeaders(bool CloseConn, Request *req);
         void    SetContentType();
         void    SetStatusLine();
         void    SetPath(std::string NewPath);
@@ -89,17 +89,23 @@ class MainResponse
         const   std::string& GetBody() const;
         const   std::string& GetContentType() const;
         int     GetStatusCode() const;
-
+        
         void    SendStatusLine(Connection *Conn);
         void    SendHeaders(Connection *Conn);
-
+        
         SendFile    CheckProg;
         State       ResponseStat;
-
+        struct stat FileState;
+        
         void    SetAndSendBody(Connection *conn);
         bool    CheckForSending(Connection *conn);
-};
+        static const    std::map<int, std::string>          ErrorHtmlPath;
 
+};
+    
+    void    ExecuteError(Connection *conn);
+    void    ExecuteGET(Connection *conn);
+    void    ExecuteDelete(Connection *conn);
 
 std::map<std::string, std::string> CreateMimeTypes();
 void    excuteGetMethod(Connection *conn);
