@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/18 12:31:30 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/20 10:41:23 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -421,8 +421,10 @@ void        HttpServer::HandlOutgoingData(int fd)
 	// 	//close the connection and cleanup
 	// 	// return;
 	// }
-	if (conn->response->GetMethod() == GET || conn->response->GetMethod() == Error)
+	if (conn->response->GetMethod() == GET || conn->response->GetMethod() == Error 
+		|| conn->response->GetMethod() == DELETE || conn->response->GetMethod() == POST)
 	{
+		
 		excuteGetMethod(conn);
 	}
 	if ( conn->state == Connection::COMPLETE && conn->response->GetMethod() != Error)

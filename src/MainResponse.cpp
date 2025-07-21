@@ -54,9 +54,57 @@ std::map<std::string, std::string> CreateMimeTypes()
     return mimeTypes;
 }
 
+std::map<int, std::string> CreateMapOfHtmlErrors()
+{
+    std::map<int, std::string> Map;
+
+    Map[400] = "Indexes/BadRequest.html";
+    Map[401] = "Indexes/Unauthorized.html";
+    Map[403] = "Indexes/Forbidden.html";
+    Map[404] = "Indexes/NotFound.html";
+    Map[405] = "Indexes/MethodNotAllowed.html";
+    Map[406] = "Indexes/NotAcceptable.html";
+    Map[408] = "Indexes/RequestTimeout.html";
+    Map[409] = "Indexes/Conflict.html";
+    Map[410] = "Indexes/Gone.html";
+    Map[411] = "Indexes/LengthRequired.html";
+    Map[412] = "Indexes/PreconditionFailed.html";
+    Map[413] = "Indexes/PayloadTooLarge.html";
+    Map[414] = "Indexes/URITooLong.html";
+    Map[415] = "Indexes/UnsupportedMediaType.html";
+    Map[416] = "Indexes/RangeNotSatisfiable.html";
+    Map[417] = "Indexes/ExpectationFailed.html";
+    Map[418] = "Indexes/ImATeapot.html";
+    Map[421] = "Indexes/MisdirectedRequest.html";
+    Map[422] = "Indexes/UnprocessableEntity.html";
+    Map[423] = "Indexes/Locked.html";
+    Map[424] = "Indexes/FailedDependency.html";
+    Map[425] = "Indexes/TooEarly.html";
+    Map[426] = "Indexes/UpgradeRequired.html";
+    Map[428] = "Indexes/PreconditionRequired.html";
+    Map[429] = "Indexes/TooManyRequests.html";
+    Map[431] = "Indexes/RequestHeaderFieldsTooLarge.html";
+    Map[451] = "Indexes/UnavailableForLegalReasons.html";
+    Map[500] = "Indexes/InternalServerError.html";
+    Map[501] = "Indexes/NotImplemented.html";
+    Map[502] = "Indexes/BadGateway.html";
+    Map[503] = "Indexes/ServiceUnavailable.html";
+    Map[504] = "Indexes/GatewayTimeout.html";
+    Map[505] = "Indexes/HTTPVersionNotSupported.html";
+    Map[506] = "Indexes/VariantAlsoNegotiates.html";
+    Map[507] = "Indexes/InsufficientStorage.html";
+    Map[508] = "Indexes/LoopDetected.html";
+    Map[510] = "Indexes/NotExtended.html";
+    Map[511] = "Indexes/NetworkAuthenticationRequired.html";
+    Map[204] = "Indexes/NoContent.html";
+
+    return Map;
+}
+
 
 const std::map<std::string, std::string> MainResponse::MimeTypes = CreateMimeTypes();
 const std::map<int, std::string> MainResponse::ErrorPhrase = createErrorPhrase();
+const std::map<int, std::string> MainResponse::ErrorHtmlPath  = CreateMapOfHtmlErrors();
 
 void    MainResponse::SetContentType()
 {
@@ -103,11 +151,17 @@ void MainResponse::SetStatusLine()
 }
 
 
-void    MainResponse::SetHeaders(bool CloseConn)
+void    MainResponse::SetHeaders(bool CloseConn, Request *req)
 {
+    std::cout << ContentLength << std::endl;
     if (!CloseConn)
     {
         Headers["Connection"] = "keep-alive\r\n";
+        std::string CookieContent = req->GetHeader("cookie");
+        if (!CookieContent.empty())
+            Headers["Set-Cookie"] = CookieContent + "\r\n";
+        std::cout << CookieContent << std::endl;
+
     }
     else
         Headers["Connection"] = "close\r\n";
@@ -174,7 +228,7 @@ void MainResponse::SendHeaders(Connection *Conn)
     ssize_t BytesWriten = 0;
     size_t TotalSent = 0;
     std::string HeadersStr;
-    
+
     std::map<std::string, std::string>::const_iterator it;
     for (it = Headers.begin(); it != Headers.end(); ++it)
         HeadersStr += it->first + ": " + it->second;
@@ -209,20 +263,10 @@ void MainResponse::SendHeaders(Connection *Conn)
 
 bool    MainResponse::CheckForSending(Connection *conn)
 {
+    (void)conn;
     struct stat FileState;
-    if (stat(FilePath.c_str(), &FileState) == -1 || !S_ISREG(FileState.st_mode))
-    {
-        StatusCode = 404; //fix don't return
-        SetIndexCaseError(conn);
-        return false;
-    }
-    CheckProg.FileFd = open(FilePath.c_str(), O_RDONLY);
-    if (CheckProg.FileFd == -1 && conn->response->GetMethod() != Error)
-    {
-        StatusCode = 403;
-        SetIndexCaseError(conn);
-        return false;
-    }
+    stat(conn->request->GetUri().c_str(), &FileState);
+    CheckProg.FileFd = open(conn->request->GetUri().c_str(), O_RDONLY);
     CheckProg.FileOffset = 0;
     CheckProg.FileSize = FileState.st_size;
     CheckProg.BuffSize = 0;
@@ -298,57 +342,58 @@ void MainResponse::SetPath(std::string NewPath)
     FilePath = NewPath;
 }
 
+bool    CheckFileRD(Connection *conn)
+{
+    if (conn->UseCgi)
+        conn->request->SetUri(conn->CgiObj->Out_File);
+    struct stat FileState;
+    if (stat(conn->request->GetUri().c_str(), &FileState) == -1)
+    {
+        conn->response->SetStatusCode(404);
+        conn->response->SetMethod(Error);
+        return false;
+    }
+    if (!S_ISREG(FileState.st_mode))
+    {
+        conn->response->SetStatusCode(409);
+        conn->response->SetMethod(Error);
+        return false;
+    }
+    int fd = open(conn->request->GetUri().c_str(), O_RDONLY);
+    if (fd == -1 && conn->response->GetMethod() != Error)
+    {
+        conn->response->SetStatusCode(403);
+        conn->response->SetMethod(Error);
+        return false;
+    }
+    close(fd);
+    return true;
+}
+
 void    excuteGetMethod(Connection *conn)
 {
     if (conn->UseCgi)
     {
         conn->CgiObj->ExecuteCgi();
     }
-    if (!conn->response->GET)
+    if (conn->response->GetMethod() == GET)
     {
-        std::string Path;
-        if (conn->UseCgi)
-            Path = conn->CgiObj->Out_File;
-        else
-            Path = conn->request->GetUri();
-        conn->response->GET = new MainResponse(conn->response->GetStatusCode(), Path);        
-        if (conn->response->GetMethod() == Error)
-            SetIndexCaseError(conn);
+        if (CheckFileRD(conn))
+        {
+            ExecuteGET(conn);
+        }
     }
-    switch (conn->response->GET->ResponseStat)
-    {   
-        case SENDING_STATUSLINE :
-        {
-            if (!conn->response->GET->CheckForSending(conn))
-                conn->response->GET->CheckForSending(conn);
-            conn->response->GET->SetContentType();
-            conn->response->GET->SetStatusLine();
-            conn->response->GET->SendStatusLine(conn);
-            if (conn->response->GetMethod() == Error)
-            {
-                conn->response->GET->SetHeaders(true);
-            }
-            else
-            {
-                conn->response->GET->SetHeaders(false);
-            }
-            conn->response->GET->SendHeaders(conn);
-            conn->response->GET->ResponseStat = SENDING_BODY;
-            break;
-        }
-        case SENDING_BODY :
-        {
-            conn->response->GET->SetAndSendBody(conn);
-            // If file sending is complete, update state
-            if (conn->response->GET->ResponseStat == SENDING_COMPLETE)
-                conn->state = Connection::COMPLETE;
-            break;
-        }
-        case SENDING_COMPLETE :
-        {
-            conn->state = Connection::COMPLETE;
-            break ;
-        }
+    if (conn->response->GetMethod() == POST)
+    {
+        
+    }
+    if (conn->response->GetMethod() == Error)
+    {
+        ExecuteError(conn);
+    }
+    if (conn->response->GetMethod() == DELETE)
+    {
+        ExecuteDelete(conn);
     }
 }
 

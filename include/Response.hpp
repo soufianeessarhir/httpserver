@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:31:30 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/19 08:54:09 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/20 10:37:14 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,9 +43,13 @@ class Response
         // Response(Request *, Server *);
         ~Response();
         MainResponse *GET;
+        MainResponse *Error;
+        MainResponse *DELETE;
+        MainResponse *POST;
         int GetStatusCode() const;
         Methods GetMethod() const;
         void    SetMethod(Methods method);
+        void    SetStatusCode(int New);
         static const std::map<int, std::string> ErrorPhrase;
         void    CheckCgiExist();
     private:
