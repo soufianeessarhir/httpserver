@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/19 17:54:59 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/28 18:43:32 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,19 +40,19 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 
 void		HttpServer::ProcessHeaders(Connection *conn)
 {
-			size_t end = conn->buffer.find("\r\n\r\n");
-			if (end != std::string::npos)
-			{
-				bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
-				conn->buffer.erase(0,end + 4);
-				if (IsValid)
-					conn->state = Connection::PROCESSING;
-				else
-				{
-					conn->response = new Response(conn->request->GetStatus(), Error);
-					conn->state = Connection::SENDING_RESPONSE;
-				}
-			}
+	size_t end = conn->buffer.find("\r\n\r\n");
+	if (end != std::string::npos)
+	{
+		bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
+		conn->buffer.erase(0,end + 4);
+		if (IsValid)
+			conn->state = Connection::PROCESSING;
+		else
+		{
+			conn->response = new Response(conn->request->GetStatus(), Error);
+			conn->state = Connection::SENDING_RESPONSE;
+		}
+	}
 }
 
 void 		HttpServer::ProcessRequest(Connection *conn)
@@ -77,9 +77,8 @@ void 		HttpServer::ProcessRequest(Connection *conn)
         bool port_matches = false;
         for (size_t j = 0; j < servers[i].listen.size(); ++j) 
 		{
-            if (port == servers[i].listen[j].second && 
-                (servers[i].listen[j].first == ip || 
-                 servers[i].listen[j].first == "0.0.0.0")) {
+            if (port == servers[i].listen[j].second && (servers[i].listen[j].first == ip || servers[i].listen[j].first == "0.0.0.0"))
+			{
                 port_matches = true;
                 break;
             }
@@ -114,6 +113,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	CheckCgiExist(conn); //added by eaboudi
 	if (conn->request->GetMethod() == "POST")
 	{
+		
 		if (!conn->request->CheckField("content-type"))
 		{
 			conn->response = new Response(400, Error);
@@ -196,7 +196,7 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 	}
 	if (!conn->location->upload)
 	{
-		//unothorized
+		conn->response = new Response(401 , Error);
 		return false;
 	}
 	std::string encoding = conn->request->GetHeader("transfer-encoding");
@@ -242,7 +242,14 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 	if (conn->location->cgi.empty() && !conn->server->cgi.empty())
 	{
 		//maybe i should merge them
-		conn->location->cgi = conn->server->cgi;
+		//it is done and should be tested
+		for (std::map<std::string,std::string>::iterator it = conn->server->cgi.begin();it != conn->server->cgi.end();++it)
+		{
+			if (conn->location->cgi.find((*it).first) != conn->location->cgi.end())
+			{
+				conn->location->cgi[(*it).first] = (*it).second;
+			}
+		}
 	}
 	if (!conn->location->upload && conn->server->upload)
 	{

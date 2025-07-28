@@ -129,10 +129,11 @@ void Post::ReadChunkSize()
     while (i < size_str.size() && isxdigit(static_cast<char>(size_str[i])))
         i++;
     errno = 0;
-    char *endp =NULL;
+    char *endp = NULL;
     current_chunk_size = std::strtol(size_str.c_str(),&endp,16);
     if (errno == ERANGE || !endp /*my need to check for large size*/)
     {
+        conn->response = new Response(400,Error);
         chunk_state = Post::CHUNK_ERROR;
         return;
     }
@@ -321,8 +322,6 @@ void Post::ProcessMultiPart()
                         output_file.open(filename.c_str(),std::ios::out | std::ios::app);
                         parts.push_back(MultiPart(filename));
                     }
-                    // std::cout<<filename<<std::endl;
-
                     conn->buffer.erase(0 , CRLFCRLF + 4);
                     multipart_state = Post::READING_PART_DATA;
                     contunue = true;
