@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/15 09:49:22 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/28 18:02:37 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,25 @@ void CGI::ExecuteCgi()
             exit(EXIT_FAILURE);
         }
         close(SCRIPT_FDO);
+        if (REQUEST_METHOD == "POST")
+        {
+                struct stat InFile;
+                // stat(PostBodyFile.c_str(), &InFile);
+                stat("CGI-SCRIPTS/hello.txt", &InFile);
+                CONTENT_LENGTH =  InFile.st_size;
+                // int FdIn = open(PostBodyFile.c_str(), O_RDONLY);
+                int FdIn = open("CGI-SCRIPTS/hello.txt", O_RDONLY);
+                if (dup2(FdIn, STDIN_FILENO) == -1)
+                {
+                    perror("dup2");
+                    exit(EXIT_FAILURE);
+                }
+                char buffer[1024];
+                // ssize_t bytesRead;
+                read(FdIn, buffer, sizeof(buffer));
+                std::cout << buffer << std::endl;
+                close(FdIn);
+        }
         char *argv[] = {(char*)"CGI-SCRIPTS/cgi.sh", NULL};
         execve("CGI-SCRIPTS/cgi.sh", argv, Env);
         perror("execve");
