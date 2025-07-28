@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   MainResponse.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 00:36:32 by eaboudi           #+#    #+#             */
 /*   Updated: 2025/07/19 08:49:59 by eaboudi          ###   ########.fr       */
@@ -337,7 +337,7 @@ void    SetIndexCaseError(Connection *conn)
 
 void MainResponse::SetPath(std::string NewPath)
 {
-    FilePath = NewPath;
+FilePath = NewPath;
 }
 
 bool    CheckFileRD(Connection *conn)

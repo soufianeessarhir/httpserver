@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/28 18:29:34 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/28 18:42:39 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,7 +169,6 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
 void		HttpServer::init()
 {
 	struct addrinfo hints, *res, *p;
-	
 	for (size_t i = 0; i < servers.size(); ++i)
 	{
 		for (size_t j = 0; j < servers[i].listen.size(); ++j)
@@ -275,20 +274,19 @@ void		HttpServer::HandlIncommingData(int fd)
 	if (!conn)
 		return ;
 	ssize_t rd_bytes = 0;
-	ssize_t buffer_size = 0;
 	char buf[READ_BUFFER_SIZE];
-	for(;(rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT)) > 0 ;)
+	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
+	conn->buffer.append(buf,rd_bytes);
+	// std::cout << conn->buffer << std::endl;
+	if (rd_bytes == 0)
 	{
-		conn->buffer.append(buf,rd_bytes);
-		buffer_size += rd_bytes;
-		if (buffer_size >= READ_BUFFER_SIZE)
-			break;
+		//[sessarhi] Connection should be closed -> the client close the socket from its side
+		return;
 	}
-	// if (rd_bytes == 0) {
-	// 	//[sessarhi] Connection should closed
-	// 	return;
-	// }
-	// std::cout << conn->buffer <<std::endl;
+	else if (rd_bytes < 0)
+	{
+		//[sessarhi] Connection should be closed -> an error happens in read operation
+	}
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -321,7 +319,7 @@ void		HttpServer::HandlIncommingData(int fd)
 				break;
 				
 			case Connection::PROCESSING:
-			
+
 				ProcessRequest(conn);
 				if (conn->request->ExpectBody())
 				{
@@ -392,7 +390,7 @@ void		HttpServer::ProcessClientsRoundRobin()
         active_clients.pop_front();
         if (clients.find(client_ev.fd) == clients.end())
         {
-            // active_clients.pop_front();
+            active_clients.pop_front();
             continue;
         }
         Connection *conn = clients[client_ev.fd];
