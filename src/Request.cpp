@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/17 11:23:33 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/28 15:18:03 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ bool        Request::ParseHeaders(std::string data)
             return false;
         }
         std::string name = line.substr(0,del);
-        if (name.empty() || Haswhitespace(name)) //[sessarhi] maybe i need to check for emply fileds | values
+        if (name.empty() || Haswhitespace(name))
         {
             RequestStatusCode = 400;
             return false;
@@ -150,14 +150,11 @@ bool        Request::ParseRequestLine(std::string& data)
     }
     if (method != "GET" && method != "POST" && method != "DELETE")
     {
-        // [sessarhi] not implemented
         RequestStatusCode = 501;
         return false;
-        
     }
     if (version != "HTTP/1.1")
     {
-        // [sessarhi] not supported
         RequestStatusCode = 505;
         return false;
     }
@@ -185,6 +182,7 @@ void            Request::RemoveFromOutputpath(std::string &output)
     }
     output = output.substr(0,last_slash);
 }
+
 void            Request::NormalizePath()
 {
     size_t querypos = uri .find('?');
@@ -199,7 +197,7 @@ void            Request::NormalizePath()
         query = "";
     while(!uri .empty())
     {
-        if(uri .length() >= 3 && uri .substr(0,3) == "../")// ../
+        if(uri .length() >= 3 && uri .substr(0,3) == "../") // ../
         {
             uri  = uri .substr(3);
         }
@@ -264,7 +262,6 @@ bool        Request::ParseUri()
     }
     if (!Decode())
         return false;
-    // [sessarhi] may i add checking for utf-8 sequences
     NormalizePath();
     if (uri.empty() || uri[0] != '/')
         return false;
@@ -275,8 +272,6 @@ bool        Request::ExpectBody()const
 {
     return headers.find("content-length") != headers.end()
         || headers.find("transfer-encoding") != headers.end();
-    //because presence of body is depends on the content 
-    //length or transfer encoding only
 }
 
 void    Request::SetUri(std::string NewUri)

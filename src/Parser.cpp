@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/16 19:43:47 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/28 16:43:18 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,7 +127,7 @@ void		Parser::Host()
 {
 	if (currentToken.value == "localhost")
 	{
-		servers.back().listen.back().first = currentToken.value;
+		servers.back().listen.back().first = "127.0.0.1";
 		return ;
 	}
 	std::string val;
