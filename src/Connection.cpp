@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/16 21:01:49 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/26 17:13:08 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,10 +66,18 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
                     conn->CgiObj->REMOTE_ADDR = conn->ip;
                     conn->CgiObj->REMOTE_PORT = conn->port;
                     conn->CgiObj->SERVER_PROTOCOL = conn->request->GetVersion();
-                    conn->CgiObj->CONTENT_LENGTH = 0;
-                    conn->CgiObj->CONTENT_TYPE = "";
+                    // if (conn->CgiObj->REQUEST_METHOD == "POST")
+                    // {
+                    //     conn->CgiObj->CONTENT_LENGTH  = conn->request->GetContentLenght();
+                    //     conn->CgiObj->CONTENT_TYPE = conn->request->GetHeader("content_type");
+                    // }
+                    // else
+                    // {
+                        conn->CgiObj->CONTENT_LENGTH = 0;
+                        conn->CgiObj->CONTENT_TYPE = "";
+                    // }
                     return ;
-                } 
+                }
             }
         }
     }

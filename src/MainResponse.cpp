@@ -160,8 +160,6 @@ void    MainResponse::SetHeaders(bool CloseConn, Request *req)
         std::string CookieContent = req->GetHeader("cookie");
         if (!CookieContent.empty())
             Headers["Set-Cookie"] = CookieContent + "\r\n";
-        std::cout << CookieContent << std::endl;
-
     }
     else
         Headers["Connection"] = "close\r\n";
@@ -372,7 +370,7 @@ bool    CheckFileRD(Connection *conn)
 
 void    excuteGetMethod(Connection *conn)
 {
-    if (conn->UseCgi)
+    if (conn->UseCgi && conn->response->GetMethod() != Error)
     {
         conn->CgiObj->ExecuteCgi();
     }
@@ -385,7 +383,7 @@ void    excuteGetMethod(Connection *conn)
     }
     if (conn->response->GetMethod() == POST)
     {
-        
+        PostResponse(conn);
     }
     if (conn->response->GetMethod() == Error)
     {

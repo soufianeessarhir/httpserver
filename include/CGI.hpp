@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/14 09:25:49 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/26 19:03:07 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <exception>
+#include <fstream>
 
 // class Connection;
 
@@ -57,6 +58,7 @@ class CGI
         char            **Env;
         int             SCRIPT_FDO;
         std::string     Out_File;
+        std::string     PostBodyFile;
         std::vector<std::string> EnvString;
         t_ExecuteCgiParams Vars;
 
