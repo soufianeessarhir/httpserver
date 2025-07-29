@@ -5,7 +5,7 @@ CXXFLAGS=-Wall -Wextra -Werror -std=c++98
 SRCS= webserv.cpp src/HttpServer.cpp  src/Lexer.cpp  src/Parser.cpp\
 	  src/Connection.cpp src/Request.cpp src/Response.cpp src/Error.cpp src/Get.cpp\
 	  src/MainResponse.cpp src/ProcessRequest.cpp src/Post.cpp src/MultiPart.cpp\
-	  src/CGI.cpp src/Delete.cpp src/EPOST.cpp
+	  src/CGI.cpp src/Delete.cpp src/EPost.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 

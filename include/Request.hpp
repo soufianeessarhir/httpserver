@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/16 10:07:34 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/29 20:10:10 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 #include            "CGI.hpp" // added by eaboudi
 
 #define CGiDir "/home/eaboudi/Desktop/httpserver/CGI-SCRIPTS" // added by eaboudi
+// #define CGiDir "/Users/eaboudi/Desktop/httpserver/CGI-SCRIPTS" // added by eaboudi
 class Request
 {
 
