@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/15 20:53:55 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/29 18:10:33 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,14 @@ struct PlatformEvent {
     void* data;
 };
 
+
+struct timeouts
+{
+	time_t last_activity; // Last activity timestamp
+    time_t read_timeout;  // Read timeout value
+    // time_t write_timeout; // Write timeout value
+    time_t idle_timeout; 
+};
 class HttpServer
 {
 

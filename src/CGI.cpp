@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/29 11:45:13 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/29 12:02:47 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,8 +54,8 @@ void CGI::ExecuteCgi()
         return;
     }
 
-    if (Child == 0)
-    {
+    // if (Child == 0)
+    // {
     //     if (dup2(SCRIPT_FDO, STDOUT_FILENO) == -1)
     //     {
     //         perror("dup2");
