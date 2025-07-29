@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/28 18:43:32 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/29 11:07:33 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,6 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	CheckCgiExist(conn); //added by eaboudi
 	if (conn->request->GetMethod() == "POST")
 	{
-		
 		if (!conn->request->CheckField("content-type"))
 		{
 			conn->response = new Response(400, Error);
@@ -126,6 +125,13 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
+		if (conn->location->methods.find("POST") == conn->location->methods.end())
+		{
+			conn->response = new Response(405, Error);
+			conn->state = Connection::SENDING_RESPONSE;
+			return;
+		}
+		conn->response = new Response(conn->request->GetStatus(), POST);
 	}
 	else if (conn->request->GetMethod() == "GET")
 	{
@@ -135,11 +141,17 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
-		conn->response = new Response(200, GET);
+		conn->response = new Response(conn->request->GetStatus(), GET);
 	}
 	else if (conn->request->GetMethod() == "DELETE")
 	{
-		conn->response = new Response(200, DELETE);
+		if (conn->location->methods.find("DELETE") == conn->location->methods.end())
+		{
+			conn->response = new Response(405, Error);
+			conn->state = Connection::SENDING_RESPONSE;
+			return;
+		}
+		conn->response = new Response(conn->request->GetStatus(), DELETE);
 	}
 	// else
 	// {
