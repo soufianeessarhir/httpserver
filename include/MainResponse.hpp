@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/28 18:37:21 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/29 11:00:16 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,5 +111,6 @@ std::map<std::string, std::string> CreateMimeTypes();
 void    excuteGetMethod(Connection *conn);
 void    SetIndexCaseError(Connection *conn);
 void    PostResponse(Connection *conn);
+
 
 #endif
