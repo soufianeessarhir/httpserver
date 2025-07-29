@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/28 18:42:39 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/29 11:04:55 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -411,17 +411,9 @@ void        HttpServer::HandlOutgoingData(int fd)
 {
     
 	Connection *conn = clients[fd];
-    // if (conn->response->GetMethod() == Error)
-	// {
-	// 	// conn->response->ErrorResponse(conn);
-	// 	// conn->state = Connection::COMPLETE;
-	// 	conn->response->SetMethod(GET);
-	// 	//close the connection and cleanup
-	// 	// return;
-	// }
 	if (conn->request->GetMethod() == "POST")
 	{
-		conn->response = new Response(200, POST);
+		conn->response = new Response(conn->request->GetStatus(), POST);
 	}
 	excuteGetMethod(conn);
 	if ( conn->state == Connection::COMPLETE && conn->response->GetMethod() != Error)
