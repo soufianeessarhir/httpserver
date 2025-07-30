@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/29 21:18:46 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/30 22:29:26 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 #include <netinet/in.h>
 #include <unistd.h>
-// #include "Connection.hpp"
+#include "Connection.hpp"
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <string>
@@ -30,15 +30,10 @@
 #include <cstdio>
 #include <exception>
 #include <fstream>
+#include <string>
 
-// class Connection;
+class Connection;
 
-typedef struct  s_ExecuteCgiParams
-{
-    int Child;
-    int Pipe[2];
-    int TmpFd;
-}t_ExecuteCgiParams;
 class CGI
 {
     // private:
@@ -58,20 +53,23 @@ class CGI
         std::string     REMOTE_IDENT;
         
         std::string     Ext;
+        std::string     InFile;
+        std::string     OutFile;
+        size_t          InSize;
         char            **Env;
-        int             SCRIPT_FDO;
-        std::string     Out_File;
         std::string     PostBodyFile;
         std::vector<std::string> EnvString;
-        t_ExecuteCgiParams Vars;
+        pid_t   Pid;
+        bool    Is_Runing;
 
         // add time to check timeout
         
         
         CGI();
         ~CGI();
-        void            ExecuteCgi();
-        void            BuildEnv();
+        void            ExecuteCgi(Connection *conn);
+        void            BuildEnv(Connection *conn);
+        bool            IsCgiComplet(Connection *conn);
 };
 
 #endif
