@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/30 14:58:03 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/30 21:16:29 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
     std::string Path = conn->location->root + conn->request->GetUri();
     std::string QueryString;
     std::string CheckDir;
+    std::string Ext;
     size_t Pos = Path.find('?');
     if (Pos != std::string::npos)
     {
@@ -39,11 +40,17 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
         if (Path.find('/', Pos) != Path.npos)
         {
             while(Path[Pos] != '/')
+            {
+                Ext.push_back(Path[Pos]);
                 Pos++;
+            }
             PathInfo = Path.substr(Pos);
         }
         else
+        {
+            Ext = Path.substr(Pos);
             Pos = Path.size();
+        }
         CheckDir = Path.substr(0, Pos);
         Pos = CheckDir.find_last_of('/');
         std::string ScriptName = CheckDir.substr(Pos + 1);
@@ -61,6 +68,7 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
                 {
                     conn->UseCgi = true;
                     conn->CgiObj = new CGI;
+                    conn->CgiObj->Ext = Ext;
                     conn->CgiObj->QUERY_STRING = QueryString;
                     conn->CgiObj->REQUEST_METHOD = conn->request->GetMethod();
                     conn->CgiObj->SCRIPT_PATH = ScriptPath;
@@ -69,6 +77,7 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
                     conn->CgiObj->REMOTE_ADDR = conn->ip;
                     conn->CgiObj->REMOTE_PORT = conn->port;
                     conn->CgiObj->SERVER_PROTOCOL = conn->request->GetVersion();
+                    conn->CgiObj->REMOTE_IDENT = "webserv";
                     // if (conn->CgiObj->REQUEST_METHOD == "POST")
                     // {
                     //     conn->CgiObj->CONTENT_LENGTH  = conn->request->GetContentLenght();
@@ -76,9 +85,10 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
                     // }
                     // else
                     // {
-                        conn->CgiObj->CONTENT_LENGTH = 0;
-                        conn->CgiObj->CONTENT_TYPE = "";
+                        conn->CgiObj->CONTENT_LENGTH = conn->request->GetHeader("content-lenght");
+                        conn->CgiObj->CONTENT_TYPE = conn->request->GetHeader("content-lenght");
                     // }
+                    conn->request->SetUri(Path);
                     return ;
                 }
             }
