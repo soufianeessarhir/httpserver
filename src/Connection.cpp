@@ -3,19 +3,22 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/26 17:13:08 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/30 14:58:03 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Connection.hpp"
 
 Connection::Connection(int fd): UseCgi(false),state(READING_REQUEST_LINE),fd(fd)
-            ,request(new Request()),response(NULL),server(NULL),location(NULL),post(NULL),LastAct(time(NULL))
+            ,request(new Request()),response(NULL),server(NULL),location(NULL),post(NULL)
 {
-            
+    timeouts.read_fails = false;
+    timeouts.idle_timeout = time(NULL);     
+    timeouts.last_activity = time(NULL);     
+    timeouts.read_timeout = time(NULL);     
 }
 
 void    CheckCgiExist(Connection *conn) // add by eaboudi

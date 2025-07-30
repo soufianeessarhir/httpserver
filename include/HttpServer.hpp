@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/29 18:10:33 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/30 12:43:46 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,13 +39,12 @@
 #include 		<arpa/inet.h>
 #include		<sys/types.h>
 
-
 class Connection;
 #define			MAX_EVENTS					1024
 #define			READ_BUFFER_SIZE			64000
-#define			CLIENT_PER_CYCLE			512
+#define			CLIENT_PER_CYCLE			12
 #define			MAX_REQUEST_LINE_LENGHT		8000 //RFC 9112,
-#define			MAX_header_field_LENGHT		8000
+#define			MAX_header_field_LENGHT		24000
 
 struct PlatformEvent {
     int fd;
@@ -54,13 +53,7 @@ struct PlatformEvent {
 };
 
 
-struct timeouts
-{
-	time_t last_activity; // Last activity timestamp
-    time_t read_timeout;  // Read timeout value
-    // time_t write_timeout; // Write timeout value
-    time_t idle_timeout; 
-};
+
 class HttpServer
 {
 
