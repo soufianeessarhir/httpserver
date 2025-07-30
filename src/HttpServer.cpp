@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/30 12:00:34 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/30 22:47:50 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,8 +276,9 @@ void		HttpServer::HandlIncommingData(int fd)
 	ssize_t rd_bytes = 0;
 	char buf[READ_BUFFER_SIZE];
 	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
-	conn->buffer.append(buf,rd_bytes);
-	if (rd_bytes == 0)
+	if (rd_bytes > 0)
+		conn->buffer.append(buf,rd_bytes);
+	else if (rd_bytes == 0)
 	{
 		//[sessarhi] Connection should be closed -> the client close the socket from its side
 		return;
@@ -294,11 +295,6 @@ void		HttpServer::HandlIncommingData(int fd)
 		{
 			case Connection::READING_REQUEST_LINE:
 			
-				if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
-				{
-					conn->response = new Response(414, Error); //[sessarhi] uri too large response
-					SetSocketForWrite(conn);
-				}
 				ProcessRequestLine(conn);
 				if (conn->state == Connection::READING_HEADERS  || conn->state == Connection::SENDING_RESPONSE)
 					continue_processing = true;
@@ -306,12 +302,6 @@ void		HttpServer::HandlIncommingData(int fd)
 				
 			case Connection::READING_HEADERS:
 			
-				if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
-				{
-					conn->response = new Response(431, Error); //[sessarhi] header field too large response
-					SetSocketForWrite(conn);
-					conn->state = Connection::SENDING_RESPONSE;
-				}
 				ProcessHeaders(conn);
 				if (conn->state == Connection::PROCESSING)
 					continue_processing = true;
