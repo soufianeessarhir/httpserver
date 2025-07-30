@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/29 12:02:47 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/29 22:01:54 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,59 +39,7 @@ void    CGI::BuildEnv()
 
 void CGI::ExecuteCgi()
 {
-    Out_File = "CGI-SCRIPTS/test";
-    SCRIPT_FDO = open(Out_File.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
-    if (SCRIPT_FDO == -1) 
-    {
-        perror("open");
-        return;
-    }
-    BuildEnv();
-    int Child = fork();
-    if (Child == -1) 
-    {
-        perror("fork");
-        return;
-    }
-
-    // if (Child == 0)
-    // {
-    //     if (dup2(SCRIPT_FDO, STDOUT_FILENO) == -1)
-    //     {
-    //         perror("dup2");
-    //         exit(EXIT_FAILURE);
-    //     }
-    //     if (REQUEST_METHOD == "POST")
-    //     {
-    //             struct stat InFile;
-    //             // stat(PostBodyFile.c_str(), &InFile);
-    //             stat("CGI-SCRIPTS/hello.txt", &InFile);
-    //             CONTENT_LENGTH =  InFile.st_size;
-    //             // int FdIn = open(PostBodyFile.c_str(), O_RDONLY);
-    //             int FdIn = open("CGI-SCRIPTS/hello.txt", O_RDONLY);
-    //             if (dup2(FdIn, STDIN_FILENO) == -1)
-    //             {
-    //                 perror("dup2");
-    //                 exit(EXIT_FAILURE);
-    //             }
-    //             char buffer[1024];
-    //             // ssize_t bytesRead;
-    //             read(FdIn, buffer, sizeof(buffer));
-    //             std::cout << buffer << std::endl;
-    //             close(FdIn);
-    //     }
-    //     char *argv[] = {(char*)"CGI-SCRIPTS/cgi.sh", NULL};
-    //     if (execve("CGI-SCRIPTS/cgi.sh", argv, Env) == -1)
-    //     {
-    //         perror("execve");
-    //         exit(EXIT_FAILURE);
-    //     }
-    // }
-    // else
-    // {
-    //     int status;
-    //     waitpid(Child, &status, 0);
-    // }
+    std::cout << Ext << std::endl;
 }
 
 CGI::~CGI()

@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/26 19:03:07 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/29 21:18:46 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,12 +49,15 @@ class CGI
         std::string     PATH_INFO; //done
         std::string     REQUEST_METHOD;//done
         std::string     CONTENT_TYPE; //done for GET
-        ssize_t         CONTENT_LENGTH; // done for GET
+        std::string     CONTENT_LENGTH; // done for GET
         std::string     SERVER_PROTOCOL; //done
         std::string     SERVER_NAME;//done
         std::string     SERVER_PORT; //done
         std::string     REMOTE_ADDR; //done
         int             REMOTE_PORT; //done
+        std::string     REMOTE_IDENT;
+        
+        std::string     Ext;
         char            **Env;
         int             SCRIPT_FDO;
         std::string     Out_File;
