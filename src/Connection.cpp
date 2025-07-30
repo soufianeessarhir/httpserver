@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/30 11:56:58 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/30 22:47:11 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,12 @@
 #include <sstream>
 
 Connection::Connection(int fd): UseCgi(false),state(READING_REQUEST_LINE),fd(fd)
-            ,request(new Request()),response(NULL),server(NULL),location(NULL),post(NULL),LastAct(time(NULL))
+            ,request(new Request()),response(NULL),server(NULL),location(NULL),post(NULL)
 {
-            
+    timeouts.read_fails = false;
+    timeouts.idle_timeout = time(NULL);     
+    timeouts.last_activity = time(NULL);     
+    timeouts.read_timeout = time(NULL);     
 }
 
 void    CheckCgiExist(Connection *conn) // add by eaboudi

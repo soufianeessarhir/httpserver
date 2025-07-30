@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/21 09:47:45 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/30 15:05:00 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,16 @@ class Response;
 // class Server;
 class Post;
 
+struct Timeouts
+{
+    bool read_fails;
+	time_t last_activity; // Last activity timestamp
+    time_t read_timeout;  // Read timeout value
+    // time_t write_timeout; // Write timeout value
+    time_t idle_timeout;
+    void UpdateLastActivityTime(){last_activity = time(NULL);}
+    void UpdateIdleTime(){idle_timeout = time(NULL);}
+};
 
 class Connection
 {
@@ -45,7 +55,7 @@ public:
     CGI             *CgiObj; // added by eaboudi
     bool            Cookies;
     std::string     CookiesString;
-    
+    Timeouts        timeouts;
     State           state;
     int             fd;
     Request         *request;
@@ -54,7 +64,6 @@ public:
     LocationData    *location;
     Post            *post;
     std::string     buffer;
-    time_t          LastAct;
     std::string     ip;
     int             port;
 };
