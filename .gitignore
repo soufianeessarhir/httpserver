@@ -1,6 +1,6 @@
 To Do
-Uploads
-# .vscode
+uploads
+.vscode
 tests
 CGI-SCRIPTS
 sheets
@@ -8,4 +8,4 @@ multipart.html
 webserv.conf
 CMakeLists.txt
 .DS_Store
-todo 
+todo

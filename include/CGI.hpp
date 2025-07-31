@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/30 08:46:19 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/31 06:39:45 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,37 +30,46 @@
 #include <cstdio>
 #include <exception>
 #include <fstream>
+#include <string>
 
+class Connection;
 
 class CGI
 {
     // private:
     public:
-        std::string     SCRIPT_PATH; //done
-        std::string     SCRIPT_NAME; //done
-        std::string     QUERY_STRING; //done
-        std::string     PATH_INFO; //done
-        std::string     SERVER_PROTOCOL; //done
-        std::string     SERVER_NAME;//done
-        std::string     SERVER_PORT; //done
-        std::string     REMOTE_ADDR; //done
-        std::string     REMOTE_PORT; //done
+        std::string     SCRIPT_PATH;
+        std::string     SCRIPT_NAME;
+        std::string     QUERY_STRING;
+        std::string     PATH_INFO;
+        std::string     SERVER_PROTOCOL;
+        std::string     SERVER_NAME;
+        int             SERVER_PORT;
+        std::string     REMOTE_ADDR;
+        std::string     REMOTE_PORT;
         std::string     REMOTE_IDENT;
+        std::string     CONTENT_TYPE; 
+        std::string     CONTENT_LENGTH;
+        std::string     REQUEST_METHOD;
         
         std::string     Ext;
-        std::string     OutFile;
         std::string     InFile;
+        std::string     OutFile;
+        size_t          InSize;
         char            **Env;
         std::string     PostBodyFile;
         std::vector<std::string> EnvString;
+        pid_t   Pid;
+        bool    Is_Runing;
 
         // add time to check timeout
         
         
         CGI();
         ~CGI();
-        void            ExecuteCgi();
+        void            ExecuteCgi(Connection *conn);
         void            BuildEnv(Connection *conn);
+        bool            IsCgiComplet(Connection *conn);
 };
 
 #endif

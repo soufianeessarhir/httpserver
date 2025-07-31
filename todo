@@ -1,1 +1,3 @@
 - consider use 0 timeout when the there is active connection and wait infinetly when there is there is no active connection
+- implemet timouts
+- remove support for port only binding 

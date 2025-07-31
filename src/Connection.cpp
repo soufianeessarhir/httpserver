@@ -6,16 +6,21 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/30 08:31:58 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/31 06:33:22 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Connection.hpp"
+#include <string>
+#include <sstream>
 
 Connection::Connection(int fd): UseCgi(false),state(READING_REQUEST_LINE),fd(fd)
-            ,request(new Request()),response(NULL),server(NULL),location(NULL),post(NULL),LastAct(time(NULL))
+            ,request(new Request()),response(NULL),server(NULL),location(NULL),post(NULL)
 {
-            
+    timeouts.read_fails = false;
+    timeouts.idle_timeout = time(NULL);     
+    timeouts.last_activity = time(NULL);     
+    timeouts.read_timeout = time(NULL);     
 }
 
 void    CheckCgiExist(Connection *conn) // add by eaboudi
@@ -70,10 +75,11 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
                     conn->CgiObj->SCRIPT_PATH = ScriptPath;
                     conn->CgiObj->SCRIPT_NAME = ScriptPath + ScriptName;
                     conn->CgiObj->PATH_INFO = PathInfo;
-                    conn->CgiObj->REMOTE_ADDR = conn->ip;
-                    conn->CgiObj->REMOTE_PORT = std::tostring(conn->port);
+                    conn->CgiObj->REMOTE_PORT = conn->port;
                     conn->CgiObj->SERVER_PROTOCOL = conn->request->GetVersion();
                     conn->CgiObj->REMOTE_IDENT = "webserv";
+                    conn->CgiObj->CONTENT_LENGTH = conn->request->GetHeader("content-lenght");
+                    conn->CgiObj->CONTENT_TYPE = conn->request->GetHeader("content-type");
                     conn->request->SetUri(Path);
                     return ;
                 }
