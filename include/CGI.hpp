@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/26 19:03:07 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/30 08:46:19 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 #include <netinet/in.h>
 #include <unistd.h>
-// #include "Connection.hpp"
+#include "Connection.hpp"
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <string>
@@ -31,14 +31,7 @@
 #include <exception>
 #include <fstream>
 
-// class Connection;
 
-typedef struct  s_ExecuteCgiParams
-{
-    int Child;
-    int Pipe[2];
-    int TmpFd;
-}t_ExecuteCgiParams;
 class CGI
 {
     // private:
@@ -47,20 +40,19 @@ class CGI
         std::string     SCRIPT_NAME; //done
         std::string     QUERY_STRING; //done
         std::string     PATH_INFO; //done
-        std::string     REQUEST_METHOD;//done
-        std::string     CONTENT_TYPE; //done for GET
-        ssize_t         CONTENT_LENGTH; // done for GET
         std::string     SERVER_PROTOCOL; //done
         std::string     SERVER_NAME;//done
         std::string     SERVER_PORT; //done
         std::string     REMOTE_ADDR; //done
-        int             REMOTE_PORT; //done
+        std::string     REMOTE_PORT; //done
+        std::string     REMOTE_IDENT;
+        
+        std::string     Ext;
+        std::string     OutFile;
+        std::string     InFile;
         char            **Env;
-        int             SCRIPT_FDO;
-        std::string     Out_File;
         std::string     PostBodyFile;
         std::vector<std::string> EnvString;
-        t_ExecuteCgiParams Vars;
 
         // add time to check timeout
         
@@ -68,7 +60,7 @@ class CGI
         CGI();
         ~CGI();
         void            ExecuteCgi();
-        void            BuildEnv();
+        void            BuildEnv(Connection *conn);
 };
 
 #endif

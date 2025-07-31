@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/29 11:04:55 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/30 06:44:01 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -277,7 +277,6 @@ void		HttpServer::HandlIncommingData(int fd)
 	char buf[READ_BUFFER_SIZE];
 	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
 	conn->buffer.append(buf,rd_bytes);
-	// std::cout << conn->buffer << std::endl;
 	if (rd_bytes == 0)
 	{
 		//[sessarhi] Connection should be closed -> the client close the socket from its side
@@ -411,10 +410,6 @@ void        HttpServer::HandlOutgoingData(int fd)
 {
     
 	Connection *conn = clients[fd];
-	if (conn->request->GetMethod() == "POST")
-	{
-		conn->response = new Response(conn->request->GetStatus(), POST);
-	}
 	excuteGetMethod(conn);
 	if ( conn->state == Connection::COMPLETE && conn->response->GetMethod() != Error)
 	{
