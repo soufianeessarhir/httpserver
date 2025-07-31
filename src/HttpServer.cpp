@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/31 06:33:30 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/31 11:15:09 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -398,8 +398,7 @@ void		HttpServer::ProcessClientsRoundRobin()
 
 void        HttpServer::HandlOutgoingData(int fd)
 {
-    
-	Connection *conn = clients[fd];
+    Connection *conn = clients[fd];
 	excuteGetMethod(conn);
 	if ( conn->state == Connection::COMPLETE && conn->response->GetMethod() != Error)
 	{

@@ -7,6 +7,7 @@
 #include "sys/time.h"
 #include <sstream>
 class Connection;
+struct  MultiPart;
 class Post
 {
 public:

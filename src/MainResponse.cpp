@@ -97,6 +97,7 @@ std::map<int, std::string> CreateMapOfHtmlErrors()
     Map[510] = "Indexes/NotExtended.html";
     Map[511] = "Indexes/NetworkAuthenticationRequired.html";
     Map[204] = "Indexes/NoContent.html";
+    Map[200] = "Indexes/Success.html";
 
     return Map;
 }
@@ -106,9 +107,9 @@ const std::map<std::string, std::string> MainResponse::MimeTypes = CreateMimeTyp
 const std::map<int, std::string> MainResponse::ErrorPhrase = createErrorPhrase();
 const std::map<int, std::string> MainResponse::ErrorHtmlPath  = CreateMapOfHtmlErrors();
 
-void    MainResponse::SetContentType()
+void    MainResponse::SetContentType(Connection *conn)
 {
-    std::string Extension = FilePath.substr(FilePath.find_last_of('.') + 1);
+    std::string Extension = conn->request->GetUri().substr(conn->request->GetUri().find_last_of('.') + 1);
     std::map<std::string, std::string>::const_iterator it = MimeTypes.find(Extension);
     if (it != MimeTypes.end())
     {
@@ -128,14 +129,9 @@ void    MainResponse::SetContentType()
         ContentType = "text/html";
 }
 
-MainResponse::MainResponse(int statusCode, std::string filePath)
-    : StatusCode(statusCode), FilePath(filePath), IsBinaryFile(false)
+MainResponse::MainResponse(int statusCode) : StatusCode(statusCode), IsBinaryFile(false)
 {
     ResponseStat = SENDING_STATUSLINE;
-    // SetContentType();
-    // SetBody();
-    // SetHeaders();
-    // SetStatusLine();
 }
 
 void MainResponse::SetStatusLine()
@@ -207,10 +203,6 @@ void MainResponse::SendStatusLine(Connection *Conn)
     }
 }
 
-const std::string& MainResponse::GetBody() const
-{
-    return Body;
-}
 const std::string& MainResponse::GetContentType() const
 {
     return ContentType;
@@ -261,7 +253,6 @@ void MainResponse::SendHeaders(Connection *Conn)
 
 bool    MainResponse::CheckForSending(Connection *conn)
 {
-    (void)conn;
     struct stat FileState;
     stat(conn->request->GetUri().c_str(), &FileState);
     CheckProg.FileFd = open(conn->request->GetUri().c_str(), O_RDONLY);
@@ -285,7 +276,10 @@ void MainResponse::SetAndSendBody(Connection* conn)
         {
             perror("read");
             conn->state = Connection::COMPLETE;
+            ResponseStat = SENDING_COMPLETE;
             close(CheckProg.FileFd);
+            conn->response->SetMethod(Error);
+            conn->response->SetStatusCode(500);
             return;
         }
         else if (bytes_read == 0)
@@ -319,31 +313,10 @@ void MainResponse::SetAndSendBody(Connection* conn)
     CheckProg.BuffOffs += bytes_sent;
 }
 
-void    SetIndexCaseError(Connection *conn)
-{
-    std::string Path;
-    int status(conn->response->GET->GetStatusCode());
-    if (status == 400)
-        Path = BADREQUEST;
-    else if  (status == 401)
-        Path = UNAUTHORIZED;
-    else if (status == 403)
-        Path = FORBIDDEN;
-    else if (status == 404)
-        Path = NOTFOUND;
-    conn->response->GET->SetPath(Path);
-    conn->response->SetMethod(Error);
-}
-
-void MainResponse::SetPath(std::string NewPath)
-{
-FilePath = NewPath;
-}
-
 bool    CheckFileRD(Connection *conn)
 {
     if (conn->UseCgi)
-        conn->request->SetUri(conn->CgiObj->Out_File);
+        conn->request->SetUri(conn->CgiObj->OutFile);
     struct stat FileState;
     if (stat(conn->request->GetUri().c_str(), &FileState) == -1)
     {
@@ -370,9 +343,11 @@ bool    CheckFileRD(Connection *conn)
 
 void    excuteGetMethod(Connection *conn)
 {
+
+
     if (conn->UseCgi && conn->response->GetMethod() != Error)
     {
-        conn->CgiObj->ExecuteCgi();
+        conn->CgiObj->ExecuteCgi(conn);
     }
     if (conn->response->GetMethod() == GET)
     {
