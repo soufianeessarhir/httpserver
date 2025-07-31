@@ -25,8 +25,8 @@ void    ExecuteDelete(Connection *conn)
             conn->response->SetStatusCode(204);
             if (!conn->response->DELETE)
             {
-                conn->response->DELETE = new MainResponse(conn->response->GetStatusCode(), conn->request->GetUri());
-                conn->response->DELETE->SetPath(conn->response->DELETE->ErrorHtmlPath.find(204)->second);
+                conn->response->DELETE = new MainResponse(conn->response->GetStatusCode());
+                conn->request->SetUri(conn->response->DELETE->ErrorHtmlPath.find(204)->second);
             }
         } 
         else
@@ -42,7 +42,7 @@ void    ExecuteDelete(Connection *conn)
         case SENDING_STATUSLINE :
         {
             conn->response->DELETE->CheckForSending(conn);
-            conn->response->DELETE->SetContentType();
+            conn->response->DELETE->SetContentType(conn);
             conn->response->DELETE->SetStatusLine();
             conn->response->DELETE->SendStatusLine(conn);
             conn->response->DELETE->SetHeaders(false, conn->request);

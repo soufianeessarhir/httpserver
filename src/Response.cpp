@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/20 10:37:57 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/31 12:07:15 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,18 @@ Response::Response(int errorCode, Methods _Method) : GET(NULL), Error(NULL), DEL
 
 Response::~Response()
 {
-    
+    if (!GET)
+        delete GET;
+    if (!DELETE)
+        delete DELETE;
+    if (!Error)
+        delete Error;
+    if (!POST)
+        delete POST;
+    GET = NULL;
+    DELETE = NULL;
+    Error = NULL;
+    POST = NULL;
 }
 
 int Response::GetStatusCode() const

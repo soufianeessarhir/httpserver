@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/29 11:00:16 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/31 12:20:50 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,30 +63,26 @@ enum    State
 };
 
 class Connection;
+class Request;
 class MainResponse
 {
     private:
         int                                                 StatusCode;
         ssize_t                                             ContentLength;
-        // ssize_t                                          BytesSent;
-        std::string                                         FilePath;
         bool                                                IsBinaryFile;
         std::string                                         ContentType;
         std::string                                         StatusLine;
-        std::string                                         Body;
         std::map<std::string, std::string>                  Headers;
         static const std::map<int, std::string>             ErrorPhrase;
         static const    std::map<std::string, std::string>  MimeTypes;
     public:
-        MainResponse(int statusCode, std::string filePath);
+        MainResponse(int statusCode);
         ~MainResponse();
         
         void    SetHeaders(bool CloseConn, Request *req);
-        void    SetContentType();
+        void    SetContentType(Connection *conn);
         void    SetStatusLine();
-        void    SetPath(std::string NewPath);
         
-        const   std::string& GetBody() const;
         const   std::string& GetContentType() const;
         int     GetStatusCode() const;
         
@@ -95,7 +91,6 @@ class MainResponse
         
         SendFile    CheckProg;
         State       ResponseStat;
-        struct stat FileState;
         
         void    SetAndSendBody(Connection *conn);
         bool    CheckForSending(Connection *conn);
@@ -107,10 +102,9 @@ class MainResponse
     void    ExecuteGET(Connection *conn);
     void    ExecuteDelete(Connection *conn);
 
-std::map<std::string, std::string> CreateMimeTypes();
-void    excuteGetMethod(Connection *conn);
-void    SetIndexCaseError(Connection *conn);
-void    PostResponse(Connection *conn);
+    std::map<std::string, std::string> CreateMimeTypes();
+    void    excuteGetMethod(Connection *conn);
+    void    PostResponse(Connection *conn);
 
 
 #endif

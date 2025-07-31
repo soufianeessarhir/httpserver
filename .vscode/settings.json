@@ -3,6 +3,8 @@
         "iosfwd": "cpp",
         "exception": "cpp",
         "string": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "utility": "cpp",
+        "locale": "cpp"
     }
 }

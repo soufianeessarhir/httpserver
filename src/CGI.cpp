@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/31 06:36:29 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/31 11:05:47 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,9 @@ void    CGI::BuildEnv(Connection *conn)
     EnvString.push_back("SCRIPT_PATH=" + SCRIPT_PATH);
     EnvString.push_back("SCRIPT_NAME=" + SCRIPT_NAME);
     EnvString.push_back("SERVER_NAME=" + SERVER_NAME);
-    EnvString.push_back("SERVER_PORT=" + SERVER_PORT);
+    ss.clear();
+    ss << SERVER_PORT;
+    EnvString.push_back("SERVER_PORT=" + ss.str());
     EnvString.push_back("REMOTE_ADDR=" + REMOTE_ADDR);
     EnvString.push_back("REMOTE_PORT=" + REMOTE_PORT);
     EnvString.push_back("GATEWAY_INTERFACE=CGI/1.1");
@@ -66,7 +68,7 @@ void CGI::ExecuteCgi(Connection *conn)
         }
         //check if the content too large
         BuildEnv(conn);
-        int FdOut = open(InFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        int FdOut = open(OutFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (FdOut < 0)
         {
             delete [] Env;
@@ -95,11 +97,42 @@ void CGI::ExecuteCgi(Connection *conn)
             }
             close(FdIn);
         }
+        const char * argv[] = {"php", SCRIPT_NAME.c_str(), NULL};
+        if (execve("php", const_cast<char **>(argv), Env) == -1)
+        {
+            delete [] Env;
+            exit(EXIT_FAILURE);
+        }
     }
     Is_Runing = true;
 }
 
-
+bool    CGI::IsCgiComplet(Connection *conn)
+{
+    if (!Is_Runing)
+        return true;
+    int Status;
+    pid_t   Res = waitpid(Pid, &Status, WNOHANG);
+    if (!Res)
+        return false;
+    Is_Runing = false;
+    if (Res == -1)
+    {
+        conn->response->SetStatusCode(500);
+        conn->response->SetMethod(Error);
+        return true;
+    }
+    if (WIFSIGNALED(Status) && WTERMSIG(Status) == SIGALRM)
+    {
+        conn->response->SetStatusCode(504);
+        conn->response->SetMethod(Error);
+    }
+    else if (WIFEXITED(Status) && WEXITSTATUS(Status) == 0)
+	{
+        
+    }
+    return false;
+}
 
 CGI::~CGI()
 {
