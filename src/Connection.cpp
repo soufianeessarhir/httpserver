@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/30 21:16:29 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/31 11:32:47 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,38 @@ Connection::Connection(int fd): UseCgi(false),state(READING_REQUEST_LINE),fd(fd)
     timeouts.read_timeout = time(NULL);     
 }
 
+
+Connection::~Connection()
+{
+    UseCgi = false;
+    state = READING_REQUEST_LINE;
+    if (request)
+    {
+        delete request;
+        request = NULL;
+    }
+    if (response)
+    {
+        delete response;
+        response = NULL;
+    }
+    if (server)
+    {
+        delete server;
+        server = NULL;
+    }
+    if (location)
+    {
+        delete location;
+        location = NULL;
+    }
+    if (post)
+    {
+        delete post;
+        post = NULL;
+    }
+    
+}
 void    CheckCgiExist(Connection *conn) // add by eaboudi
 {
     std::string Path = conn->location->root + conn->request->GetUri();

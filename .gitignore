@@ -1,5 +1,6 @@
 To Do
 uploads
+
 .vscode
 tests
 CGI-SCRIPTS
@@ -9,3 +10,4 @@ webserv.conf
 CMakeLists.txt
 .DS_Store
 todo
+webserv.conf
