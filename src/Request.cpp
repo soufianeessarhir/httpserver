@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/28 18:43:38 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/30 22:05:00 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ std::string Request::GetHeader(std::string name)const
     std::map<std::string, std::string>::const_iterator it = headers.find(name);
     if (it != headers.end())
         return (it->second);
+    //here should implement a way to indecate n error 
     return "";
 }
 size_t          Request::GetContentLenght()const
