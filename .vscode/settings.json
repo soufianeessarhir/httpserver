@@ -1,6 +1,14 @@
 {
     "files.associations": {
         "iosfwd": "cpp",
+<<<<<<< HEAD
         "optional": "cpp"
+=======
+        "exception": "cpp",
+        "string": "cpp",
+        "new": "cpp",
+        "utility": "cpp",
+        "locale": "cpp"
+>>>>>>> 1512683be189a66d2bd6544cecac9f6785d04cb4
     }
 }

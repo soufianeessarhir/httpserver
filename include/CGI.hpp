@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/29 21:18:46 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/31 07:48:17 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 #include <netinet/in.h>
 #include <unistd.h>
-// #include "Connection.hpp"
+#include "Connection.hpp"
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <string>
@@ -30,48 +30,46 @@
 #include <cstdio>
 #include <exception>
 #include <fstream>
+#include <string>
 
-// class Connection;
+class Connection;
 
-typedef struct  s_ExecuteCgiParams
-{
-    int Child;
-    int Pipe[2];
-    int TmpFd;
-}t_ExecuteCgiParams;
 class CGI
 {
     // private:
     public:
-        std::string     SCRIPT_PATH; //done
-        std::string     SCRIPT_NAME; //done
-        std::string     QUERY_STRING; //done
-        std::string     PATH_INFO; //done
-        std::string     REQUEST_METHOD;//done
-        std::string     CONTENT_TYPE; //done for GET
-        std::string     CONTENT_LENGTH; // done for GET
-        std::string     SERVER_PROTOCOL; //done
-        std::string     SERVER_NAME;//done
-        std::string     SERVER_PORT; //done
-        std::string     REMOTE_ADDR; //done
-        int             REMOTE_PORT; //done
+        std::string     SCRIPT_PATH;
+        std::string     SCRIPT_NAME;
+        std::string     QUERY_STRING;
+        std::string     PATH_INFO;
+        std::string     SERVER_PROTOCOL;
+        std::string     SERVER_NAME;
+        int             SERVER_PORT;
+        std::string     REMOTE_ADDR;
+        std::string     REMOTE_PORT;
         std::string     REMOTE_IDENT;
+        std::string     CONTENT_TYPE; 
+        std::string     CONTENT_LENGTH;
+        std::string     REQUEST_METHOD;
         
         std::string     Ext;
+        std::string     InFile;
+        std::string     OutFile;
+        size_t          InSize;
         char            **Env;
-        int             SCRIPT_FDO;
-        std::string     Out_File;
         std::string     PostBodyFile;
         std::vector<std::string> EnvString;
-        t_ExecuteCgiParams Vars;
+        pid_t   Pid;
+        bool    Is_Runing;
 
         // add time to check timeout
         
         
         CGI();
         ~CGI();
-        void            ExecuteCgi();
-        void            BuildEnv();
+        void            ExecuteCgi(Connection *conn);
+        void            BuildEnv(Connection *conn);
+        bool            IsCgiComplet(Connection *conn);
 };
 
 #endif

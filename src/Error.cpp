@@ -5,7 +5,7 @@ void    ExecuteError(Connection *conn)
 {
     if (!conn->response->Error)
     {  
-        conn->response->Error = new MainResponse(conn->response->GetStatusCode(), conn->request->GetUri());
+        conn->response->Error = new MainResponse(conn->response->GetStatusCode());
         std::string Path = conn->response->Error->ErrorHtmlPath.find(conn->response->GetStatusCode())->second;
         conn->request->SetUri(Path);
     }
@@ -15,7 +15,7 @@ void    ExecuteError(Connection *conn)
         case SENDING_STATUSLINE :
         {
             conn->response->Error->CheckForSending(conn);
-            conn->response->Error->SetContentType();
+            conn->response->Error->SetContentType(conn);
             conn->response->Error->SetStatusLine();
             conn->response->Error->SendStatusLine(conn);
             conn->response->Error->SetHeaders(true, conn->request);
