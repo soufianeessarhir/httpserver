@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/31 11:15:09 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/31 15:27:38 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -404,6 +404,7 @@ void        HttpServer::HandlOutgoingData(int fd)
 	{
 		SetSocketForRead(conn);
 		conn->state = Connection::READING_REQUEST_LINE;
+		// conn->~Connection();
 	}
 	
 }

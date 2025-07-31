@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/30 12:32:20 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/31 17:16:02 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,8 @@
 
 void		HttpServer::ProcessRequestLine(Connection *conn)
 {
-	if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
-	{
-		conn->response = new Response(414, Error); //[sessarhi] uri too large response
-		SetSocketForWrite(conn);
-		return;
-	}
+
+	
 	size_t end = conn->buffer.find("\r\n");
 	if (end  != std::string::npos)
 	{
@@ -42,17 +38,17 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 			conn->state =  Connection::SENDING_RESPONSE;
 		}
 	}
+	else if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
+	{
+		conn->response = new Response(414, Error); //[sessarhi] uri too large response
+		SetSocketForWrite(conn);
+		return;
+	}
 }
 
 void		HttpServer::ProcessHeaders(Connection *conn)
 {
-	if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
-	{
-		conn->response = new Response(431, Error); //[sessarhi] header field too large response
-		SetSocketForWrite(conn);
-		conn->state = Connection::SENDING_RESPONSE;
-		return;
-	}
+	
 	size_t end = conn->buffer.find("\r\n\r\n");
 	if (end != std::string::npos)
 	{
@@ -65,6 +61,13 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 			conn->response = new Response(conn->request->GetStatus(), Error);
 			conn->state = Connection::SENDING_RESPONSE;
 		}
+	}
+	else if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
+	{
+		conn->response = new Response(431, Error); //[sessarhi] header field too large response
+		SetSocketForWrite(conn);
+		conn->state = Connection::SENDING_RESPONSE;
+		return;
 	}
 }
 

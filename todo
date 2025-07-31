@@ -2,3 +2,4 @@
 - implemet timouts
 - remove support for port only binding 
 - if host header does not exest the server should responce by error
+- need to remove errno when sending

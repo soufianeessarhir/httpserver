@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/31 12:42:45 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/07/31 15:24:31 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,12 @@ Connection::~Connection()
     }
     if (server)
     {
-        delete server;
+        // delete server;
         server = NULL;
     }
     if (location)
     {
-        delete location;
+        // delete location;
         location = NULL;
     }
     if (post)
