@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/31 06:33:22 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/07/31 15:24:31 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,38 @@ Connection::Connection(int fd): UseCgi(false),state(READING_REQUEST_LINE),fd(fd)
     timeouts.read_timeout = time(NULL);     
 }
 
+
+Connection::~Connection()
+{
+    UseCgi = false;
+    state = READING_REQUEST_LINE;
+    if (request)
+    {
+        delete request;
+        request = NULL;
+    }
+    if (response)
+    {
+        delete response;
+        response = NULL;
+    }
+    if (server)
+    {
+        // delete server;
+        server = NULL;
+    }
+    if (location)
+    {
+        // delete location;
+        location = NULL;
+    }
+    if (post)
+    {
+        delete post;
+        post = NULL;
+    }
+    
+}
 void    CheckCgiExist(Connection *conn) // add by eaboudi
 {
     std::string Path = conn->location->root + conn->request->GetUri();
