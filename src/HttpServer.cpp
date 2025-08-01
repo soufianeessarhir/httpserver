@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/31 15:27:38 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:06:20 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -281,7 +281,8 @@ void		HttpServer::HandlIncommingData(int fd)
 	else if (rd_bytes == 0)
 	{
 		//[sessarhi] Connection should be closed -> the client close the socket from its side
-		return;
+		if (conn->buffer.empty())
+			return;
 	}
 	else if (rd_bytes < 0)
 	{
@@ -391,8 +392,18 @@ void		HttpServer::ProcessClientsRoundRobin()
         }
         else if (client_ev.events & WRITE_EVENT)
             HandlOutgoingData(client_ev.fd);
-		if (conn->state != Connection::COMPLETE)
+		if (conn->state != Connection::COMPLETE )
 			active_clients.push_back(client_ev);
+		else if (conn->state == Connection::COMPLETE && !conn->buffer.empty())
+		{
+			client_ev.events = READ_EVENT;
+			conn->state = Connection::READING_REQUEST_LINE; 
+			active_clients.push_back(client_ev);
+		}
+		else
+		{
+			conn->state = Connection::READING_REQUEST_LINE;
+		}
     }
 }
 
@@ -403,8 +414,7 @@ void        HttpServer::HandlOutgoingData(int fd)
 	if ( conn->state == Connection::COMPLETE && conn->response->GetMethod() != Error)
 	{
 		SetSocketForRead(conn);
-		conn->state = Connection::READING_REQUEST_LINE;
-		// conn->~Connection();
+		conn->Reset();
 	}
 	
 }
