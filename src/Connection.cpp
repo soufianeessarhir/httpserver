@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/31 15:24:31 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:02:48 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,14 +24,15 @@ Connection::Connection(int fd): UseCgi(false),state(READING_REQUEST_LINE),fd(fd)
 }
 
 
-Connection::~Connection()
+void Connection::Reset()
 {
     UseCgi = false;
-    state = READING_REQUEST_LINE;
+    state = COMPLETE;
     if (request)
     {
         delete request;
         request = NULL;
+        request = new Request();
     }
     if (response)
     {
