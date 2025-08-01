@@ -1,13 +1,12 @@
-To Do
-uploads
-
-.vscode
-tests
-CGI-SCRIPTS
-sheets
 multipart.html
 webserv.conf
 CMakeLists.txt
 .DS_Store
 todo
 webserv.conf
+To Do
+uploads/
+.vscode/
+tests/
+CGI-SCRIPTS/
+sheets/
