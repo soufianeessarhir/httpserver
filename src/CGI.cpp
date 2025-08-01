@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/31 11:05:47 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/01 10:46:14 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ void CGI::ExecuteCgi(Connection *conn)
 {
     std::stringstream id;
     id << conn->fd;
-    OutFile = "/tmp/CgiOutFile" +  id.str();
+    OutFile = "/tmp/CgiOutFile" + id.str();
     Pid = fork();
     if (Pid == 0)
     {
@@ -81,7 +81,7 @@ void CGI::ExecuteCgi(Connection *conn)
             exit(EXIT_FAILURE);
         }
         close(FdOut);
-        if (conn->request->GetMethod() == "POST")
+        if (conn->response->GetMethod() == POST)
         {
             int FdIn = open(InFile.c_str(), O_RDONLY);
             if (FdIn < 0)
@@ -109,29 +109,79 @@ void CGI::ExecuteCgi(Connection *conn)
 
 bool    CGI::IsCgiComplet(Connection *conn)
 {
-    if (!Is_Runing)
-        return true;
-    int Status;
-    pid_t   Res = waitpid(Pid, &Status, WNOHANG);
-    if (!Res)
-        return false;
-    Is_Runing = false;
-    if (Res == -1)
-    {
-        conn->response->SetStatusCode(500);
-        conn->response->SetMethod(Error);
-        return true;
-    }
-    if (WIFSIGNALED(Status) && WTERMSIG(Status) == SIGALRM)
-    {
-        conn->response->SetStatusCode(504);
-        conn->response->SetMethod(Error);
-    }
-    else if (WIFEXITED(Status) && WEXITSTATUS(Status) == 0)
-	{
-        
-    }
-    return false;
+    (void)conn;
+    // if (!Is_Runing)
+    //     return true;
+    // int Status;
+    // pid_t   Res = waitpid(Pid, &Status, WNOHANG);
+    // if (!Res)
+    //     return false;
+    // Is_Runing = false;
+    // if (Res == -1)
+    // {
+    //     conn->response->SetStatusCode(500);
+    //     conn->response->SetMethod(Error);
+    //     return true;
+    // }
+    // if (WIFSIGNALED(Status) && WTERMSIG(Status) == SIGALRM)
+    // {
+    //     conn->response->SetStatusCode(504);
+    //     conn->response->SetMethod(Error);
+    // }
+    // else if (WIFEXITED(Status) && WEXITSTATUS(Status) == 0)
+	// {
+    //     std::fstream    OFile(OutFile);
+    //     if (OFile)
+    //     {
+    //         std::stringstream buff;
+    //         std::string line;
+    //         buff << OFile.rdbuf();
+
+    //         while (std::getline(buff, line))
+    //         {
+    //             if (line.empty() || line.find(':') == line.npos)
+    //                 break;
+    //             size_t  Pos(line.find('\r'));
+    //             if (Pos != line.npos)
+    //                 line = line.substr(0, Pos);
+    //             Pos = line.find(':');
+    //             if (Pos == line.npos)
+    //                 break;
+    //             if (Pos + 1 >= line.size())
+    //                 continue;
+    //             std::string Key(line.substr(0, Pos));
+    //             std::string Value(line.substr(Pos + 1));
+    //             CgiHeaders[Key] = Value;
+    //         }
+    //         size_t DoubleCrCf(buff.str().find("\r\n\r\n"));
+    //         std::string content;
+    //         if (DoubleCrCf != buff.str().npos)
+    //             content = buff.str().substr(DoubleCrCf + 4);
+    //         else
+    //             content = buff.str();
+    //         OutputSize = content.size();
+    //         conn->response->SetStatusCode(200);
+    //         OFile.close();
+    //     }
+    //     else
+    //     {
+    //         conn->response->SetStatusCode(500);
+    //         conn->response->SetMethod(Error);
+    //     }
+    // }
+    // else if (WIFEXITED(Status) && WEXITSTATUS(Status) == CONTENT_TO_LARGE)
+    // {
+    //     conn->response->SetStatusCode(413);
+    //     conn->response->SetMethod(Error);
+    // }
+    // else
+    // {
+    //     conn->response->SetStatusCode(500);
+    //     conn->response->SetMethod(Error);
+    // }
+    // if (conn->response->GetMethod() == POST)
+    //     unlink(InFile.c_str());
+    return true;
 }
 
 CGI::~CGI()
