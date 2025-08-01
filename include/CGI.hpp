@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/31 07:48:17 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/01 10:32:04 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@
 #include <exception>
 #include <fstream>
 #include <string>
+
+#define CONTENT_TOO_LARGE 21
 
 class Connection;
 
@@ -57,6 +59,8 @@ class CGI
         std::string     OutFile;
         size_t          InSize;
         char            **Env;
+        std::map<std::string, std::string> CgiHeaders;
+        size_t          OutputSize;
         std::string     PostBodyFile;
         std::vector<std::string> EnvString;
         pid_t   Pid;
