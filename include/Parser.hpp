@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:08:59 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/05/02 21:37:08 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/02 19:43:25 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ public:
 	void LocationDirectiveList();
 	void LocationDirective();
 	void RootDirective(std::string &);
+	void AliasDirective(std::string &alias);
 	void MethodsDirective();
 	void ReturnDirective(std::pair<int, std::string> &, bool&);
 	void AutoindexDirective(bool&);

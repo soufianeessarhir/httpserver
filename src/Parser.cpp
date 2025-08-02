@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 15:45:56 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/02 19:44:08 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -260,6 +260,8 @@ void		Parser::LocationDirective()
 {
 	if (currentToken.value == "root")
 		RootDirective(servers.back().locations[tmpkey].root);
+	else if (currentToken.value == "alias")
+		AliasDirective(servers.back().locations[tmpkey].alias);
 	else if (currentToken.value == "index")
 		IndexDirective(servers.back().locations[tmpkey].index);
 	else if (currentToken.value == "return")
@@ -286,6 +288,17 @@ void		Parser::RootDirective(std::string &root)
 	if (currentToken.type != TOKEN_PATH)
 		throw ParseException("Expected path after 'root'");
     root = currentToken.value;
+	currentToken = lexer.getNextToken();
+	if (currentToken.type != TOKEN_SEMICOLON)
+		throw ParseException("Expected ';' after 'root' directive");
+}
+
+void Parser::AliasDirective(std::string &alias)
+{
+	currentToken = lexer.getNextToken();
+	if (currentToken.type != TOKEN_PATH)
+		throw ParseException("Expected path after 'root'");
+    alias = currentToken.value;
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_SEMICOLON)
 		throw ParseException("Expected ';' after 'root' directive");
