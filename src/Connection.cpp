@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/01 16:02:48 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/02 13:14:18 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,6 @@ Connection::Connection(int fd): UseCgi(false),state(READING_REQUEST_LINE),fd(fd)
 void Connection::Reset()
 {
     UseCgi = false;
-    state = COMPLETE;
     if (request)
     {
         delete request;
@@ -121,6 +120,11 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
     }
     conn->request->SetUri(Path);
     conn->UseCgi = false;
+}
+
+Connection::~Connection()
+{
+    Reset();
 }
 
 

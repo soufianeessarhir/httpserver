@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/01 16:06:20 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/02 13:13:00 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -282,7 +282,10 @@ void		HttpServer::HandlIncommingData(int fd)
 	{
 		//[sessarhi] Connection should be closed -> the client close the socket from its side
 		if (conn->buffer.empty())
+		{
+			ClientCleanUp(fd);
 			return;
+		}
 	}
 	else if (rd_bytes < 0)
 	{
@@ -391,19 +394,13 @@ void		HttpServer::ProcessClientsRoundRobin()
                 client_ev.events = WRITE_EVENT;
         }
         else if (client_ev.events & WRITE_EVENT)
+		{
             HandlOutgoingData(client_ev.fd);
+			if (conn->state == Connection::READING_REQUEST_LINE)
+                client_ev.events = READ_EVENT;
+		}
 		if (conn->state != Connection::COMPLETE )
 			active_clients.push_back(client_ev);
-		else if (conn->state == Connection::COMPLETE && !conn->buffer.empty())
-		{
-			client_ev.events = READ_EVENT;
-			conn->state = Connection::READING_REQUEST_LINE; 
-			active_clients.push_back(client_ev);
-		}
-		else
-		{
-			conn->state = Connection::READING_REQUEST_LINE;
-		}
     }
 }
 
@@ -418,7 +415,20 @@ void        HttpServer::HandlOutgoingData(int fd)
 	}
 	
 }
-
+void		HttpServer::ClientCleanUp(int fd)
+{
+	shutdown(fd,SHUT_WR);
+	RemoveEvent(fd);
+	for(std::deque<PlatformEvent>::const_iterator it = active_clients.cbegin();it != active_clients.cend();
+		++it)
+	{
+		if ((*it).fd == fd)
+			active_clients.erase(it);
+	}
+	Connection *conn = clients[fd];
+	clients.erase(fd);
+	delete conn;
+}
 void		HttpServer::cleanup()
 {
 	for (std::map<int, Server>::iterator it = server_map.begin(); it != server_map.end(); ++it)
