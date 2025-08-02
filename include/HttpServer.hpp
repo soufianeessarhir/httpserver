@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 16:19:34 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/02 17:13:23 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,8 +74,6 @@ private:
 	
 	void		ClientCleanUp(int fd);
 	
-	void		SetSocketToNonblocking(int fd);
-	
 	void		HandleNewConnection(int fd);
 	
 	void		HandlIncommingData(int fd);
@@ -101,6 +99,10 @@ private:
 	bool		ProcessPostRequest(Connection *);
 	
 	void 		FillLocationMisseddata(Connection *);
+	
+	void 		SetClientSocketToNonblocking(int fd);
+
+	void 		SetServerSocketToNonblocking(int fd);
 	
 	
 	int CreateEvent();
@@ -150,8 +152,8 @@ class HttpServerError : public std::exception
 class HttpClientError : public std::exception
 {
 	public:
-	
-		HttpClientError(const char *msg) : message(msg) {}
+		const int client_fd;
+		HttpClientError(const char *msg,const int fd) : client_fd(fd),message(msg){}
 		
 		virtual const char* what() const throw()
 		{
