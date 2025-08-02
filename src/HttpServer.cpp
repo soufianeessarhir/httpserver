@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 13:13:00 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/02 16:19:15 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,8 +178,7 @@ void		HttpServer::init()
 			hints.ai_family = AF_INET;
 			hints.ai_socktype = SOCK_STREAM;
 			hints.ai_flags = AI_PASSIVE;
-			std::string host = servers[i].listen[j].first.empty() ?
-				"localhost" : servers[i].listen[j].first;
+			std::string host = servers[i].listen[j].first.empty() ? "localhost" : servers[i].listen[j].first;
 			std::ostringstream port;
 			port << servers[i].listen[j].second;
 			if (getaddrinfo(host.c_str(), port.str().c_str(),&hints, &res) != 0)
@@ -289,6 +288,7 @@ void		HttpServer::HandlIncommingData(int fd)
 	}
 	else if (rd_bytes < 0)
 	{
+		//no data / error 
 		//[sessarhi] Connection should be closed -> an error happens in read operation
 	}
 	bool continue_processing = true;
@@ -344,30 +344,43 @@ void		HttpServer::HandlIncommingData(int fd)
 void		HttpServer::run()
 {
 	PlatformEvent platform_events[MAX_EVENTS];
+	int event_count;
 	for(;;)
 	{
-		int event_count = WaitForEvents(platform_events, MAX_EVENTS, 0);
-        if (event_count == -1)
-            throw HttpServerError("Event wait failed");
-		for (int i = 0; i < event_count; ++i)
+		try
 		{
-			if (server_map.find(platform_events[i].fd) != server_map.end())
-				HandleNewConnection(platform_events[i].fd);
-			else if (platform_events[i].events & (READ_EVENT | WRITE_EVENT))
+			event_count = WaitForEvents(platform_events, MAX_EVENTS, 0);
+			if (event_count == -1)
+				throw HttpServerError("Event wait failed");
+			for (int i = 0; i < event_count; ++i)
 			{
-				if (!CheckForEventFd(platform_events[i].fd))
-					active_clients.push_back(platform_events[i]);
+				if (server_map.find(platform_events[i].fd) != server_map.end())
+					HandleNewConnection(platform_events[i].fd);
+				else if (platform_events[i].events & (READ_EVENT | WRITE_EVENT))
+				{
+					if (!CheckForEventFd(platform_events[i].fd))
+						active_clients.push_back(platform_events[i]);
+				}
+				else if (platform_events[i].events  & HUP_EVENT)
+				{
+					// [sessarhi] handle errors for this fd
+				}
+				else if (platform_events[i].events  & ERROR_EVENT)
+				{
+					
+				}
 			}
-			else if (platform_events[i].events  & HUP_EVENT)
-			{
-				// [sessarhi] handle errors for this fd
-			}
-			else if (platform_events[i].events  & ERROR_EVENT)
-			{
-				
-			}
+			ProcessClientsRoundRobin();
 		}
-		ProcessClientsRoundRobin();
+		catch(const HttpClientError &e)
+		{
+			std::cerr << e.what() << '\n';
+		}
+		catch(const HttpServerError &e)
+		{
+			std::cerr << e.what() << '\n';
+			return ;
+		}
 	}
 }
 

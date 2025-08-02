@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 12:44:24 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/02 16:19:34 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,6 +141,24 @@ class HttpServerError : public std::exception
 		}
 		
 		virtual ~HttpServerError() throw() {}
+		
+	private:
+
+		const char *message;
+};
+
+class HttpClientError : public std::exception
+{
+	public:
+	
+		HttpClientError(const char *msg) : message(msg) {}
+		
+		virtual const char* what() const throw()
+		{
+			return message;
+		}
+		
+		virtual ~HttpClientError() throw() {}
 		
 	private:
 

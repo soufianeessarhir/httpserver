@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/28 16:43:18 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/02 15:45:56 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -341,10 +341,10 @@ void		Parser::AutoindexDirective(bool &autoindex)
 void		Parser::IndexDirective(std::string &index)
 {
 	currentToken = lexer.getNextToken();
-	if (currentToken.type != TOKEN_PATH)
+	if (currentToken.type != TOKEN_IDENTIFIER)
 		throw ParseException("Expected path after 'index'");
 	currentToken = lexer.getNextToken();
-	while (currentToken.type == TOKEN_PATH)
+	while (currentToken.type == TOKEN_IDENTIFIER)
 	{
 		index = currentToken.value;
 		currentToken = lexer.getNextToken();
@@ -357,13 +357,13 @@ void		Parser::IndexDirective(std::string &index)
 void		Parser::CgiDirective( std::map<std::string, std::string> &cgi)
 {
 	currentToken = lexer.getNextToken();
-	if (currentToken.value[0] != '.')
-	throw ParseException("Expected '.' in  'cgi' extention");
+	// if (currentToken.value[0] != '.')
+	// throw ParseException("Expected '.' in  'cgi' extention");
 	std::string extension = currentToken.value;
-	currentToken = lexer.getNextToken();
-	if (currentToken.type != TOKEN_IDENTIFIER)
-		throw ParseException("Expected extension after '.'");
-	extension += currentToken.value;
+	// currentToken = lexer.getNextToken();
+	// if (currentToken.type != TOKEN_IDENTIFIER)
+	// 	throw ParseException("Expected extension after '.'");
+	// extension += currentToken.value;
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_PATH && currentToken.type != TOKEN_IDENTIFIER)
 		throw ParseException("Expected path after 'cgi' path");
