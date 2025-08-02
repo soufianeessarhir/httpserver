@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 17:15:57 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/02 17:25:21 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -291,8 +291,8 @@ void		HttpServer::HandleNewConnection(int fd)
 		conn->ip = ipstr;
 		conn->port = ntohs(s->sin_port);
 		std::cout<< " " << ipstr << " " << conn->port<< std::endl;
-		SetClientSocketToNonblocking(client_fd);
 		clients[client_fd] = conn;
+		SetClientSocketToNonblocking(client_fd);
 		AddEvent(client_fd,READ_EVENT | EDGE_TRIGGERED);
 	}
 }
@@ -403,6 +403,11 @@ void		HttpServer::run()
 			std::cerr << e.what() << '\n';
 			return ;
 		}
+		catch(const std::exception &e)
+		{
+			std::cerr << e.what() << '\n';
+			return;
+		}
 	}
 }
 
@@ -417,10 +422,7 @@ void		HttpServer::ProcessClientsRoundRobin()
         struct PlatformEvent client_ev = active_clients.front();
         active_clients.pop_front();
         if (clients.find(client_ev.fd) == clients.end())
-        {
-            active_clients.pop_front();
             continue;
-        }
         Connection *conn = clients[client_ev.fd];
         if (client_ev.events & READ_EVENT)
         {
@@ -454,7 +456,7 @@ void		HttpServer::ClientCleanUp(int fd)
 {
 	shutdown(fd,SHUT_WR);
 	RemoveEvent(fd);
-	for(std::deque<PlatformEvent>::const_iterator it = active_clients.cbegin();it != active_clients.cend();
+	for(std::deque<PlatformEvent>::iterator it = active_clients.begin();it != active_clients.end();
 		++it)
 	{
 		if ((*it).fd == fd)
