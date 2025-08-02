@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/30 12:43:46 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/02 12:44:24 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,8 @@ public:
 private:	
 
 	void		init();
+	
+	void		ClientCleanUp(int fd);
 	
 	void		SetSocketToNonblocking(int fd);
 	
