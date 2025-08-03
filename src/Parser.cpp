@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 19:44:08 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/03 11:52:48 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -370,15 +370,13 @@ void		Parser::IndexDirective(std::string &index)
 void		Parser::CgiDirective( std::map<std::string, std::string> &cgi)
 {
 	currentToken = lexer.getNextToken();
-	// if (currentToken.value[0] != '.')
-	// throw ParseException("Expected '.' in  'cgi' extention");
+	if (currentToken.type != TOKEN_IDENTIFIER)
+		throw ParseException("Expected IDENTIFIER after cgi directive");
+	if (currentToken.value[0] != '.')
+		throw ParseException("Expected '.' in  'cgi' extention");
 	std::string extension = currentToken.value;
-	// currentToken = lexer.getNextToken();
-	// if (currentToken.type != TOKEN_IDENTIFIER)
-	// 	throw ParseException("Expected extension after '.'");
-	// extension += currentToken.value;
 	currentToken = lexer.getNextToken();
-	if (currentToken.type != TOKEN_PATH && currentToken.type != TOKEN_IDENTIFIER)
+	if (currentToken.type != TOKEN_PATH)
 		throw ParseException("Expected path after 'cgi' path");
 	cgi[extension] = currentToken.value;
 	currentToken = lexer.getNextToken();
