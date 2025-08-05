@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/28 16:43:18 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/03 11:52:48 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -260,6 +260,8 @@ void		Parser::LocationDirective()
 {
 	if (currentToken.value == "root")
 		RootDirective(servers.back().locations[tmpkey].root);
+	else if (currentToken.value == "alias")
+		AliasDirective(servers.back().locations[tmpkey].alias);
 	else if (currentToken.value == "index")
 		IndexDirective(servers.back().locations[tmpkey].index);
 	else if (currentToken.value == "return")
@@ -286,6 +288,17 @@ void		Parser::RootDirective(std::string &root)
 	if (currentToken.type != TOKEN_PATH)
 		throw ParseException("Expected path after 'root'");
     root = currentToken.value;
+	currentToken = lexer.getNextToken();
+	if (currentToken.type != TOKEN_SEMICOLON)
+		throw ParseException("Expected ';' after 'root' directive");
+}
+
+void Parser::AliasDirective(std::string &alias)
+{
+	currentToken = lexer.getNextToken();
+	if (currentToken.type != TOKEN_PATH)
+		throw ParseException("Expected path after 'root'");
+    alias = currentToken.value;
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_SEMICOLON)
 		throw ParseException("Expected ';' after 'root' directive");
@@ -341,10 +354,10 @@ void		Parser::AutoindexDirective(bool &autoindex)
 void		Parser::IndexDirective(std::string &index)
 {
 	currentToken = lexer.getNextToken();
-	if (currentToken.type != TOKEN_PATH)
+	if (currentToken.type != TOKEN_IDENTIFIER)
 		throw ParseException("Expected path after 'index'");
 	currentToken = lexer.getNextToken();
-	while (currentToken.type == TOKEN_PATH)
+	while (currentToken.type == TOKEN_IDENTIFIER)
 	{
 		index = currentToken.value;
 		currentToken = lexer.getNextToken();
@@ -357,15 +370,13 @@ void		Parser::IndexDirective(std::string &index)
 void		Parser::CgiDirective( std::map<std::string, std::string> &cgi)
 {
 	currentToken = lexer.getNextToken();
+	if (currentToken.type != TOKEN_IDENTIFIER)
+		throw ParseException("Expected IDENTIFIER after cgi directive");
 	if (currentToken.value[0] != '.')
-	throw ParseException("Expected '.' in  'cgi' extention");
+		throw ParseException("Expected '.' in  'cgi' extention");
 	std::string extension = currentToken.value;
 	currentToken = lexer.getNextToken();
-	if (currentToken.type != TOKEN_IDENTIFIER)
-		throw ParseException("Expected extension after '.'");
-	extension += currentToken.value;
-	currentToken = lexer.getNextToken();
-	if (currentToken.type != TOKEN_PATH && currentToken.type != TOKEN_IDENTIFIER)
+	if (currentToken.type != TOKEN_PATH)
 		throw ParseException("Expected path after 'cgi' path");
 	cgi[extension] = currentToken.value;
 	currentToken = lexer.getNextToken();
