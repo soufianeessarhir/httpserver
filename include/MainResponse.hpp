@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/07/31 12:20:50 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/06 09:50:27 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@
 #include "Connection.hpp"
 #include <cstddef>
 
-#define BUFFER_SIZE 5000
+#define BUFFER_SIZE 10000
 #define NOTFOUND "Indexes/NotFound.html"
 #define FORBIDDEN "Indexes/Forbidden.html"
 #define BADREQUEST "Indexes/BadRequest.html"
