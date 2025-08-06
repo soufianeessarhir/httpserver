@@ -213,7 +213,7 @@ int MainResponse::GetStatusCode() const
     return StatusCode;
 }
 
-void MainResponse::SendHeaders(Connection *Conn)
+void MainResponse::SendHeaders(Connection *conn)
 {
     ssize_t BytesWriten = 0;
     size_t TotalSent = 0;
@@ -222,28 +222,34 @@ void MainResponse::SendHeaders(Connection *Conn)
     std::map<std::string, std::string>::const_iterator it;
     for (it = Headers.begin(); it != Headers.end(); ++it)
         HeadersStr += it->first + ": " + it->second;
+    if (conn->UseCgi && conn->request->GetMethod() == "POST" && !conn->CgiObj->CgiHeaders.empty())
+    {
+       std::map<std::string, std::string>::const_iterator it(conn->CgiObj->CgiHeaders.begin());
+       for(;it != Headers.end(); ++it)
+            HeadersStr += it->first + ": " + it->second;
+    }
     HeadersStr += "\r\n";
     
     while (TotalSent < HeadersStr.size())
     {
-        BytesWriten = send(Conn->fd, HeadersStr.c_str() + TotalSent, 
+        BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 
                           HeadersStr.size() - TotalSent, MSG_NOSIGNAL);
         if (BytesWriten < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
-                Conn->state = Connection::SENDING_RESPONSE;
+                conn->state = Connection::SENDING_RESPONSE;
                 return;
             }
             else if (errno == EPIPE || errno == ECONNRESET)
             {
-                Conn->state = Connection::COMPLETE;
+                conn->state = Connection::COMPLETE;
                 return;
             }
             else
             {
                 perror("send headers");
-                Conn->state = Connection::COMPLETE;
+                conn->state = Connection::COMPLETE;
                 return;
             }
         }
