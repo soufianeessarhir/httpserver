@@ -265,19 +265,19 @@ void Post::ProcessMultiPart()
                     delimiter = "--" + boundry;
                     is_initial_del = false;
                 }
+                 size_t  CRLF = conn->buffer.find(delimiter + "\r\n");
+                if(CRLF != std::string::npos)
+                {
+                    conn->buffer.erase(0,(delimiter + "\r\n").size());
+                    multipart_state = Post::READING_PART_HEADERS;
+                    contunue = true;
+                    break;
+                }
                 size_t close_del = conn->buffer.find(delimiter + "--");
                 if (close_del !=  std::string::npos)
                 {
                     conn->buffer.erase(close_del + (delimiter + "--").length() - 1);
                     multipart_state = Post::MULTIPART_COMPLETE;
-                    contunue = true;
-                    break;
-                }
-                size_t  CRLF = conn->buffer.find(delimiter + "\r\n");
-                if(CRLF != std::string::npos)
-                {
-                    conn->buffer.erase(0,(delimiter + "\r\n").size());
-                    multipart_state = Post::READING_PART_HEADERS;
                     contunue = true;
                     break;
                 }
