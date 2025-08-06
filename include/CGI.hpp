@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/06 09:06:58 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/06 11:16:10 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@
 #include <fstream>
 #include <string>
 
-#define CONTENT_TOO_LARGE 21
+#define CONTENT_TOO_LARGE 19
 
 class Connection;
 
