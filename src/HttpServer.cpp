@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/06 17:25:00 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/06 18:45:52 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -306,21 +306,22 @@ void		HttpServer::HandlIncommingData(int fd)
 	char buf[READ_BUFFER_SIZE];
 	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
 	if (rd_bytes > 0)
-		conn->buffer.append(buf,rd_bytes);
+	conn->buffer.append(buf,rd_bytes);
 	else if (rd_bytes == 0)
 	{
 		//[sessarhi] Connection should be closed -> the client close the socket from its side
 		if (conn->buffer.empty())
 		{
 			ClientCleanUp(fd);
-			return;
 		}
+		return;
 	}
 	else if (rd_bytes < 0)
 	{
 		//no data / error 
 		//[sessarhi] Connection should be closed -> an error happens in read operation
 	}
+	std::cout << conn->buffer<<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -392,7 +393,8 @@ void		HttpServer::run()
 				else if ((platform_events[i].events  & HUP_EVENT) || (platform_events[i].events  & ERROR_EVENT))
 					throw HttpClientError("HUP_EVENT | ERROR_EVENT",platform_events[i].fd);
 			}
-			ProcessClientsRoundRobin();
+			if (!active_clients.empty())
+				ProcessClientsRoundRobin();
 		}
 		catch(const HttpClientError &e)
 		{
