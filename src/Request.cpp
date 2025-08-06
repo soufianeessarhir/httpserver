@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/06 09:45:19 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/06 09:49:49 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ size_t          Request::GetContentLenght() const
         return 0;
     long long val =  std::strtol((*it).second.c_str(),&endptr,10);
     if (errno == ERANGE || endptr[0] != '\0')
+        return 0;
     return val;
     
 }
