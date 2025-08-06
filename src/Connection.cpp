@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 13:14:18 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/05 21:09:58 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,15 @@ void Connection::Reset()
     }
     
 }
+
+// bool    CheckConfigCgi(Connection *conn, std::string Ext)
+// {
+//     if ()
+//     {
+            
+//     }
+// }
+
 void    CheckCgiExist(Connection *conn) // add by eaboudi
 {
     std::string Path = conn->location->root + conn->request->GetUri();
@@ -66,6 +75,12 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
     {
         QueryString = Path.substr(Pos + 1);
         Path = Path.substr(0, Pos);
+    }
+    if (conn->location->cgi.empty())
+    {
+        conn->CgiObj = false;
+        conn->request->SetUri(Path);
+        return ;
     }
     Pos = Path.find('.');
     if (Pos != Path.npos)
@@ -89,7 +104,7 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
         Pos = CheckDir.find_last_of('/');
         std::string ScriptName = CheckDir.substr(Pos + 1);
         CheckDir = CheckDir.substr(0, Pos);
-        std::string CgiDir = CGiDir;
+        std::string CgiDir = conn->location->root + conn->location->cgi[Ext];
         if (CheckDir.compare(0, CgiDir.size(), CgiDir) == 0)
         {
             CheckDir += '/';
