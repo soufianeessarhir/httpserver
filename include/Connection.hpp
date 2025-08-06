@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/01 12:19:00 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/06 21:04:02 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,6 @@ struct Timeouts
     bool read_fails;
 	time_t last_activity; // Last activity timestamp
     time_t read_timeout;  // Read timeout value
-    // time_t write_timeout; // Write timeout value
-    time_t idle_timeout;
-    void UpdateLastActivityTime(){last_activity = time(NULL);}
-    void UpdateIdleTime(){idle_timeout = time(NULL);}
 };
 
 class Connection
@@ -43,7 +39,9 @@ class Connection
 public:
     Connection(int fd);
     void Reset();
+    void UpdateTime(time_t &t);
     ~Connection();
+    
     enum State 
     {
         READING_REQUEST_LINE,
@@ -68,6 +66,7 @@ public:
     std::string     buffer;
     std::string     ip;
     int             port;
+    
 };
 
 void    CheckCgiExist(Connection *conn);
