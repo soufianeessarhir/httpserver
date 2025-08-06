@@ -276,7 +276,7 @@ void Post::ProcessMultiPart()
                 size_t close_del = conn->buffer.find(delimiter + "--");
                 if (close_del !=  std::string::npos)
                 {
-                    conn->buffer.erase(close_del + (delimiter + "--").length() - 1);
+                    conn->buffer.erase(0,close_del + (delimiter + "--").length() - 1);
                     multipart_state = Post::MULTIPART_COMPLETE;
                     contunue = true;
                     break;
