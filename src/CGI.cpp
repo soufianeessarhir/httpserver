@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/06 08:36:01 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/06 10:05:18 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 CGI::CGI()
 {
-    
+    InFile = "/tmp/cgi_in";
 }
 
 void    CGI::BuildEnv(Connection *conn)

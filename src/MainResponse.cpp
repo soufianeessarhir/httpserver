@@ -343,8 +343,6 @@ bool    CheckFileRD(Connection *conn)
 
 void    excuteGetMethod(Connection *conn)
 {
-
-
     if (conn->UseCgi && conn->response->GetMethod() != Error)
     {
         conn->CgiObj->ExecuteCgi(conn);
