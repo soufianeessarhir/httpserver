@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/01 10:32:04 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/06 09:06:58 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ class CGI
         std::string     REQUEST_METHOD;
         
         std::string     Ext;
-        std::string     InFile;
+        std::string     InFile; 
         std::string     OutFile;
         size_t          InSize;
         char            **Env;
