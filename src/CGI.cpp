@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/06 11:39:52 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/06 17:16:48 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,7 @@ bool    CGI::IsCgiComplet(Connection *conn)
     }
     else if (WIFEXITED(Status) && WEXITSTATUS(Status) == 0)
 	{
-        std::fstream    OFile(OutFile);
+        std::fstream    OFile(OutFile.c_str());
         if (OFile)
         {
             std::stringstream buff;
