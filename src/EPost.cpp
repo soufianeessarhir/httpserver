@@ -6,17 +6,16 @@ void PostResponse(Connection *conn)
 {
     if (!conn->response->POST)
     {
-        conn->response->POST = new MainResponse(conn->response->GetStatusCode());
+        conn->response->POST = new MainResponse(conn->response->GetStatusCode(), conn->request->GetUri());
         std::string Path;
         Path = conn->response->POST->ErrorHtmlPath.find(conn->response->POST->GetStatusCode())->second;
-        conn->request->SetUri(Path);
     }
     switch (conn->response->POST->ResponseStat)
     {   
         case SENDING_STATUSLINE :
         {
             conn->response->POST->CheckForSending(conn);
-            conn->response->POST->SetContentType(conn);
+            conn->response->POST->SetContentType();
             conn->response->POST->SetStatusLine();
             conn->response->POST->SendStatusLine(conn);
             conn->response->POST->SetHeaders(false, conn->request);
