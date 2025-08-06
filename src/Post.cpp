@@ -458,14 +458,8 @@ bool Post::CheckFileName(std::string &filename)
 }
 void Post::WriteDataToFile(size_t size)
 {
-    // if (is_multipart)
-    // {
-    //     return ;
-    // }
-    // else
-    // {
-       output_file.write(conn->buffer.data(),size);
-    // }
+
+    output_file.write(conn->buffer.data(),size);
 }
 
 void Post::GenerateUploadfile(const std::string &ext)

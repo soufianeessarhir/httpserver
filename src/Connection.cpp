@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/06 09:24:56 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/06 21:01:08 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,15 @@
 Connection::Connection(int fd): UseCgi(false),state(READING_REQUEST_LINE),fd(fd)
             ,request(new Request()),response(NULL),server(NULL),location(NULL),post(NULL)
 {
-    timeouts.read_fails = false;
-    timeouts.idle_timeout = time(NULL);     
+    timeouts.read_fails = false;   
     timeouts.last_activity = time(NULL);     
     timeouts.read_timeout = time(NULL);     
 }
 
+void Connection::UpdateTime(time_t &t)
+{
+    t  = time(NULL);
+}
 
 void Connection::Reset()
 {
