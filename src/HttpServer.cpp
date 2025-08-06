@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 17:25:21 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/06 17:25:00 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -463,8 +463,8 @@ void		HttpServer::ClientCleanUp(int fd)
 			active_clients.erase(it);
 	}
 	Connection *conn = clients[fd];
-	clients.erase(fd);
 	delete conn;
+	clients.erase(fd);
 }
 void		HttpServer::cleanup()
 {
