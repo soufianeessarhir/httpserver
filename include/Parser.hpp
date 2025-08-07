@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:08:59 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 19:43:25 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/07 11:06:39 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <algorithm>
+#include "Exceptions.hpp"
 
 class Parser
 {
@@ -57,13 +58,4 @@ public:
 	
 };
 
-class ParseException : public std::exception
-{	
-public:
-	ParseException(const std::string &message) : msg_(message) {}
-	virtual const char* what() const throw() { return msg_.c_str(); }
-	virtual ~ParseException() throw() {}
-private:
-	std::string msg_;
-};
 #endif

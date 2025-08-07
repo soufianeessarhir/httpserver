@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 17:13:23 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/07 11:08:28 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@
 #include		<cstdio>
 #include 		<arpa/inet.h>
 #include		<sys/types.h>
+#include		"Exceptions.hpp"
 
 class Connection;
 #define			MAX_EVENTS					1024
@@ -128,43 +129,6 @@ private:
 	
 	 std::deque<PlatformEvent> active_clients;
 	
-};
-
-
-class HttpServerError : public std::exception
-{
-	public:
-	
-		HttpServerError(const char *msg) : message(msg) {}
-		
-		virtual const char* what() const throw()
-		{
-			return message;
-		}
-		
-		virtual ~HttpServerError() throw() {}
-		
-	private:
-
-		const char *message;
-};
-
-class HttpClientError : public std::exception
-{
-	public:
-		const int client_fd;
-		HttpClientError(const char *msg,const int fd) : client_fd(fd),message(msg){}
-		
-		virtual const char* what() const throw()
-		{
-			return message;
-		}
-		
-		virtual ~HttpClientError() throw() {}
-		
-	private:
-
-		const char *message;
 };
 
 
