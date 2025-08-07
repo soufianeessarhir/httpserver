@@ -1,67 +1,30 @@
-void    CheckCgiExist(std::string path) // add by eaboudi
+#include <netinet/in.h>
+#include <unistd.h>
+// #include "Connection.hpp"
+#include <arpa/inet.h>
+#include <sys/stat.h>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <iostream>
+#include <unistd.h>
+#include <cstdlib>
+#include <cstdio>
+#include <exception>
+#include <fstream>
+#include <string>
+
+
+int main()
 {
-    std::string Path = conn->location->root + conn->request->GetUri();
-    std::string QueryString;
-    std::string CheckDir;
-    size_t Pos = Path.find('?');
-    if (Pos != std::string::npos)
-    {
-        QueryString = Path.substr(Pos + 1);
-        Path = Path.substr(0, Pos);
-    }
-    Pos = Path.find('.');
-    if (Pos != Path.npos)
-    {
-        std::string PathInfo;
-        std::string Ext;
-        if (Path.find('/', Pos) != Path.npos)
+        char *Env[] = {"hoem", "test", NULL};
+        const char * argv[] = {"/usr/bin/python3", "/Users/eaboudi/Desktop/httpserver/CGI_SCRIPTS/pyet.py", NULL};
+        if (execve(argv[0], const_cast<char **>(argv), Env) == -1)
         {
-            while(Path[Pos] != '/')
-                Pos++;
-            PathInfo = Path.substr(Pos);
+            perror("execve: ");
+            exit(EXIT_FAILURE);
         }
-        else
-            Pos = Path.size();
-        CheckDir = Path.substr(0, Pos);
-        Pos = CheckDir.find_last_of('/');
-        std::string ScriptName = CheckDir.substr(Pos + 1);
-        CheckDir = CheckDir.substr(0, Pos);
-        std::string CgiDir = CGiDir;
-        if (CheckDir.compare(0, CgiDir.size(), CgiDir) == 0)
-        {
-            CheckDir += '/';
-            std::string ScriptPath = CheckDir;
-            CheckDir += ScriptName;
-            struct stat FileState;
-            if (stat(CheckDir.c_str(), &FileState) == 0)
-            {
-                if (S_ISREG(FileState.st_mode))
-                {
-                    conn->UseCgi = true;
-                    conn->CgiObj = new CGI;
-                    conn->CgiObj->QUERY_STRING = QueryString;
-                    conn->CgiObj->REQUEST_METHOD = conn->request->GetMethod();
-                    conn->CgiObj->SCRIPT_PATH = ScriptPath;
-                    conn->CgiObj->SCRIPT_NAME = ScriptPath + ScriptName;
-                    conn->CgiObj->PATH_INFO = PathInfo;
-                    conn->CgiObj->REMOTE_ADDR = conn->ip;
-                    conn->CgiObj->REMOTE_PORT = conn->port;
-                    conn->CgiObj->SERVER_PROTOCOL = conn->request->GetVersion();
-                    // if (conn->CgiObj->REQUEST_METHOD == "POST")
-                    // {
-                    //     conn->CgiObj->CONTENT_LENGTH  = conn->request->GetContentLenght();
-                    //     conn->CgiObj->CONTENT_TYPE = conn->request->GetHeader("content_type");
-                    // }
-                    // else
-                    // {
-                        conn->CgiObj->CONTENT_LENGTH = 0;
-                        conn->CgiObj->CONTENT_TYPE = "";
-                    // }
-                    return ;
-                }
-            }
-        }
-    }
-    conn->request->SetUri(Path);
-    conn->UseCgi = false;
 }
