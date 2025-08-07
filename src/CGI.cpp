@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/06 17:16:48 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/06 22:10:20 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,9 @@
 
 CGI::CGI()
 {
-    InFile = "/tmp/cgi_in";
+    // InFile = "/tmp/cgi_in";
+    InFile = "input_cgi";
+    OutFile = "/tmp/cgi_out";
 }
 
 void    CGI::BuildEnv(Connection *conn)
@@ -53,11 +55,9 @@ void    CGI::BuildEnv(Connection *conn)
 
 void CGI::ExecuteCgi(Connection *conn)
 {
-    std::cout << "execute success" << std::endl;
-    (void)conn;
     std::stringstream id;
     id << conn->fd;
-    OutFile = "/tmp/CgiOutFile" + id.str();
+    OutFile += id.str();
     Pid = fork();
     if (Pid == 0)
     {
@@ -113,7 +113,6 @@ void CGI::ExecuteCgi(Connection *conn)
 
 bool    CGI::IsCgiComplet(Connection *conn)
 {
-    
     if (!Is_Runing)
         return true;
     int Status;
@@ -192,5 +191,5 @@ bool    CGI::IsCgiComplet(Connection *conn)
 
 CGI::~CGI()
 {
-    
+    unlink(OutFile.c_str());
 }

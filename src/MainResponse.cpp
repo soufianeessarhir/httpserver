@@ -322,7 +322,10 @@ void MainResponse::SetAndSendBody(Connection* conn)
 bool    CheckFileRD(Connection *conn)
 {
     if (conn->UseCgi)
+    {    
         conn->request->SetUri(conn->CgiObj->OutFile);
+        conn->UseCgi = false;
+    }
     struct stat FileState;
     if (stat(conn->request->GetUri().c_str(), &FileState) == -1)
     {
@@ -352,6 +355,7 @@ void    excuteGetMethod(Connection *conn)
     if (conn->UseCgi && conn->response->GetMethod() != Error)
     {
         conn->CgiObj->ExecuteCgi(conn);
+        conn->CgiObj->IsCgiComplet(conn);
     }
     if (conn->response->GetMethod() == GET)
     {
