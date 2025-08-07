@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/03 11:52:48 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/07 10:52:40 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,10 @@ void		Parser::ListenDirective()
 				throw ParseException("Expected ':' or port number after IP address");
 		}
 		else
+		{
+			servers.back().listen.back().first = "0.0.0.0";
 			Port();
+		}
 	}
 	else
 		throw ParseException("Expected host or port number after 'listen'");
