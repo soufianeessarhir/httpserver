@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/06 22:10:20 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/07 14:11:40 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,11 @@ CGI::CGI()
     // InFile = "/tmp/cgi_in";
     InFile = "input_cgi";
     OutFile = "/tmp/cgi_out";
+    InSize = 0;
+    OutputSize = 0;
+    SERVER_PORT = 0;
+    Pid = -42;
+    Env = NULL;
 }
 
 void    CGI::BuildEnv(Connection *conn)
@@ -55,11 +60,13 @@ void    CGI::BuildEnv(Connection *conn)
 
 void CGI::ExecuteCgi(Connection *conn)
 {
+    if (Pid != -42)
+        return ;
     std::stringstream id;
     id << conn->fd;
     OutFile += id.str();
-    Pid = fork();
-    if (Pid == 0)
+    this->Pid = fork();
+    if (this->Pid == 0)
     {
         if (conn->request->GetMethod() == "POST")
         {
@@ -101,25 +108,27 @@ void CGI::ExecuteCgi(Connection *conn)
             }
             close(FdIn);
         }
-        const char * argv[] = {conn->location->cgi.find(Ext)->second.c_str(), SCRIPT_NAME.c_str(), NULL};
-        if (execve(conn->location->cgi.find(Ext)->second.c_str(), const_cast<char **>(argv), Env) == -1)
+        const char * argv[] = {conn->location->cgi[Ext].c_str(), SCRIPT_NAME.c_str(), NULL};
+        // std::cout << SCRIPT_NAME << std::endl;
+        if (execve(argv[0], const_cast<char **>(argv), Env) == -1)
         {
+            perror("execeve: ");
             delete [] Env;
             exit(EXIT_FAILURE);
         }
     }
-    Is_Runing = true;
+    Is_Runing = 1;
 }
 
 bool    CGI::IsCgiComplet(Connection *conn)
-{
-    if (!Is_Runing)
+{    
+    if (Is_Runing == 0)
         return true;
     int Status;
     pid_t   Res = waitpid(Pid, &Status, WNOHANG);
     if (!Res)
         return false;
-    Is_Runing = false;
+    Is_Runing = 0;
     if (Res == -1)
     {
         conn->response->SetStatusCode(500);
@@ -191,5 +200,5 @@ bool    CGI::IsCgiComplet(Connection *conn)
 
 CGI::~CGI()
 {
-    unlink(OutFile.c_str());
+
 }
