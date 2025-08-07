@@ -21,7 +21,6 @@ void    ExecuteGET(Connection *conn)
         case SENDING_BODY :
         {
             conn->response->GET->SetAndSendBody(conn);
-            // If file sending is complete, update state
             if (conn->response->GET->ResponseStat == SENDING_COMPLETE)
                 conn->state = Connection::COMPLETE;
             break;
