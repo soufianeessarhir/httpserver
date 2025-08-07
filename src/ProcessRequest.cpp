@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/31 17:16:02 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/07 22:16:33 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,7 +137,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		}
 		if (!ProcessPostRequest(conn))
 		{
-			conn->response = new Response(400, Error);
+			conn->response = new Response(400, Error);//need not to reallocate the response when it is already alocated
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
@@ -227,9 +227,9 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 		conn->response = new Response(401 , Error);
 		return false;
 	}
-	std::string encoding = conn->request->GetHeader("transfer-encoding");
-	if (!encoding.empty())
+	if (conn->request->CheckField("transfer-encoding"))
 	{
+		std::string encoding = conn->request->GetHeader("transfer-encoding");
 		size_t last_space = encoding.find_last_of(' ');
 		if (last_space != std::string::npos)
 			encoding = encoding.substr(last_space);

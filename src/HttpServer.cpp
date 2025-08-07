@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/06 18:45:52 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/07 21:48:24 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -313,8 +313,8 @@ void		HttpServer::HandlIncommingData(int fd)
 		if (conn->buffer.empty())
 		{
 			ClientCleanUp(fd);
+			return;
 		}
-		return;
 	}
 	else if (rd_bytes < 0)
 	{
@@ -466,6 +466,7 @@ void		HttpServer::ClientCleanUp(int fd)
 	}
 	Connection *conn = clients[fd];
 	delete conn;
+	conn = NULL;
 	clients.erase(fd);
 }
 void		HttpServer::cleanup()
