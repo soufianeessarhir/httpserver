@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/06 22:10:56 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/07 06:42:08 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,10 +126,12 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
                 conn->CgiObj->SCRIPT_NAME = ScriptPath + ScriptName;
                 conn->CgiObj->PATH_INFO = PathInfo;
                 conn->CgiObj->REMOTE_PORT = conn->port;
+                conn->CgiObj->REMOTE_ADDR = conn->ip;
                 conn->CgiObj->SERVER_PROTOCOL = conn->request->GetVersion();
                 conn->CgiObj->REMOTE_IDENT = "webserv";
                 conn->CgiObj->CONTENT_LENGTH = conn->request->GetHeader("content-lenght");
                 conn->CgiObj->CONTENT_TYPE = conn->request->GetHeader("content-type");
+                // conn->CgiObj->SERVER_PORT = conn->
                 conn->request->SetUri(Path);
                 return ;
             }
