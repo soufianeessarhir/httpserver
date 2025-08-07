@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/03 11:52:48 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/07 15:19:47 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,10 @@ void		Parser::ListenDirective()
 				throw ParseException("Expected ':' or port number after IP address");
 		}
 		else
+		{
+			servers.back().listen.back().first = "0.0.0.0";
 			Port();
+		}
 	}
 	else
 		throw ParseException("Expected host or port number after 'listen'");
@@ -171,6 +174,8 @@ void		Parser::ServerNameDirective()
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_IDENTIFIER)
 		throw ParseException("Expected server name after 'server_name'");
+	if (std::find(servers.back().server_names.begin(),servers.back().server_names.end(),currentToken.value) != servers.back().server_names.end())
+		throw ParseException(" server name already exist");
 	servers.back().server_names.push_back(currentToken.value);
 	currentToken = lexer.getNextToken();
 	while (currentToken.type != TOKEN_SEMICOLON && currentToken.type != TOKEN_EOF)
@@ -210,7 +215,8 @@ void		Parser::ErrorPageList(std::vector<std::pair<std::vector<int>, std::string>
 		long long errorCode = strtol(currentToken.value.c_str(), &endptr, 10);
 		if (errno == ERANGE || *endptr != '\0' || errorCode < 100 || errorCode > 599)
 			throw ParseException("Error code out of range");
-		error_pages.back().first.push_back(static_cast<int>(errorCode));
+		if (std::find(error_pages.back().first.begin(),error_pages.back().first.end(),errorCode) != error_pages.back().first.end())
+			error_pages.back().first.push_back(static_cast<int>(errorCode));
 		currentToken = lexer.getNextToken();
 	}
 }
