@@ -376,5 +376,10 @@ void    excuteGetMethod(Connection *conn)
     {
         ExecuteDelete(conn);
     }
+    if (conn->UseCgi && conn->state == Connection::COMPLETE)
+    {
+        if (conn->UseCgi)
+            unlink(conn->CgiObj->OutFile.c_str());
+    }
 }
 
