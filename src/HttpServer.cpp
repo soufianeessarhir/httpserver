@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/07 21:48:24 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/08 15:23:48 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,26 +92,16 @@ int HttpServer::ModifyEvent(int fd, int events)
     ev.data.fd = fd;
     result =  epoll_ctl(event_fd, EPOLL_CTL_MOD, fd, &ev);
 #elif defined(__APPLE__)
+
     change_count = 0;
-    
     if (events & READ_EVENT)
 	{
         EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
         change_count++;
     }
-	else 
-	{
-        EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-        change_count++;
-    }
     if (events & WRITE_EVENT)
 	{
         EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
-        change_count++;
-    }
-	else
-	{
-        EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
         change_count++;
     }
 	result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
@@ -158,8 +148,8 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
     if (timeout == -1)
         pts = NULL; // infinite wait
     else {
-        ts.tv_sec = timeout / 1000;
-        ts.tv_nsec = (timeout % 1000) * 1000000;
+        ts.tv_sec = 0 ;
+        ts.tv_nsec = 0;
         pts = &ts;
     }
     event_count = kevent(event_fd, NULL, 0, kevents, max_events, pts);
@@ -226,11 +216,14 @@ void		HttpServer::init()
 				close(sockfd);
 				throw HttpServerError("Socket listening failed");
 			}
-			if (AddEvent(sockfd, READ_EVENT) == -1)
-            {
-                close(sockfd);
-                throw HttpServerError("Event control failed");
-            }
+			try 
+			{
+				AddEvent(sockfd, READ_EVENT);
+			}
+			catch(const HttpClientError &e)
+			{
+				std::cerr << e.what() << '\n';
+			}
 			server_map[sockfd] = servers[i];
 		}
 	}
@@ -309,19 +302,16 @@ void		HttpServer::HandlIncommingData(int fd)
 	conn->buffer.append(buf,rd_bytes);
 	else if (rd_bytes == 0)
 	{
-		//[sessarhi] Connection should be closed -> the client close the socket from its side
 		if (conn->buffer.empty())
-		{
-			ClientCleanUp(fd);
-			return;
-		}
+		    throw HttpClientError("recv faild",fd);
+		return;
 	}
 	else if (rd_bytes < 0)
 	{
 		//no data / error 
 		//[sessarhi] Connection should be closed -> an error happens in read operation
 	}
-	std::cout << conn->buffer<<std::endl;
+	// std::cout << conn->buffer<<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -399,13 +389,9 @@ void		HttpServer::run()
 		catch(const HttpClientError &e)
 		{
 			std::cerr << e.what() << '\n';
+			ClientCleanUp(e.client_fd);
 		}
 		catch(const HttpServerError &e)
-		{
-			std::cerr << e.what() << '\n';
-			return ;
-		}
-		catch(const std::exception &e)
 		{
 			std::cerr << e.what() << '\n';
 			return;
@@ -468,6 +454,7 @@ void		HttpServer::ClientCleanUp(int fd)
 	delete conn;
 	conn = NULL;
 	clients.erase(fd);
+	close(fd);
 }
 void		HttpServer::cleanup()
 {
