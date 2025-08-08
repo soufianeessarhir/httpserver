@@ -6,26 +6,12 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/08 15:23:48 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/08 16:09:06 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
 
-
-#ifdef __linux__
-    #define READ_EVENT EPOLLIN
-    #define WRITE_EVENT EPOLLOUT
-    #define ERROR_EVENT EPOLLERR
-    #define HUP_EVENT EPOLLHUP
-    #define EDGE_TRIGGERED EPOLLET
-#elif defined(__APPLE__)
-    #define READ_EVENT		0x01
-    #define WRITE_EVENT 	0x02
-    #define ERROR_EVENT 	0x04
-    #define HUP_EVENT		0x08
-    #define EDGE_TRIGGERED EV_CLEAR
-#endif
 
 bool HttpServer::CheckForEventFd(int fd)
 {
@@ -308,8 +294,9 @@ void		HttpServer::HandlIncommingData(int fd)
 	}
 	else if (rd_bytes < 0)
 	{
-		//no data / error 
-		//[sessarhi] Connection should be closed -> an error happens in read operation
+		if (conn->buffer.empty())
+		    throw HttpClientError("recv faild",fd);
+		return;
 	}
 	// std::cout << conn->buffer<<std::endl;
 	bool continue_processing = true;
@@ -390,10 +377,12 @@ void		HttpServer::run()
 		{
 			std::cerr << e.what() << '\n';
 			ClientCleanUp(e.client_fd);
+			std::cout << "HttpClientError"<<std::endl;
 		}
 		catch(const HttpServerError &e)
 		{
 			std::cerr << e.what() << '\n';
+			std::cout << "HttpServerError"<<std::endl;
 			return;
 		}
 	}
