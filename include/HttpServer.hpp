@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/07 11:08:28 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/08 16:07:38 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,20 @@
 #elif defined(__APPLE__)
     #include <sys/event.h>
     #include <sys/time.h>
+#endif
+
+#ifdef __linux__
+    #define READ_EVENT EPOLLIN
+    #define WRITE_EVENT EPOLLOUT
+    #define ERROR_EVENT EPOLLERR
+    #define HUP_EVENT EPOLLHUP
+    #define EDGE_TRIGGERED EPOLLET
+#elif defined(__APPLE__)
+    #define READ_EVENT		0x01
+    #define WRITE_EVENT 	0x02
+    #define ERROR_EVENT 	0x04
+    #define HUP_EVENT		0x08
+    #define EDGE_TRIGGERED EV_CLEAR
 #endif
 
 #include		<unistd.h>
