@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/07 21:48:24 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/08 10:38:39 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -321,7 +321,7 @@ void		HttpServer::HandlIncommingData(int fd)
 		//no data / error 
 		//[sessarhi] Connection should be closed -> an error happens in read operation
 	}
-	std::cout << conn->buffer<<std::endl;
+	// std::cout << conn->buffer<<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{

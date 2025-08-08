@@ -324,7 +324,7 @@ bool    CheckFileRD(Connection *conn)
     if (conn->UseCgi)
     {    
         conn->request->SetUri(conn->CgiObj->OutFile);
-        conn->UseCgi = false;
+        // conn->UseCgi = false;
     }
     struct stat FileState;
     if (stat(conn->request->GetUri().c_str(), &FileState) == -1)
@@ -355,7 +355,10 @@ void    excuteGetMethod(Connection *conn)
     if (conn->UseCgi && conn->response->GetMethod() != Error)
     {
         conn->CgiObj->ExecuteCgi(conn);
-        conn->CgiObj->IsCgiComplet(conn);
+        if (conn->CgiObj->IsCgiComplet(conn) == true)
+            conn->CgiObj->Pid = -42;
+        else
+            return ;
     }
     if (conn->response->GetMethod() == GET)
     {
@@ -376,10 +379,9 @@ void    excuteGetMethod(Connection *conn)
     {
         ExecuteDelete(conn);
     }
-    if (conn->UseCgi && conn->state == Connection::COMPLETE)
+    if (conn->UseCgi == true && conn->state == Connection::COMPLETE)
     {
-        if (conn->UseCgi)
-            unlink(conn->CgiObj->OutFile.c_str());
+        unlink(conn->CgiObj->OutFile.c_str());
     }
 }
 
