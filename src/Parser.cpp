@@ -6,14 +6,18 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/07 15:37:03 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/09 19:53:34 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Parser.hpp"
 
 Parser::Parser(std::ifstream &cfg, std::vector<Server> &servers)
-	: servers(servers),lexer(cfg),currentToken(TOKEN_EOF, ""){}
+:servers(servers),lexer(cfg),currentToken(TOKEN_EOF, "")
+{
+
+	
+}
 
 void		Parser::Config()
 {
@@ -174,40 +178,42 @@ void		Parser::ServerNameDirective()
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_IDENTIFIER)
 		throw ParseException("Expected server name after 'server_name'");
-	if (std::find(servers.back().server_names.begin(),servers.back().server_names.end(),currentToken.value) != servers.back().server_names.end())
-		throw ParseException(" server name already exist");
-	servers.back().server_names.push_back(currentToken.value);
-	currentToken = lexer.getNextToken();
-	while (currentToken.type != TOKEN_SEMICOLON && currentToken.type != TOKEN_EOF)
+	if (std::find(servers.back().server_names.begin(),servers.back().server_names.end(),currentToken.value) == servers.back().server_names.end())
 	{
-		if (currentToken.type == TOKEN_IDENTIFIER)
-			servers.back().server_names.push_back(currentToken.value);
-		else
-			throw ParseException("Expected server name");
+		servers.back().server_names.push_back(currentToken.value);
 		currentToken = lexer.getNextToken();
+		while (currentToken.type != TOKEN_SEMICOLON && currentToken.type != TOKEN_EOF)
+		{
+			if (currentToken.type == TOKEN_IDENTIFIER)
+				servers.back().server_names.push_back(currentToken.value);
+			else
+				throw ParseException("Expected server name");
+			currentToken = lexer.getNextToken();
+		}
 	}
 	if (currentToken.type != TOKEN_SEMICOLON)
 		throw ParseException("Expected ';' after 'server_name' directive");
 }
 
 
-void		Parser::ErrorPageDirective(std::vector<std::pair<std::vector<int>, std::string> > & error_pages)
+void		Parser::ErrorPageDirective(std::map<int,std::string > & error_pages)
 {
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_NUMBER)
 		throw ParseException("Expected error code after 'error_page'");
-	ErrorPageList(error_pages);
+	std::set<int> tmpset;
+	ErrorPageList(tmpset);
 	if (currentToken.type != TOKEN_PATH && currentToken.type != TOKEN_IDENTIFIER)
 		throw ParseException("Expected path after error code");
-	error_pages.back().second = currentToken.value;
+	for (std::set<int>::iterator  it = tmpset.begin();it != tmpset.end();++it)
+		error_pages[*it] =  currentToken.value;
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_SEMICOLON)
 		throw ParseException("Expected ';' after 'error_page' directive");
 }
 
-void		Parser::ErrorPageList(std::vector<std::pair<std::vector<int>, std::string> > & error_pages)
+void		Parser::ErrorPageList(std::set<int> & tmpset)
 {
-	servers.back().error_pages.push_back(std::pair<std::vector<int>, std::string>());
 	while (currentToken.type == TOKEN_NUMBER)
 	{
 		char *endptr;
@@ -215,8 +221,7 @@ void		Parser::ErrorPageList(std::vector<std::pair<std::vector<int>, std::string>
 		long long errorCode = strtol(currentToken.value.c_str(), &endptr, 10);
 		if (errno == ERANGE || *endptr != '\0' || errorCode < 100 || errorCode > 599)
 			throw ParseException("Error code out of range");
-		if (std::find(error_pages.back().first.begin(),error_pages.back().first.end(),errorCode) != error_pages.back().first.end())
-			error_pages.back().first.push_back(static_cast<int>(errorCode));
+		tmpset.insert(static_cast<int>(errorCode));
 		currentToken = lexer.getNextToken();
 	}
 }
