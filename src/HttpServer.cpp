@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/08 15:23:48 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/09 09:57:27 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -303,12 +303,13 @@ void		HttpServer::HandlIncommingData(int fd)
 	else if (rd_bytes == 0)
 	{
 		if (conn->buffer.empty())
-		    throw HttpClientError("recv faild",fd);
-		return;
+		    throw HttpClientError("connection close by peer",fd);
+		// return;
 	}
 	else if (rd_bytes < 0)
 	{
-		//no data / error 
+		if (conn->buffer.empty())
+		    throw HttpClientError("recv faild",fd);
 		//[sessarhi] Connection should be closed -> an error happens in read operation
 	}
 	// std::cout << conn->buffer<<std::endl;
@@ -335,7 +336,7 @@ void		HttpServer::HandlIncommingData(int fd)
 			case Connection::PROCESSING:
 
 				ProcessRequest(conn);
-				if (conn->request->ExpectBody())
+				if (conn->request->ExpectBody() && conn->request->GetMethod() == "POST")
 				{
 					if (conn->state == Connection::PROCESSING)
 						conn->state = Connection::READING_BODY;
@@ -444,13 +445,13 @@ void		HttpServer::ClientCleanUp(int fd)
 {
 	shutdown(fd,SHUT_WR);
 	RemoveEvent(fd);
-	for(std::deque<PlatformEvent>::iterator it = active_clients.begin();it != active_clients.end();
-		++it)
+	for(std::deque<PlatformEvent>::iterator it = active_clients.begin();it != active_clients.end();++it)
 	{
 		if ((*it).fd == fd)
 			active_clients.erase(it);
 	}
 	Connection *conn = clients[fd];
+	// conn->~Connection();
 	delete conn;
 	conn = NULL;
 	clients.erase(fd);
