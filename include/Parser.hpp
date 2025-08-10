@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:08:59 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/09 19:45:25 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/10 09:42:19 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include "Exceptions.hpp"
+#include "ConfigValidator.hpp"
 
 class Parser
 {
@@ -39,7 +40,6 @@ public:
 	void ListenDirective();
 	void Host();
 	void Port();
-	// void IpAddress();
 	void ServerNameDirective();
 	void ErrorPageDirective(std::map<int, std::string > &);
 	void ErrorPageList(std::set<int>&);
