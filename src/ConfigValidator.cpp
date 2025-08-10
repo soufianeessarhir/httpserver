@@ -32,13 +32,18 @@ void ConfigValidator::CheckSharedInterface(Server &fr, Server &sc)
 }
 void ConfigValidator::CheckListenDup(Server &srv)
 {
+    bool samePort;
+    bool sameIP;
+    bool wildcardConflict;
+    if (srv.listen.empty())
+        throw ParseException("no interface specified for binding");
     for (size_t i = 0; i < srv.listen.size(); ++i)
     {
         for (size_t j = i + 1; j < srv.listen.size(); ++j)
         {
-            bool samePort = (srv.listen[i].second == srv.listen[j].second);
-            bool sameIP   = (srv.listen[i].first == srv.listen[j].first);
-            bool wildcardConflict = (srv.listen[i].first == "0.0.0.0" || 
+            samePort = (srv.listen[i].second == srv.listen[j].second);
+            sameIP   = (srv.listen[i].first == srv.listen[j].first);
+            wildcardConflict = (srv.listen[i].first == "0.0.0.0" || 
                     srv.listen[j].first == "0.0.0.0");
             if (samePort && (sameIP || wildcardConflict))
                 throw ParseException("cannot bind to the same interface");
@@ -56,8 +61,4 @@ void ConfigValidator::ValidateConfig()
         }
 	}
 }
-
-
-
-
 
