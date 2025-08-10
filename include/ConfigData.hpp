@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:14:10 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/09 19:42:06 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/10 11:33:09 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,9 @@ struct Server : public CommonConfig
     std::vector<std::pair<std::string, int> > listen;
     std::vector<std::string> server_names;
     std::map<std::string, LocationData> locations;
+    bool isvirtual;
+    std::vector<std::pair<std::string, int> > virtual_listen;
+    Server():isvirtual(false){}
 };
 
 
