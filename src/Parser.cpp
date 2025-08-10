@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/09 19:53:34 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/10 09:46:36 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@ void		Parser::Config()
 			throw ParseException("Expected 'server' or 'EOF'");
 		currentToken = lexer.getNextToken();
 	}
+	ConfigValidator conf(this->servers);
+	conf.ValidateConfig();
 }
 
 void		Parser::ServerBlock()
@@ -406,3 +408,5 @@ void		Parser::UploadDirective(bool &upload,std::string &upload_store)
 	if (currentToken.type != TOKEN_SEMICOLON)
 		throw ParseException("Expected ';' after 'upload_store' directive");
 }
+
+
