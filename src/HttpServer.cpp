@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/09 09:57:27 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/10 18:20:51 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -299,7 +299,7 @@ void		HttpServer::HandlIncommingData(int fd)
 	char buf[READ_BUFFER_SIZE];
 	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
 	if (rd_bytes > 0)
-	conn->buffer.append(buf,rd_bytes);
+		conn->buffer.append(buf,rd_bytes);
 	else if (rd_bytes == 0)
 	{
 		if (conn->buffer.empty())
@@ -308,8 +308,8 @@ void		HttpServer::HandlIncommingData(int fd)
 	}
 	else if (rd_bytes < 0)
 	{
-		if (conn->buffer.empty())
-		    throw HttpClientError("recv faild",fd);
+		// if (conn->buffer.empty())
+		//     throw HttpClientError("recv faild",fd);
 		//[sessarhi] Connection should be closed -> an error happens in read operation
 	}
 	// std::cout << conn->buffer<<std::endl;
@@ -455,7 +455,7 @@ void		HttpServer::ClientCleanUp(int fd)
 	delete conn;
 	conn = NULL;
 	clients.erase(fd);
-	close(fd);
+	// close(fd);
 }
 void		HttpServer::cleanup()
 {
