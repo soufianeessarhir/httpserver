@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/09 09:57:27 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/10 14:43:12 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,7 +187,12 @@ void		HttpServer::init()
 			hints.ai_flags = AI_PASSIVE;
 			std::string host = servers[i].listen[j].first.empty() ? "localhost" : servers[i].listen[j].first;
 			std::ostringstream port;
+			int port_num;
+			std::istringstream(port.str()) >> port_num;
 			port << servers[i].listen[j].second;
+			if (servers[i].isvirtual && std::find(servers[i].virtual_listen.begin()
+			,servers[i].virtual_listen.end(),std::make_pair(host,port_num)) != servers[i].virtual_listen.end())
+				continue;
 			if (getaddrinfo(host.c_str(), port.str().c_str(),&hints, &res) != 0)
 			{
 				close(sockfd);
@@ -300,19 +305,9 @@ void		HttpServer::HandlIncommingData(int fd)
 	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
 	if (rd_bytes > 0)
 	conn->buffer.append(buf,rd_bytes);
-	else if (rd_bytes == 0)
-	{
-		if (conn->buffer.empty())
-		    throw HttpClientError("connection close by peer",fd);
+	else if (rd_bytes == 0 && conn->buffer.empty())
+		throw HttpClientError("connection close by peer",fd);
 		// return;
-	}
-	else if (rd_bytes < 0)
-	{
-		if (conn->buffer.empty())
-		    throw HttpClientError("recv faild",fd);
-		//[sessarhi] Connection should be closed -> an error happens in read operation
-	}
-	// std::cout << conn->buffer<<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -374,15 +369,24 @@ void		HttpServer::run()
 			event_count = WaitForEvents(platform_events, MAX_EVENTS);
 			for (int i = 0; i < event_count; ++i)
 			{
-				if (server_map.find(platform_events[i].fd) != server_map.end())
-					HandleNewConnection(platform_events[i].fd);
-				else if (platform_events[i].events & (READ_EVENT | WRITE_EVENT))
+				int fd = platform_events[i].fd;
+				short ev = platform_events[i].events;
+
+				// First, handle hangups or errors right away
+				if (ev & (HUP_EVENT | ERROR_EVENT))
 				{
-					if (!CheckForEventFd(platform_events[i].fd))
+					throw HttpClientError("HUP_EVENT | ERROR_EVENT", fd);
+				}
+
+				if (server_map.find(fd) != server_map.end())
+				{
+					HandleNewConnection(fd);
+				}
+				else if (ev & (READ_EVENT | WRITE_EVENT))
+				{
+					if (!CheckForEventFd(fd))
 						active_clients.push_back(platform_events[i]);
 				}
-				else if ((platform_events[i].events  & HUP_EVENT) || (platform_events[i].events  & ERROR_EVENT))
-					throw HttpClientError("HUP_EVENT | ERROR_EVENT",platform_events[i].fd);
 			}
 			if (!active_clients.empty())
 				ProcessClientsRoundRobin();
@@ -445,11 +449,15 @@ void		HttpServer::ClientCleanUp(int fd)
 {
 	shutdown(fd,SHUT_WR);
 	RemoveEvent(fd);
-	for(std::deque<PlatformEvent>::iterator it = active_clients.begin();it != active_clients.end();++it)
+	for (std::deque<PlatformEvent>::iterator it = active_clients.begin();
+		it != active_clients.end(); )
 	{
-		if ((*it).fd == fd)
-			active_clients.erase(it);
+		if (it->fd == fd)
+			it = active_clients.erase(it); // erase returns the next iterator
+		else
+			++it;
 	}
+
 	Connection *conn = clients[fd];
 	// conn->~Connection();
 	delete conn;
