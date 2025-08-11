@@ -215,7 +215,8 @@ void MainResponse::SendHeaders(Connection *conn)
     std::map<std::string, std::string>::const_iterator it;
     for (it = Headers.begin(); it != Headers.end(); ++it)
         HeadersStr += it->first + ": " + it->second;
-    if (conn->UseCgi && conn->request->GetMethod() == "POST" && !conn->CgiObj->CgiHeaders.empty())
+    if (conn->UseCgi && (conn->request->GetMethod() == "POST" || conn->request->GetMethod() == "GET") 
+        && !conn->CgiObj->CgiHeaders.empty())
     {
        std::map<std::string, std::string>::const_iterator it(conn->CgiObj->CgiHeaders.begin());
        for(;it != Headers.end(); ++it)
