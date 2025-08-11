@@ -16,17 +16,13 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
             is_multipart = true;
             multipart_state= Post::READING_PREAMBLE;
             if (!ExtractAndValidateBoundry())
-            {
                 transfer_type = Post::ERROR;
-            }
             return;
         }
         std::string media_type;
         size_t semi_colon = content_type.find(';');
         if (semi_colon != std::string::npos)
-        {
             media_type = content_type.substr(0,semi_colon);
-        }
         else 
             media_type = content_type;
         std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
@@ -45,16 +41,12 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
             is_multipart = true;
             multipart_state = Post::READING_PREAMBLE;
             if (!ExtractAndValidateBoundry())
-            {
                 transfer_type = Post::ERROR;
-            }
         }
          std::string media_type;
         size_t semi_colon = content_type.find(';');
         if (semi_colon != std::string::npos)
-        {
             media_type = content_type.substr(0,semi_colon);
-        }
         else 
             media_type = content_type;
         std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
@@ -90,16 +82,13 @@ bool Post::ExtractAndValidateBoundry()
     return false;
     begin++;
     for (;begin < ct.length() && isspace(ct[begin]);++begin);
-
     size_t end;
     if (ct[begin] == '"')
     {
         begin ++;
         size_t q = ct.find(begin,'"');
         if (q != std::string::npos)
-        {
             boundry = origin.substr(begin,q - begin);
-        }
     }
     else {
         for (end=begin;end < ct.length()&&
@@ -185,9 +174,7 @@ void Post::ReadChunkData()
             chunk_bytes_read = 0;
         }
         else
-        {
             chunk_state = Post::CHUNK_ERROR;
-        }
     }
 }
 
@@ -276,7 +263,7 @@ void Post::ProcessMultiPart()
                 size_t close_del = conn->buffer.find(delimiter + "--");
                 if (close_del !=  std::string::npos)
                 {
-                    conn->buffer.erase(0,close_del + (delimiter + "--").length() - 1);
+                    conn->buffer.erase(0,close_del + delimiter.length() + 2);
                     multipart_state = Post::MULTIPART_COMPLETE;
                     contunue = true;
                     break;

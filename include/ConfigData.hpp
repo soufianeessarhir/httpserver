@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:14:10 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/10 11:33:09 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/10 19:33:42 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ struct CommonConfig
 
 struct LocationData : public CommonConfig 
 {
-    std::string alias;
     std::set<std::string> methods;
 };
 

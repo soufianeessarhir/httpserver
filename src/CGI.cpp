@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/07 22:27:15 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/11 14:56:45 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,7 +148,6 @@ bool    CGI::IsCgiComplet(Connection *conn)
             std::stringstream buff;
             std::string line;
             buff << OFile.rdbuf();
-
             while (std::getline(buff, line))
             {
                 if (line.empty() || line.find(':') == line.npos)
