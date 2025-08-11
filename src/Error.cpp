@@ -21,7 +21,7 @@ void    ExecuteError(Connection *conn)
             conn->response->Error->SetContentType(conn);
             conn->response->Error->SetStatusLine();
             conn->response->Error->SendStatusLine(conn);
-            conn->response->Error->SetHeaders(true, conn->request);
+            conn->response->Error->SetHeaders(true, conn);
             conn->response->Error->SendHeaders(conn);
             conn->response->Error->ResponseStat = SENDING_BODY;
             break;

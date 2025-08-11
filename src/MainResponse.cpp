@@ -148,13 +148,13 @@ void MainResponse::SetStatusLine()
 }
 
 
-void    MainResponse::SetHeaders(bool CloseConn, Request *req)
+void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
 {
     std::cout << ContentLength << std::endl;
     if (!CloseConn)
     {
         Headers["Connection"] = "keep-alive\r\n";
-        std::string CookieContent = req->GetHeader("cookie");
+        std::string CookieContent = conn->request->GetHeader("cookie");
         if (!CookieContent.empty())
             Headers["Set-Cookie"] = CookieContent + "\r\n";
     }
@@ -162,8 +162,13 @@ void    MainResponse::SetHeaders(bool CloseConn, Request *req)
         Headers["Connection"] = "close\r\n";
     std::ostringstream oss;
     oss << ContentLength;
+    if (conn->UseCgi == false)
+    {
+        Headers["Content-Length"] = oss.str() + "\r\n";
+        Headers["Content-Type"] = ContentType + "\r\n";
+    }
     Headers["Content-Length"] = oss.str() + "\r\n";
-    Headers["Content-Type"] = ContentType + "\r\n";
+    Headers["Content-Type"] = "text/html\r\n";
 }
 
 MainResponse::~MainResponse()

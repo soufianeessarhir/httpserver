@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/10 09:46:36 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/10 19:36:25 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,9 +151,7 @@ void		Parser::Host()
 			prevpos = ++pos;
 		}
 		else if(pos == std::string::npos && i == 3)
-		{
 			val = currentToken.value.substr(prevpos);
-		}
 		else 
 			throw ParseException("Expected 'ipv4 address or localhost' in 'listen' directive");
 		errno = 0;
@@ -273,8 +271,6 @@ void		Parser::LocationDirective()
 {
 	if (currentToken.value == "root")
 		RootDirective(servers.back().locations[tmpkey].root);
-	else if (currentToken.value == "alias")
-		AliasDirective(servers.back().locations[tmpkey].alias);
 	else if (currentToken.value == "index")
 		IndexDirective(servers.back().locations[tmpkey].index);
 	else if (currentToken.value == "return")
@@ -301,17 +297,6 @@ void		Parser::RootDirective(std::string &root)
 	if (currentToken.type != TOKEN_PATH)
 		throw ParseException("Expected path after 'root'");
     root = currentToken.value;
-	currentToken = lexer.getNextToken();
-	if (currentToken.type != TOKEN_SEMICOLON)
-		throw ParseException("Expected ';' after 'root' directive");
-}
-
-void Parser::AliasDirective(std::string &alias)
-{
-	currentToken = lexer.getNextToken();
-	if (currentToken.type != TOKEN_PATH)
-		throw ParseException("Expected path after 'root'");
-    alias = currentToken.value;
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_SEMICOLON)
 		throw ParseException("Expected ';' after 'root' directive");
