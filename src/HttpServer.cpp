@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/08 16:09:06 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/11 09:49:36 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,8 +111,8 @@ int HttpServer::RemoveEvent(int fd)
     result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
 #endif
-	if (result < 0)
-		throw HttpClientError("RemoveEvent",fd);
+	// if (result < 0)
+	// 	throw HttpClientError("RemoveEvent",fd);
     return result;
 }
 
@@ -173,7 +173,12 @@ void		HttpServer::init()
 			hints.ai_flags = AI_PASSIVE;
 			std::string host = servers[i].listen[j].first.empty() ? "localhost" : servers[i].listen[j].first;
 			std::ostringstream port;
+			int port_num;
+			std::istringstream(port.str()) >> port_num;
 			port << servers[i].listen[j].second;
+			if (servers[i].isvirtual && std::find(servers[i].virtual_listen.begin()
+			,servers[i].virtual_listen.end(),std::make_pair(host,port_num)) != servers[i].virtual_listen.end())
+				continue;
 			if (getaddrinfo(host.c_str(), port.str().c_str(),&hints, &res) != 0)
 			{
 				close(sockfd);
@@ -282,23 +287,11 @@ void		HttpServer::HandlIncommingData(int fd)
 	if (!conn)
 		return ;
 	ssize_t rd_bytes = 0;
-	char buf[READ_BUFFER_SIZE];
-	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
+	rd_bytes = recv(fd,conn->buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
 	if (rd_bytes > 0)
-	conn->buffer.append(buf,rd_bytes);
-	else if (rd_bytes == 0)
-	{
-		if (conn->buffer.empty())
-		    throw HttpClientError("recv faild",fd);
-		return;
-	}
-	else if (rd_bytes < 0)
-	{
-		if (conn->buffer.empty())
-		    throw HttpClientError("recv faild",fd);
-		return;
-	}
-	// std::cout << conn->buffer<<std::endl;
+		conn->buffer.append(conn->buf,rd_bytes);
+	else if (rd_bytes == 0 && conn->buffer.empty())
+		throw HttpClientError("connection close by peer",fd);
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -322,7 +315,7 @@ void		HttpServer::HandlIncommingData(int fd)
 			case Connection::PROCESSING:
 
 				ProcessRequest(conn);
-				if (conn->request->ExpectBody())
+				if (conn->request->ExpectBody() && conn->request->GetMethod() == "POST")
 				{
 					if (conn->state == Connection::PROCESSING)
 						conn->state = Connection::READING_BODY;
@@ -353,6 +346,8 @@ void		HttpServer::run()
 {
 	PlatformEvent platform_events[MAX_EVENTS];
 	int event_count;
+	int fd;
+	short ev;
 	for(;;)
 	{
 		try
@@ -360,15 +355,15 @@ void		HttpServer::run()
 			event_count = WaitForEvents(platform_events, MAX_EVENTS);
 			for (int i = 0; i < event_count; ++i)
 			{
-				if (server_map.find(platform_events[i].fd) != server_map.end())
-					HandleNewConnection(platform_events[i].fd);
-				else if (platform_events[i].events & (READ_EVENT | WRITE_EVENT))
-				{
-					if (!CheckForEventFd(platform_events[i].fd))
+				fd = platform_events[i].fd;
+				ev = platform_events[i].events;
+				if (ev & (HUP_EVENT | ERROR_EVENT))
+					throw HttpClientError("HUP_EVENT | ERROR_EVENT", fd);
+				if (server_map.find(fd) != server_map.end())
+					HandleNewConnection(fd);
+				else if (ev & (READ_EVENT | WRITE_EVENT))
+					if (!CheckForEventFd(fd))
 						active_clients.push_back(platform_events[i]);
-				}
-				else if ((platform_events[i].events  & HUP_EVENT) || (platform_events[i].events  & ERROR_EVENT))
-					throw HttpClientError("HUP_EVENT | ERROR_EVENT",platform_events[i].fd);
 			}
 			if (!active_clients.empty())
 				ProcessClientsRoundRobin();
@@ -433,17 +428,18 @@ void		HttpServer::ClientCleanUp(int fd)
 {
 	shutdown(fd,SHUT_WR);
 	RemoveEvent(fd);
-	for(std::deque<PlatformEvent>::iterator it = active_clients.begin();it != active_clients.end();
-		++it)
+	for (std::deque<PlatformEvent>::iterator it = active_clients.begin();it != active_clients.end(); )
 	{
-		if ((*it).fd == fd)
-			active_clients.erase(it);
+		if (it->fd == fd)
+			it = active_clients.erase(it);
+		else
+			++it;
 	}
 	Connection *conn = clients[fd];
 	delete conn;
 	conn = NULL;
 	clients.erase(fd);
-	close(fd);
+	// close(fd);
 }
 void		HttpServer::cleanup()
 {

@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:14:10 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/02 19:34:19 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/10 19:33:42 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ struct CommonConfig
     // bool upload_set /*= false*/;
     bool upload;
     std::string upload_store;
-	std::vector<std::pair<std::vector<int>, std::string> > error_pages;
+	std::map<int,std::string> error_pages;
     size_t max_body_size /*0*/;
     CommonConfig():root(""),index(""),has_redirect(false),
     autoindex_set(false),upload(false),upload_store(""),
@@ -38,7 +38,6 @@ struct CommonConfig
 
 struct LocationData : public CommonConfig 
 {
-    std::string alias;
     std::set<std::string> methods;
 };
 
@@ -47,6 +46,9 @@ struct Server : public CommonConfig
     std::vector<std::pair<std::string, int> > listen;
     std::vector<std::string> server_names;
     std::map<std::string, LocationData> locations;
+    bool isvirtual;
+    std::vector<std::pair<std::string, int> > virtual_listen;
+    Server():isvirtual(false){}
 };
 
 
