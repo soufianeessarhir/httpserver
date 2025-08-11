@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/07 22:16:33 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/08 20:14:13 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,7 +137,6 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		}
 		if (!ProcessPostRequest(conn))
 		{
-			conn->response = new Response(400, Error);//need not to reallocate the response when it is already alocated
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
@@ -269,14 +268,10 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 	}
 	if (conn->location->cgi.empty() && !conn->server->cgi.empty())
 	{
-		//maybe i should merge them
-		//it is done and should be tested
 		for (std::map<std::string,std::string>::iterator it = conn->server->cgi.begin();it != conn->server->cgi.end();++it)
 		{
 			if (conn->location->cgi.find((*it).first) != conn->location->cgi.end())
-			{
 				conn->location->cgi[(*it).first] = (*it).second;
-			}
 		}
 	}
 	if (!conn->location->upload && conn->server->upload)

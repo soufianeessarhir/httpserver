@@ -5,11 +5,14 @@ void    ExecuteError(Connection *conn)
 {
     if (!conn->response->Error)
     {  
+        std::string Path;
         conn->response->Error = new MainResponse(conn->response->GetStatusCode());
-        std::string Path = conn->response->Error->ErrorHtmlPath.find(conn->response->GetStatusCode())->second;
+        if (conn->location->error_pages.find(conn->response->GetStatusCode()) != conn->location->error_pages.end())
+            Path = conn->location->root + conn->location->error_pages[conn->response->GetStatusCode()];
+        else
+            Path = conn->response->Error->ErrorHtmlPath.find(conn->response->GetStatusCode())->second;
         conn->request->SetUri(Path);
     }
-    
     switch (conn->response->Error->ResponseStat)
     {   
         case SENDING_STATUSLINE :
