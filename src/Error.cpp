@@ -7,6 +7,7 @@ void    ExecuteError(Connection *conn)
     {  
         conn->response->Error = new MainResponse(conn->response->GetStatusCode());
         std::string Path = conn->response->Error->ErrorHtmlPath.find(conn->response->GetStatusCode())->second;
+         
         conn->request->SetUri(Path);
     }
     

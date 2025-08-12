@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/08 10:38:39 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/08 11:58:37 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,28 +92,28 @@ int HttpServer::ModifyEvent(int fd, int events)
     ev.data.fd = fd;
     result =  epoll_ctl(event_fd, EPOLL_CTL_MOD, fd, &ev);
 #elif defined(__APPLE__)
+
     change_count = 0;
-    
     if (events & READ_EVENT)
 	{
         EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
         change_count++;
     }
-	else 
-	{
-        EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-        change_count++;
-    }
+	// else 
+	// {
+    //     EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+    //     change_count++;
+    // }
     if (events & WRITE_EVENT)
 	{
         EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
         change_count++;
     }
-	else
-	{
-        EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-        change_count++;
-    }
+	// else
+	// {
+    //     EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+    //     change_count++;
+    // }
 	result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
 #endif
