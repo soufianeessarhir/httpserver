@@ -270,7 +270,11 @@ void Post::ProcessMultiPart()
                 size_t close_del = conn->buffer.find(delimiter + "--");
                 if (close_del !=  std::string::npos)
                 {
-                    conn->buffer.erase(0,close_del + delimiter.length() + 2);
+                    size_t erase_pos = close_del + delimiter.length() + 2;
+                    // Check for optional CRLF after closing boundary
+                    if (erase_pos + 2 <= conn->buffer.size() && conn->buffer.substr(erase_pos, 2) == "\r\n")
+                        erase_pos += 2;
+                    conn->buffer.erase(0, erase_pos);
                     multipart_state = Post::MULTIPART_COMPLETE;
                     contunue = true;
                     break;
