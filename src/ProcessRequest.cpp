@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/12 17:21:08 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/12 18:07:41 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -230,17 +230,39 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 	if (conn->request->CheckField("transfer-encoding"))
 	{
 		std::string encoding = conn->request->GetHeader("transfer-encoding");
-		size_t last_space = encoding.find_last_of(' ');
-		if (last_space != std::string::npos)
-			encoding = encoding.substr(last_space);
-		if (encoding != "chunked")
+		std::vector<std::string> tokens;
+		std::stringstream ss(encoding);
+		std::string token;
+		while (std::getline(ss, token, ','))
 		{
-			conn->response = new Response(400 , Error);
+			Request::trim(token);
+			size_t semicolon = token.find(';');
+			if (semicolon != std::string::npos)
+				token = token.substr(0, semicolon);
+			tokens.push_back(token);
+		}
+		bool chunked_found = false;
+		for (size_t i = 0; i < tokens.size(); ++i) 
+		{
+			if (tokens[i] == "chunked") 
+			{
+				if (chunked_found || i != tokens.size() - 1)
+				{
+					conn->response = new Response(400, Error);
+					return false;
+				}
+				chunked_found = true;
+			}
+		}
+		if (!chunked_found) 
+		{
+			conn->response = new Response(400, Error);
 			return false;
 		}
-		conn->post = new Post(conn,Post::CHUNKED);
+		conn->post = new Post(conn, Post::CHUNKED);
+		return true;
 	}
-	else if (!conn->request->GetHeader("content-length").empty())
+	if (!conn->request->GetHeader("content-length").empty())
 		conn->post = new Post(conn,Post::CONTENT_LENGTH);
 	else
 	{
