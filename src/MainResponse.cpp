@@ -164,7 +164,6 @@ void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
     oss << ContentLength;
     if (conn->UseCgi == false)
     {
-        Headers["Content-Length"] = oss.str() + "\r\n";
         Headers["Content-Type"] = ContentType + "\r\n";
     }
     Headers["Content-Length"] = oss.str() + "\r\n";
@@ -231,6 +230,7 @@ void MainResponse::SendHeaders(Connection *conn)
     
     while (TotalSent < HeadersStr.size())
     {
+        std::cout << HeadersStr << std::endl;
         BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 
                           HeadersStr.size() - TotalSent, MSG_NOSIGNAL);
         
