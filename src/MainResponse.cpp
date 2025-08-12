@@ -264,7 +264,6 @@ bool    MainResponse::CheckForSending(Connection *conn)
 
 void MainResponse::SetAndSendBody(Connection* conn) 
 {
-    // Make Buff a member of CheckProg so it persists between calls
     if (CheckProg.BuffOffs >= CheckProg.BuffSize)
     {
         ssize_t bytes_read = read(CheckProg.FileFd, CheckProg.Buff, BUFFER_SIZE);
@@ -365,10 +364,10 @@ void    excuteGetMethod(Connection *conn)
     {
         ExecuteError(conn);
     }
-    // if (conn->UseCgi && conn->state == Connection::COMPLETE)
-    // {
-    //     if (conn->UseCgi)
-    //         unlink(conn->CgiObj->OutFile.c_str());
-    // }
+    if (conn->UseCgi && conn->state == Connection::COMPLETE)
+    {
+        if (conn->UseCgi)
+            unlink(conn->CgiObj->OutFile.c_str());
+    }
 }
 
