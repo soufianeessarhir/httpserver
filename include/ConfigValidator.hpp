@@ -10,6 +10,7 @@ class ConfigValidator
 {
     std::vector<Server> &servers;
     public:
+    void CkeckRoot(Server &srv);
     ConfigValidator(std::vector<Server>&srv);
     void CheckSharedInterface(Server &fr, Server &sc);
     void CheckListenDup(Server &srv);
