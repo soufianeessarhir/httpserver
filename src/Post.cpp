@@ -120,25 +120,26 @@ void Post::ReadChunkSize()
     size_t CRLF = conn->buffer.find("\r\n");
     if (CRLF == std::string::npos)
         return;
-    std::string size_str = conn->buffer.substr(0,CRLF);
-    conn->buffer.erase(0,CRLF + 2);
-    size_t i = 0;
-    while (i < size_str.size() && isxdigit(static_cast<char>(size_str[i])))
-        i++;
+    std::string size_str = conn->buffer.substr(0, CRLF);
+    conn->buffer.erase(0, CRLF + 2);
+    size_t hex_end = 0;
+    while (hex_end < size_str.size() && std::isxdigit(static_cast<unsigned char>(size_str[hex_end])))
+        ++hex_end;
     errno = 0;
     char *endp = NULL;
-    current_chunk_size = std::strtol(size_str.c_str(),&endp,16);
-    if (errno == ERANGE || !endp /*my need to check for large size*/)
-    {
-        conn->response = new Response(400,Error);
+    long val = std::strtol(size_str.c_str(), &endp, 16);
+    if (errno == ERANGE || endp == size_str.c_str() || val < 0) {
+        conn->response = new Response(400, Error);
         chunk_state = Post::CHUNK_ERROR;
         return;
     }
-    if (current_chunk_size == 0 && !size_str.empty())
+    current_chunk_size = static_cast<size_t>(val);
+    if (current_chunk_size == 0)
         chunk_state = Post::READING_TRAILER_HEADERS;
     else
         chunk_state = Post::READING_CHUNK_DATA;
 }
+
 
 void Post::ReadChunkData()
 {
@@ -171,18 +172,20 @@ void Post::ReadChunkData()
         conn->buffer.erase(0,size_to_read);
         chunk_bytes_read += size_to_read;
     }
-    if (current_chunk_size <= chunk_bytes_read)
+   if (current_chunk_size <= chunk_bytes_read)
     {
         size_t CRLF = conn->buffer.find("\r\n");
-        if (CRLF != std::string::npos)
+        if (CRLF == 0)
         {
-            conn->buffer.erase(0,2);
+            conn->buffer.erase(0, 2);
             chunk_state = Post::READING_CHUNK_SIZE;
             current_chunk_size = 0;
             chunk_bytes_read = 0;
         }
-        else
+        else if (CRLF != std::string::npos)
+        {
             chunk_state = Post::CHUNK_ERROR;
+        }
     }
 }
 
@@ -259,10 +262,10 @@ void Post::ProcessMultiPart()
                     delimiter = "--" + boundry;
                     is_initial_del = false;
                 }
-                 size_t  CRLF = conn->buffer.find(delimiter + "\r\n");
+                size_t  CRLF = conn->buffer.find(delimiter + "\r\n");
                 if(CRLF != std::string::npos)
                 {
-                    conn->buffer.erase(0,(delimiter + "\r\n").size());
+                    conn->buffer.erase(0,delimiter.length() + 2);
                     multipart_state = Post::READING_PART_HEADERS;
                     contunue = true;
                     break;
@@ -270,7 +273,10 @@ void Post::ProcessMultiPart()
                 size_t close_del = conn->buffer.find(delimiter + "--");
                 if (close_del !=  std::string::npos)
                 {
-                    conn->buffer.erase(0,close_del + delimiter.length() + 2);
+                    size_t erase_pos = close_del + delimiter.length() + 2;
+                    if (conn->buffer.substr(erase_pos, 2) == "\r\n")
+                        erase_pos += 2;
+                    conn->buffer.erase(0, erase_pos);
                     multipart_state = Post::MULTIPART_COMPLETE;
                     contunue = true;
                     break;
@@ -339,7 +345,6 @@ void Post::ProcessMultiPart()
                 break;
             }
             case MULTIPART_COMPLETE:
-                conn->state = Connection::SENDING_RESPONSE;
                 if(output_file.is_open())
                     output_file.close();
             break;
