@@ -17,7 +17,6 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
             multipart_state= Post::READING_PREAMBLE;
             if (!ExtractAndValidateBoundry())
                 transfer_type = Post::ERROR;
-            return;
         }
         std::string media_type;
         size_t semi_colon = content_type.find(';');
@@ -31,6 +30,8 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
         if (it == mime_ext.end())
         {
             //unsupporeted media type error
+            conn->response = new Response(415,Error);
+            conn->state =  Connection::SENDING_RESPONSE;
             transfer_type = Post::ERROR;
             return;
         }
@@ -44,8 +45,11 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
             multipart_state = Post::READING_PREAMBLE;
             if (!ExtractAndValidateBoundry())
                 transfer_type = Post::ERROR;
+            chunk_state = READING_CHUNK_SIZE;
+            chunk_bytes_read = 0;
+            return;
         }
-         std::string media_type;
+        std::string media_type;
         size_t semi_colon = content_type.find(';');
         if (semi_colon != std::string::npos)
             media_type = content_type.substr(0,semi_colon);
@@ -55,6 +59,8 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
         if (it == mime_ext.end())
         {
             //unsupporeted media type error
+            conn->response = new Response(415,Error);
+            conn->state =  Connection::SENDING_RESPONSE;
             transfer_type = Post::ERROR;
             return;
         }
@@ -88,7 +94,7 @@ bool Post::ExtractAndValidateBoundry()
     if (ct[begin] == '"')
     {
         begin ++;
-        size_t q = ct.find(begin,'"');
+        size_t q = ct.find('"', begin);
         if (q != std::string::npos)
             boundry = origin.substr(begin,q - begin);
     }
@@ -182,7 +188,6 @@ void Post::ReadChunkData()
 
 void Post::ReadTrailerHeaders()
 {
-    // should be protected for size limits
     if (output_file.is_open())
         output_file.close();
     size_t CRLF = conn->buffer.find("\r\n");
@@ -208,7 +213,7 @@ void Post::ProcessChunck()
             break;
             case Post::READING_CHUNK_DATA:
             ReadChunkData();
-            contunue = chunk_state != Post::Post::READING_CHUNK_DATA;
+            contunue = chunk_state != Post::READING_CHUNK_DATA;
             break;
             case Post::READING_TRAILER_HEADERS:
             ReadTrailerHeaders();
@@ -218,7 +223,7 @@ void Post::ProcessChunck()
             conn->state = Connection::SENDING_RESPONSE;
             break;
             case Post::CHUNK_ERROR:
-            //the status code should be set here
+                return;
             conn->state = Connection::SENDING_RESPONSE;
             break;
         }
@@ -279,7 +284,6 @@ void Post::ProcessMultiPart()
             break;
             case READING_PART_HEADERS:
             {
-                // here should be a header size  limit check
 				filename.clear();
                 headers.clear();
                 size_t CRLFCRLF = conn->buffer.find("\r\n\r\n");
@@ -336,17 +340,21 @@ void Post::ProcessMultiPart()
             }
             case MULTIPART_COMPLETE:
                 conn->state = Connection::SENDING_RESPONSE;
-                output_file.close();
+                if(output_file.is_open())
+                    output_file.close();
             break;
             case MULTIPART_ERROR:
+                conn->response = new Response(400,Error);
                 conn->state = Connection::SENDING_RESPONSE;
+                if(output_file.is_open())
+                    output_file.close();
             break;
         }
     }
 }
 void Post::ProcessContentLength()
 {
-    size_t bytes_to_read = std::min(conn->buffer.size(),content_length - content_bytes_read + 1);
+    size_t bytes_to_read = std::min(conn->buffer.size(),content_length - content_bytes_read);
     if (is_multipart)
         ProcessMultiPart();
     else
@@ -382,7 +390,7 @@ bool Post::ProcessMultiPartHeaders(std::string data)
         if(del ==  std::string::npos)
             return false;
         name = line.substr(0,del);
-        if (name.empty() || Request::Haswhitespace(name)) //[sessarhi] maybe i need to check for emply fileds | values
+        if (name.empty() || Request::Haswhitespace(name))
             return false;
         value = line.substr(del + 1);
         Request::trim(value);
@@ -448,7 +456,12 @@ void Post::GenerateUploadfile(const std::string &ext)
     else
         filename = conn->location->upload_store + oss.str();
     output_file.open(filename.c_str(),std::ios::app |  std::ios::out);
-    // output_file.open(filename.c_str(),std::ios::out | std::ios::app);
+    if (output_file.bad())
+    {
+        transfer_type = Post::ERROR;
+        conn->response = new Response(500,Error);
+        conn->state = Connection::SENDING_RESPONSE;
+    }
    
 }
 Post::~Post()

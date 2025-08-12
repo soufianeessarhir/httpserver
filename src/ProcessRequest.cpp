@@ -6,13 +6,20 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/11 11:55:59 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/12 17:21:08 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
 
+bool HttpServer::isValueCaseInsensitive(const std::string& headerName) {
 
+    const std::map<std::string, bool>& map = HeaderValueCase::get();
+    std::map<std::string, bool>::const_iterator it = map.find(headerName);
+    if (it != map.end())
+        return it->second;
+    return false;
+}
 void		HttpServer::ProcessRequestLine(Connection *conn)
 {
 
@@ -168,12 +175,6 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		}
 		conn->response = new Response(conn->request->GetStatus(), DELETE);
 	}
-	// else
-	// {
-	// 	conn->response = new Response(501, Error);
-	// 	conn->state = Connection::SENDING_RESPONSE;
-	// 	return;
-	// }
 }
 bool HttpServer::MatchLocation(Connection *conn)
 {
@@ -283,6 +284,6 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 		conn->location->error_pages = conn->server->error_pages;
 	if (conn->location->max_body_size == 0 && conn->server->max_body_size > 0)
 		conn->location->max_body_size = conn->server->max_body_size;
-	if (*(--conn->location->upload_store.end()) != '/')
+	if (!conn->location->upload_store.empty() && *(--conn->location->upload_store.end()) != '/')
 		conn->location->upload_store.push_back('/');
 }
