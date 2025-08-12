@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/07 06:42:08 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/12 08:50:59 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,13 +59,6 @@ void Connection::Reset()
     
 }
 
-// bool    CheckConfigCgi(Connection *conn, std::string Ext)
-// {
-//     if ()
-//     {
-            
-//     }
-// }
 
 void    CheckCgiExist(Connection *conn) // add by eaboudi
 {
@@ -107,9 +100,6 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
         Pos = CheckDir.find_last_of('/');
         std::string ScriptName = CheckDir.substr(Pos + 1);
         CheckDir = CheckDir.substr(0, Pos);
-        // std::string CgiDir = CGiDir;
-        // if (CheckDir.compare(0, CgiDir.size(), CgiDir) == 0)
-        // {
         CheckDir += '/';
         std::string ScriptPath = CheckDir;
         CheckDir += ScriptName;
@@ -136,7 +126,6 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
                 return ;
             }
         }
-        // }
     }
     conn->request->SetUri(Path);
     conn->UseCgi = false;

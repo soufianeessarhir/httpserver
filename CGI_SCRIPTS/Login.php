@@ -1,7 +1,5 @@
-
 <?php
     session_start();
-    header("Location: /Dashboard");
     if (isset($_SESSION["logined"]) && $_SESSION["logined"] === true)
     {
         header("Location: /Dashboard");
