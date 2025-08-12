@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:31:30 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/20 10:37:14 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/12 08:52:14 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ class Response
     public:
         Response();
         Response(int StatusCode, Methods _Method);
-        // Response(Request *, Server *);
         ~Response();
         MainResponse *GET;
         MainResponse *Error;
@@ -56,8 +55,6 @@ class Response
         Methods Method;
         int StatusCode;
         std::string StatusLineError;
-        
-    
 };
 
 std::map<int, std::string> createErrorPhrase();

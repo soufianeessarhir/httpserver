@@ -6,26 +6,12 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/08 11:58:37 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/12 09:09:41 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
 
-
-#ifdef __linux__
-    #define READ_EVENT EPOLLIN
-    #define WRITE_EVENT EPOLLOUT
-    #define ERROR_EVENT EPOLLERR
-    #define HUP_EVENT EPOLLHUP
-    #define EDGE_TRIGGERED EPOLLET
-#elif defined(__APPLE__)
-    #define READ_EVENT		0x01
-    #define WRITE_EVENT 	0x02
-    #define ERROR_EVENT 	0x04
-    #define HUP_EVENT		0x08
-    #define EDGE_TRIGGERED EV_CLEAR
-#endif
 
 bool HttpServer::CheckForEventFd(int fd)
 {
@@ -99,21 +85,11 @@ int HttpServer::ModifyEvent(int fd, int events)
         EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
         change_count++;
     }
-	// else 
-	// {
-    //     EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-    //     change_count++;
-    // }
     if (events & WRITE_EVENT)
 	{
         EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
         change_count++;
     }
-	// else
-	// {
-    //     EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-    //     change_count++;
-    // }
 	result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
 #endif
@@ -135,8 +111,8 @@ int HttpServer::RemoveEvent(int fd)
     result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
 #endif
-	if (result < 0)
-		throw HttpClientError("RemoveEvent",fd);
+	// if (result < 0)
+	// 	throw HttpClientError("RemoveEvent",fd);
     return result;
 }
 
@@ -158,8 +134,8 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
     if (timeout == -1)
         pts = NULL; // infinite wait
     else {
-        ts.tv_sec = timeout / 1000;
-        ts.tv_nsec = (timeout % 1000) * 1000000;
+        ts.tv_sec = 0 ;
+        ts.tv_nsec = 0;
         pts = &ts;
     }
     event_count = kevent(event_fd, NULL, 0, kevents, max_events, pts);
@@ -197,7 +173,12 @@ void		HttpServer::init()
 			hints.ai_flags = AI_PASSIVE;
 			std::string host = servers[i].listen[j].first.empty() ? "localhost" : servers[i].listen[j].first;
 			std::ostringstream port;
+			int port_num;
+			std::istringstream(port.str()) >> port_num;
 			port << servers[i].listen[j].second;
+			if (servers[i].isvirtual && std::find(servers[i].virtual_listen.begin()
+			,servers[i].virtual_listen.end(),std::make_pair(host,port_num)) != servers[i].virtual_listen.end())
+				continue;
 			if (getaddrinfo(host.c_str(), port.str().c_str(),&hints, &res) != 0)
 			{
 				close(sockfd);
@@ -226,11 +207,14 @@ void		HttpServer::init()
 				close(sockfd);
 				throw HttpServerError("Socket listening failed");
 			}
-			if (AddEvent(sockfd, READ_EVENT) == -1)
-            {
-                close(sockfd);
-                throw HttpServerError("Event control failed");
-            }
+			try 
+			{
+				AddEvent(sockfd, READ_EVENT);
+			}
+			catch(const HttpClientError &e)
+			{
+				std::cerr << e.what() << '\n';
+			}
 			server_map[sockfd] = servers[i];
 		}
 	}
@@ -303,25 +287,11 @@ void		HttpServer::HandlIncommingData(int fd)
 	if (!conn)
 		return ;
 	ssize_t rd_bytes = 0;
-	char buf[READ_BUFFER_SIZE];
-	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
+	rd_bytes = recv(fd,conn->buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
 	if (rd_bytes > 0)
-	conn->buffer.append(buf,rd_bytes);
-	else if (rd_bytes == 0)
-	{
-		//[sessarhi] Connection should be closed -> the client close the socket from its side
-		if (conn->buffer.empty())
-		{
-			ClientCleanUp(fd);
-			return;
-		}
-	}
-	else if (rd_bytes < 0)
-	{
-		//no data / error 
-		//[sessarhi] Connection should be closed -> an error happens in read operation
-	}
-	// std::cout << conn->buffer<<std::endl;
+		conn->buffer.append(conn->buf,rd_bytes);
+	else if (rd_bytes == 0 && conn->buffer.empty())
+		throw HttpClientError("connection close by peer",fd);
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -345,7 +315,7 @@ void		HttpServer::HandlIncommingData(int fd)
 			case Connection::PROCESSING:
 
 				ProcessRequest(conn);
-				if (conn->request->ExpectBody())
+				if (conn->request->ExpectBody() && conn->request->GetMethod() == "POST")
 				{
 					if (conn->state == Connection::PROCESSING)
 						conn->state = Connection::READING_BODY;
@@ -376,6 +346,8 @@ void		HttpServer::run()
 {
 	PlatformEvent platform_events[MAX_EVENTS];
 	int event_count;
+	int fd;
+	short ev;
 	for(;;)
 	{
 		try
@@ -383,15 +355,15 @@ void		HttpServer::run()
 			event_count = WaitForEvents(platform_events, MAX_EVENTS);
 			for (int i = 0; i < event_count; ++i)
 			{
-				if (server_map.find(platform_events[i].fd) != server_map.end())
-					HandleNewConnection(platform_events[i].fd);
-				else if (platform_events[i].events & (READ_EVENT | WRITE_EVENT))
-				{
-					if (!CheckForEventFd(platform_events[i].fd))
+				fd = platform_events[i].fd;
+				ev = platform_events[i].events;
+				if (ev & (HUP_EVENT | ERROR_EVENT))
+					throw HttpClientError("HUP_EVENT | ERROR_EVENT", fd);
+				if (server_map.find(fd) != server_map.end())
+					HandleNewConnection(fd);
+				else if (ev & (READ_EVENT | WRITE_EVENT))
+					if (!CheckForEventFd(fd))
 						active_clients.push_back(platform_events[i]);
-				}
-				else if ((platform_events[i].events  & HUP_EVENT) || (platform_events[i].events  & ERROR_EVENT))
-					throw HttpClientError("HUP_EVENT | ERROR_EVENT",platform_events[i].fd);
 			}
 			if (!active_clients.empty())
 				ProcessClientsRoundRobin();
@@ -399,15 +371,13 @@ void		HttpServer::run()
 		catch(const HttpClientError &e)
 		{
 			std::cerr << e.what() << '\n';
+			ClientCleanUp(e.client_fd);
+			std::cout << "HttpClientError"<<std::endl;
 		}
 		catch(const HttpServerError &e)
 		{
 			std::cerr << e.what() << '\n';
-			return ;
-		}
-		catch(const std::exception &e)
-		{
-			std::cerr << e.what() << '\n';
+			std::cout << "HttpServerError"<<std::endl;
 			return;
 		}
 	}
@@ -458,16 +428,18 @@ void		HttpServer::ClientCleanUp(int fd)
 {
 	shutdown(fd,SHUT_WR);
 	RemoveEvent(fd);
-	for(std::deque<PlatformEvent>::iterator it = active_clients.begin();it != active_clients.end();
-		++it)
+	for (std::deque<PlatformEvent>::iterator it = active_clients.begin();it != active_clients.end(); )
 	{
-		if ((*it).fd == fd)
-			active_clients.erase(it);
+		if (it->fd == fd)
+			it = active_clients.erase(it);
+		else
+			++it;
 	}
 	Connection *conn = clients[fd];
 	delete conn;
 	conn = NULL;
 	clients.erase(fd);
+	// close(fd);
 }
 void		HttpServer::cleanup()
 {

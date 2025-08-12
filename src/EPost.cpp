@@ -19,7 +19,7 @@ void PostResponse(Connection *conn)
             conn->response->POST->SetContentType(conn);
             conn->response->POST->SetStatusLine();
             conn->response->POST->SendStatusLine(conn);
-            conn->response->POST->SetHeaders(false, conn->request);
+            conn->response->POST->SetHeaders(false, conn);
             conn->response->POST->SendHeaders(conn);
             conn->response->POST->ResponseStat = SENDING_BODY;
             break;

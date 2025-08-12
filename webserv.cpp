@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:26:08 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/03 10:23:39 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/11 09:30:31 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 int main(int argc, char **argv)
 {
+	signal(SIGPIPE, SIG_IGN);
 	std::vector<Server> servers;
 	if (argc != 2)
 		return std::cerr << "Usage: " << argv[0] << " <config_file>" << std::endl, 1;

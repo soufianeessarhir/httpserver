@@ -11,24 +11,22 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
     {
         content_length = conn->request->GetContentLenght();
         content_bytes_read = 0;
-        if (content_type.find("multipart/form-data") != std::string::npos)
+        if (content_type.find("multipart/form-data") != std::string::npos && !conn->UseCgi)
         {
             is_multipart = true;
             multipart_state= Post::READING_PREAMBLE;
             if (!ExtractAndValidateBoundry())
-            {
                 transfer_type = Post::ERROR;
-            }
             return;
         }
         std::string media_type;
         size_t semi_colon = content_type.find(';');
         if (semi_colon != std::string::npos)
-        {
             media_type = content_type.substr(0,semi_colon);
-        }
         else 
             media_type = content_type;
+        if (media_type.empty() && conn->UseCgi)
+            media_type = ".bin";
         std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
         if (it == mime_ext.end())
         {
@@ -45,16 +43,12 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
             is_multipart = true;
             multipart_state = Post::READING_PREAMBLE;
             if (!ExtractAndValidateBoundry())
-            {
                 transfer_type = Post::ERROR;
-            }
         }
          std::string media_type;
         size_t semi_colon = content_type.find(';');
         if (semi_colon != std::string::npos)
-        {
             media_type = content_type.substr(0,semi_colon);
-        }
         else 
             media_type = content_type;
         std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
@@ -90,16 +84,13 @@ bool Post::ExtractAndValidateBoundry()
     return false;
     begin++;
     for (;begin < ct.length() && isspace(ct[begin]);++begin);
-
     size_t end;
     if (ct[begin] == '"')
     {
         begin ++;
         size_t q = ct.find(begin,'"');
         if (q != std::string::npos)
-        {
             boundry = origin.substr(begin,q - begin);
-        }
     }
     else {
         for (end=begin;end < ct.length()&&
@@ -185,9 +176,7 @@ void Post::ReadChunkData()
             chunk_bytes_read = 0;
         }
         else
-        {
             chunk_state = Post::CHUNK_ERROR;
-        }
     }
 }
 
@@ -276,7 +265,7 @@ void Post::ProcessMultiPart()
                 size_t close_del = conn->buffer.find(delimiter + "--");
                 if (close_del !=  std::string::npos)
                 {
-                    conn->buffer.erase(0,close_del + (delimiter + "--").length() - 1);
+                    conn->buffer.erase(0,close_del + delimiter.length() + 2);
                     multipart_state = Post::MULTIPART_COMPLETE;
                     contunue = true;
                     break;
@@ -348,7 +337,6 @@ void Post::ProcessMultiPart()
             case MULTIPART_COMPLETE:
                 conn->state = Connection::SENDING_RESPONSE;
                 output_file.close();
-            /* code */
             break;
             case MULTIPART_ERROR:
                 conn->state = Connection::SENDING_RESPONSE;
@@ -360,9 +348,7 @@ void Post::ProcessContentLength()
 {
     size_t bytes_to_read = std::min(conn->buffer.size(),content_length - content_bytes_read + 1);
     if (is_multipart)
-	{
         ProcessMultiPart();
-	}
     else
     {
         WriteDataToFile(bytes_to_read); 
@@ -376,41 +362,29 @@ void Post::ProcessContentLength()
     }
 }
 
-
-
-
 bool Post::ProcessMultiPartHeaders(std::string data)
 {
     std::istringstream iss(data);
     std::string line;
+    size_t del;
+    std::string name;
+    std::string value;
     while (std::getline(iss,line))
     {
-        if (!line.empty() && line[line.size() - 1] == '\r') {
+        if (!line.empty() && line[line.size() - 1] == '\r')
             line.erase(line.size() - 1);
-        }
         if (headers.size() == 0)
-        {
             if (line.empty() || Request::OnlySpaces(line))
-            {
                 return false;
-            }
-        }
         if (line.empty())
-        {
             return true;
-        }
-        size_t del = line.find(':');
+        del = line.find(':');
         if(del ==  std::string::npos)
-        {
             return false;
-        }
-        std::string name = line.substr(0,del);
+        name = line.substr(0,del);
         if (name.empty() || Request::Haswhitespace(name)) //[sessarhi] maybe i need to check for emply fileds | values
-        {
-
             return false;
-        }
-        std::string value = line.substr(del + 1);
+        value = line.substr(del + 1);
         Request::trim(value);
         Request::ToCanonical(name);
         headers[name] = value;
@@ -423,11 +397,10 @@ bool Post::ConfigureMultipart()
     std::string content_type = headers["content-disposition"];
     size_t name = content_type.find("name");
     std::string tmp;
+    size_t fname;
     if (name == std::string::npos)
-    {
         return false;
-    }
-    size_t fname = content_type.find("filename=\"");
+    fname = content_type.find("filename=\"");
     if (fname != std::string::npos)
     {
         fname += 10;
@@ -450,10 +423,8 @@ bool Post::CheckFileName(std::string &filename)
 {
     const std::string ilegal="()<>@,;:\\\"/[]?=";
     for (size_t i = 0; i < ilegal.size();++i)
-    {
         if (filename.find(ilegal[i]) != std::string::npos)
             return false;
-    }
     return true;
 }
 void Post::WriteDataToFile(size_t size)
@@ -469,7 +440,13 @@ void Post::GenerateUploadfile(const std::string &ext)
     gettimeofday(&tm,NULL);
     oss << tm.tv_sec << &tm << tm.tv_usec << &oss<<ext;
     std::cout<<filename<<std::endl;
-    filename = conn->location->upload_store + oss.str();
+    if (conn->UseCgi)
+    {
+        filename = "/tmp/" + oss.str();
+        conn->CgiObj->InFile = filename;
+    }
+    else
+        filename = conn->location->upload_store + oss.str();
     output_file.open(filename.c_str(),std::ios::app |  std::ios::out);
     // output_file.open(filename.c_str(),std::ios::out | std::ios::app);
    
@@ -477,7 +454,5 @@ void Post::GenerateUploadfile(const std::string &ext)
 Post::~Post()
 {
     if (output_file.is_open())
-    {
         output_file.close();
-    }
 }

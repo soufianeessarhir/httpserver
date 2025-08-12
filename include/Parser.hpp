@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:08:59 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/07 11:06:39 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/10 19:32:58 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include "Exceptions.hpp"
+#include "ConfigValidator.hpp"
 
 class Parser
 {
@@ -39,16 +40,14 @@ public:
 	void ListenDirective();
 	void Host();
 	void Port();
-	void IpAddress();
 	void ServerNameDirective();
-	void ErrorPageDirective(std::vector<std::pair<std::vector<int>, std::string> > &);
-	void ErrorPageList(std::vector<std::pair<std::vector<int>, std::string> > &);
+	void ErrorPageDirective(std::map<int, std::string > &);
+	void ErrorPageList(std::set<int>&);
 	void ClientMaxBodySizeDirective(size_t &);
 	void LocationBlock();
 	void LocationDirectiveList();
 	void LocationDirective();
 	void RootDirective(std::string &);
-	void AliasDirective(std::string &alias);
 	void MethodsDirective();
 	void ReturnDirective(std::pair<int, std::string> &, bool&);
 	void AutoindexDirective(bool&);

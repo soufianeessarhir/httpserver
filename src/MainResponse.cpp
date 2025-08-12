@@ -132,6 +132,7 @@ void    MainResponse::SetContentType(Connection *conn)
 MainResponse::MainResponse(int statusCode) : StatusCode(statusCode), IsBinaryFile(false)
 {
     ResponseStat = SENDING_STATUSLINE;
+    ContentLength = 0;
 }
 
 void MainResponse::SetStatusLine()
@@ -147,13 +148,13 @@ void MainResponse::SetStatusLine()
 }
 
 
-void    MainResponse::SetHeaders(bool CloseConn, Request *req)
+void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
 {
     std::cout << ContentLength << std::endl;
     if (!CloseConn)
     {
         Headers["Connection"] = "keep-alive\r\n";
-        std::string CookieContent = req->GetHeader("cookie");
+        std::string CookieContent = conn->request->GetHeader("cookie");
         if (!CookieContent.empty())
             Headers["Set-Cookie"] = CookieContent + "\r\n";
     }
@@ -161,8 +162,13 @@ void    MainResponse::SetHeaders(bool CloseConn, Request *req)
         Headers["Connection"] = "close\r\n";
     std::ostringstream oss;
     oss << ContentLength;
+    if (conn->UseCgi == false)
+    {
+        Headers["Content-Length"] = oss.str() + "\r\n";
+        Headers["Content-Type"] = ContentType + "\r\n";
+    }
     Headers["Content-Length"] = oss.str() + "\r\n";
-    Headers["Content-Type"] = ContentType + "\r\n";
+    Headers["Content-Type"] = "text/html\r\n";
 }
 
 MainResponse::~MainResponse()
@@ -179,25 +185,17 @@ void MainResponse::SendStatusLine(Connection *Conn)
     {
         BytesWriten = send(Conn->fd, StatusLine.c_str() + TotalSent, 
                           StatusLine.size() - TotalSent, MSG_NOSIGNAL);
+        
+        if (BytesWriten == 0)
+        {
+            Conn->state = Connection::SENDING_RESPONSE;
+            return;
+        }
         if (BytesWriten < 0)
         {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
-            {
-                Conn->state = Connection::SENDING_RESPONSE;
-                return; // Wait for next round
-            }
-            else if (errno == EPIPE || errno == ECONNRESET)
-            {
-                // Client disconnected - clean up and exit
-                Conn->state = Connection::COMPLETE;
-                return;
-            }
-            else
-            {
-                perror("send status line");
-                Conn->state = Connection::COMPLETE;
-                return;
-            }
+            perror("send status line");
+            Conn->state = Connection::COMPLETE;
+            return;
         }
         TotalSent += BytesWriten;
     }
@@ -222,7 +220,8 @@ void MainResponse::SendHeaders(Connection *conn)
     std::map<std::string, std::string>::const_iterator it;
     for (it = Headers.begin(); it != Headers.end(); ++it)
         HeadersStr += it->first + ": " + it->second;
-    if (conn->UseCgi && conn->request->GetMethod() == "POST" && !conn->CgiObj->CgiHeaders.empty())
+    if (conn->UseCgi && (conn->request->GetMethod() == "POST" || conn->request->GetMethod() == "GET") 
+        && !conn->CgiObj->CgiHeaders.empty())
     {
        std::map<std::string, std::string>::const_iterator it(conn->CgiObj->CgiHeaders.begin());
        for(;it != Headers.end(); ++it)
@@ -234,24 +233,17 @@ void MainResponse::SendHeaders(Connection *conn)
     {
         BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 
                           HeadersStr.size() - TotalSent, MSG_NOSIGNAL);
+        
+        if (BytesWriten == 0)
+        {
+            conn->state = Connection::SENDING_RESPONSE;
+            return ;
+        }
         if (BytesWriten < 0)
         {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
-            {
-                conn->state = Connection::SENDING_RESPONSE;
-                return;
-            }
-            else if (errno == EPIPE || errno == ECONNRESET)
-            {
-                conn->state = Connection::COMPLETE;
-                return;
-            }
-            else
-            {
-                perror("send headers");
-                conn->state = Connection::COMPLETE;
-                return;
-            }
+            perror("send headers");
+            conn->state = Connection::COMPLETE;
+            return;
         }
         TotalSent += BytesWriten;
     }
@@ -266,15 +258,12 @@ bool    MainResponse::CheckForSending(Connection *conn)
     CheckProg.FileSize = FileState.st_size;
     CheckProg.BuffSize = 0;
     CheckProg.BuffOffs = 0;
-    // Allocate buffer if not already done
-    // if (!CheckProg.Buff)
-    //     CheckProg.Buff = new char[BUFFER_SIZE];
     ContentLength = FileState.st_size;
     return true;
 }
+
 void MainResponse::SetAndSendBody(Connection* conn) 
 {
-    // Make Buff a member of CheckProg so it persists between calls
     if (CheckProg.BuffOffs >= CheckProg.BuffSize)
     {
         ssize_t bytes_read = read(CheckProg.FileFd, CheckProg.Buff, BUFFER_SIZE);
@@ -302,29 +291,25 @@ void MainResponse::SetAndSendBody(Connection* conn)
                                 CheckProg.Buff + CheckProg.BuffOffs,
                                 CheckProg.BuffSize - CheckProg.BuffOffs,
                                 MSG_NOSIGNAL);
+    
+    if (bytes_sent == 0)
+        return;
     if (bytes_sent < 0)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
-        {
-            return;
-        }
-        else
-        {
             perror("send");
             conn->state = Connection::COMPLETE;
             close(CheckProg.FileFd);
             return;
-        }
     }
     CheckProg.BuffOffs += bytes_sent;
 }
+
 
 bool    CheckFileRD(Connection *conn)
 {
     if (conn->UseCgi)
     {    
         conn->request->SetUri(conn->CgiObj->OutFile);
-        // conn->UseCgi = false;
     }
     struct stat FileState;
     if (stat(conn->request->GetUri().c_str(), &FileState) == -1)
@@ -371,15 +356,15 @@ void    excuteGetMethod(Connection *conn)
     {
         PostResponse(conn);
     }
-    if (conn->response->GetMethod() == Error)
-    {
-        ExecuteError(conn);
-    }
     if (conn->response->GetMethod() == DELETE)
     {
         ExecuteDelete(conn);
     }
-    if (conn->UseCgi == true && conn->state == Connection::COMPLETE)
+    if (conn->response->GetMethod() == Error)
+    {
+        ExecuteError(conn);
+    }
+    if (conn->UseCgi && conn->state == Connection::COMPLETE)
     {
         unlink(conn->CgiObj->OutFile.c_str());
     }
