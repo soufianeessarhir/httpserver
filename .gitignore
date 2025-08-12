@@ -7,4 +7,8 @@ To Do
 uploads/
 .vscode/
 tests/
+
+# Build artifacts
+*.o
+webserv
 sheets/
