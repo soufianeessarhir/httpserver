@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/11 09:17:26 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/12 13:25:27 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,8 +56,8 @@
 
 class Connection;
 #define			MAX_EVENTS					1024
-#define			CLIENT_PER_CYCLE			12
-#define			MAX_REQUEST_LINE_LENGHT		8000 //RFC 9112,
+#define			CLIENT_PER_CYCLE			1024
+#define			MAX_REQUEST_LINE_LENGHT		8000
 #define			MAX_header_field_LENGHT		24000
 
 struct PlatformEvent {

@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/12 11:54:26 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/12 13:10:18 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -378,12 +378,10 @@ void		HttpServer::run()
 		{
 			std::cerr << e.what() << '\n';
 			ClientCleanUp(e.client_fd);
-			std::cout << "HttpClientError"<<std::endl;
 		}
 		catch(const HttpServerError &e)
 		{
 			std::cerr << e.what() << '\n';
-			std::cout << "HttpServerError"<<std::endl;
 			return;
 		}
 	}
