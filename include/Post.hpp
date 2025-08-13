@@ -50,8 +50,12 @@ private:
 
     size_t max_body_size;
     bool is_multipart;
-    bool is_initial_del;
     std::string boundry;
+    std::string initial_boundry;
+    std::string subsequent_boundry;
+    std::string close_boundry;
+    std::string delimiter;
+
 	std::string filename;
 	bool is_file_upload;
     std::vector<MultiPart> parts;

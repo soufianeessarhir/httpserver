@@ -4,7 +4,7 @@
 const std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap();
 
 Post::Post(Connection *conn , TransferType type):transfer_type(type)
-,conn(conn),is_multipart(false),is_initial_del(false)
+,conn(conn),is_multipart(false)
 {
     std::string content_type = conn->request->GetHeader("content-type");
     if (type ==  CONTENT_LENGTH)
@@ -17,6 +17,7 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
             multipart_state= Post::READING_PREAMBLE;
             if (!ExtractAndValidateBoundry())
                 transfer_type = Post::ERROR;
+            return;
         }
         std::string media_type;
         size_t semi_colon = content_type.find(';');
@@ -29,7 +30,6 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
         std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
         if (it == mime_ext.end())
         {
-            //unsupporeted media type error
             conn->response = new Response(415,Error);
             conn->state =  Connection::SENDING_RESPONSE;
             transfer_type = Post::ERROR;
@@ -58,7 +58,6 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
         std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
         if (it == mime_ext.end())
         {
-            //unsupporeted media type error
             conn->response = new Response(415,Error);
             conn->state =  Connection::SENDING_RESPONSE;
             transfer_type = Post::ERROR;
@@ -106,12 +105,16 @@ bool Post::ExtractAndValidateBoundry()
             return false;
         boundry = origin.substr(begin, end - begin);
     }
-    if (boundry.empty())
+    if (boundry.empty() || boundry.length() > 70)
         return false;
     const std::string illegal = "\'()+_,-./:=?";
     for (std::string::iterator it = boundry.begin();it !=  boundry.end();++it)
         if (!isalnum(*it) && illegal.find(*it) == std::string::npos)
             return false;
+    initial_boundry = "--" + boundry + "\r\n";
+    subsequent_boundry  = "\r\n--" + boundry + "\r\n";
+    close_boundry = "\r\n--" + boundry + "--\r\n";
+    delimiter = "\r\n--" + boundry;
     return true;
 }
 
@@ -183,9 +186,7 @@ void Post::ReadChunkData()
             chunk_bytes_read = 0;
         }
         else if (CRLF != std::string::npos)
-        {
             chunk_state = Post::CHUNK_ERROR;
-        }
     }
 }
 
@@ -235,7 +236,6 @@ void Post::ProcessChunck()
 
 void Post::ProcessMultiPart()
 {
-    std::string delimiter = "\r\n--" + boundry;
     bool contunue = true;
     while (contunue)
     {
@@ -244,44 +244,34 @@ void Post::ProcessMultiPart()
         {
             case READING_PREAMBLE:
             {
-                delimiter = "--" + boundry;
-                size_t del = conn->buffer.find(delimiter);
+                size_t del = conn->buffer.find(initial_boundry);
                 if (del != std::string::npos)
                 {
-                    conn->buffer.erase(0,del);
-                    multipart_state = Post::READING_BOUNDARY;
-                    is_initial_del = true;
+                    conn->buffer.erase(0,del + initial_boundry.length());
+                    multipart_state = Post::READING_PART_HEADERS;
                     contunue = true;
                 }
                 break;
             }
             case READING_BOUNDARY:
             {
-                if (is_initial_del)
-                {
-                    delimiter = "--" + boundry;
-                    is_initial_del = false;
-                }
-                size_t  CRLF = conn->buffer.find(delimiter + "\r\n");
+                size_t  CRLF = conn->buffer.find(subsequent_boundry);
                 if(CRLF != std::string::npos)
                 {
-                    conn->buffer.erase(0,delimiter.length() + 2);
+                    conn->buffer.erase(0,subsequent_boundry.length());
                     multipart_state = Post::READING_PART_HEADERS;
                     contunue = true;
                     break;
                 }
-                size_t close_del = conn->buffer.find(delimiter + "--");
+                size_t close_del = conn->buffer.find(close_boundry);
                 if (close_del !=  std::string::npos)
                 {
-                    size_t erase_pos = close_del + delimiter.length() + 2;
-                    if (conn->buffer.substr(erase_pos, 2) == "\r\n")
-                        erase_pos += 2;
-                    conn->buffer.erase(0, erase_pos);
+                    conn->buffer.erase(0, close_boundry.length());
                     multipart_state = Post::MULTIPART_COMPLETE;
                     contunue = true;
                     break;
                 }
-                if (conn->buffer.size() > (delimiter + "\r\n").size())
+                if (conn->buffer.length() > subsequent_boundry.length())
                 {
                     multipart_state = Post::MULTIPART_ERROR;
                     contunue = true;
@@ -359,18 +349,30 @@ void Post::ProcessMultiPart()
 }
 void Post::ProcessContentLength()
 {
-    size_t bytes_to_read = std::min(conn->buffer.size(),content_length - content_bytes_read);
+    size_t bytes_to_read = std::min(conn->buffer.size(), content_length - content_bytes_read);
+    
     if (is_multipart)
+    {
+        std::string original_buffer = conn->buffer;
+        if (bytes_to_read < conn->buffer.size()) 
+            conn->buffer = conn->buffer.substr(0, bytes_to_read);
+        size_t initial_buffer_size = conn->buffer.size();
         ProcessMultiPart();
+        size_t consumed = initial_buffer_size - conn->buffer.size();
+        content_bytes_read += consumed;
+        if (bytes_to_read < original_buffer.size())
+            conn->buffer += original_buffer.substr(bytes_to_read);
+    }
     else
     {
         WriteDataToFile(bytes_to_read); 
-        conn->buffer.erase(0,bytes_to_read);
+        conn->buffer.erase(0, bytes_to_read);
         content_bytes_read += bytes_to_read;
     }
     if (content_bytes_read >= content_length)
     {
-        output_file.close();
+        if (output_file.is_open())
+            output_file.close();
         conn->state = Connection::SENDING_RESPONSE;
     }
 }
