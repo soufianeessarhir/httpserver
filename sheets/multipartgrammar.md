@@ -1,30 +1,52 @@
-; Main multipart structure
-multipart-body    = [preamble] 
-                    initial-delimiter CRLF
-                    body-part
-                    *(encapsulation)
-                    close-delimiter
-                    [epilogue]
+boundary            := 0*69<bchars> bcharsnospace
 
-; Individual part encapsulation  
-encapsulation     = delimiter CRLF body-part
+bchars              := bcharsnospace / " "
 
-; Boundary delimiters
-initial-delimiter = "--" boundary
-delimiter         = CRLF "--" boundary  
-close-delimiter   = CRLF "--" boundary "--"
+bcharsnospace       := DIGIT / ALPHA / "'" / "(" / ")" /
+                    "+" / "_" / "," / "-" / "." /
+                    "/" / ":" / "=" / "?"
 
-; Optional sections
-preamble          = *OCTET                    ; Ignored by parsers
-epilogue          = *OCTET                    ; Ignored by parsers
+Overall, the body of a "multipart" entity may be specified as follows:
 
-; Part structure
-body-part         = *part-header blank-line part-body
-part-header       = field-name ":" [field-value] CRLF
-blank-line        = CRLF
-part-body         = *OCTET                    ; Must not contain boundary
+dash-boundary       := "--" boundary
+                    ; boundary taken from the value of
+                    ; boundary parameter of the
+                    ; Content-Type field.
 
-; Boundary definition (from Content-Type parameter)
-boundary          = 1*70boundary-char
-boundary-char     = DIGIT / ALPHA / "'" / "(" / ")" / "+" / "_" /
-                    "," / "-" / "." / "/" / ":" / "=" / "?"
+multipart-body      := [preamble CRLF]
+                    dash-boundary transport-padding CRLF
+                    body-part *encapsulation
+                    close-delimiter transport-padding
+                    [CRLF epilogue]
+
+transport-padding   := *LWSP-char
+                        ; Composers MUST NOT generate
+                        ; non-zero length transport
+                        ; padding, but receivers MUST
+                        ; be able to handle padding
+                        ; added by message transports.
+
+encapsulation       := delimiter transport-padding
+                        CRLF body-part
+
+delimiter           := CRLF dash-boundary
+
+close-delimiter     := delimiter "--"
+
+preamble            := discard-text
+
+epilogue            := discard-text
+
+discard-text        := *(*text CRLF) *text
+                        ; May be ignored or discarded.
+
+body-part           := MIME-part-headers [CRLF *OCTET]
+                        ; Lines in a body-part must not start
+                        ; with the specified dash-boundary and
+                        ; the delimiter must not appear anywhere
+                        ; in the body part.  Note that the
+                        ; semantics of a body-part differ from
+                        ; the semantics of a message, as
+                        ; described in the text.
+
+OCTET := <any 0-255 octet value>

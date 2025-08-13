@@ -194,13 +194,17 @@ void Post::ReadTrailerHeaders()
 {
     if (output_file.is_open())
         output_file.close();
-    size_t CRLF = conn->buffer.find("\r\n");
+    size_t CRLF = conn->buffer.find("\r\n\r\n");
     if (CRLF != std::string::npos)
     {
-        conn->buffer.erase(0,CRLF + 2);
+        conn->buffer.erase(0,CRLF + 4);
         chunk_state = Post::CHUNK_COMPLETE;
     }
-    
+    else if ( conn->buffer.find("\r\n") == 0)
+    {
+        conn->buffer.erase(0,2);
+        chunk_state = Post::CHUNK_COMPLETE;
+    }
 }
 
 void Post::ProcessChunck()
