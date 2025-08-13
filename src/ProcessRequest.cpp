@@ -6,13 +6,20 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 10:08:20 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/13 21:46:47 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
 
+bool HttpServer::isValueCaseInsensitive(const std::string& headerName) {
 
+    const std::map<std::string, bool>& map = HeaderValueCase::get();
+    std::map<std::string, bool>::const_iterator it = map.find(headerName);
+    if (it != map.end())
+        return it->second;
+    return false;
+}
 void		HttpServer::ProcessRequestLine(Connection *conn)
 {
 
@@ -168,12 +175,6 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		}
 		conn->response = new Response(conn->request->GetStatus(), DELETE);
 	}
-	// else
-	// {
-	// 	conn->response = new Response(501, Error);
-	// 	conn->state = Connection::SENDING_RESPONSE;
-	// 	return;
-	// }
 }
 bool HttpServer::MatchLocation(Connection *conn)
 {
@@ -229,17 +230,39 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 	if (conn->request->CheckField("transfer-encoding"))
 	{
 		std::string encoding = conn->request->GetHeader("transfer-encoding");
-		size_t last_space = encoding.find_last_of(' ');
-		if (last_space != std::string::npos)
-			encoding = encoding.substr(last_space);
-		if (encoding != "chunked")
+		std::vector<std::string> tokens;
+		std::stringstream ss(encoding);
+		std::string token;
+		while (std::getline(ss, token, ','))
 		{
-			conn->response = new Response(400 , Error);
+			Request::trim(token);
+			size_t semicolon = token.find(';');
+			if (semicolon != std::string::npos)
+				token = token.substr(0, semicolon);
+			tokens.push_back(token);
+		}
+		bool chunked_found = false;
+		for (size_t i = 0; i < tokens.size(); ++i) 
+		{
+			if (tokens[i] == "chunked") 
+			{
+				if (chunked_found || i != tokens.size() - 1)
+				{
+					conn->response = new Response(400, Error);
+					return false;
+				}
+				chunked_found = true;
+			}
+		}
+		if (!chunked_found) 
+		{
+			conn->response = new Response(400, Error);
 			return false;
 		}
-		conn->post = new Post(conn,Post::CHUNKED);
+		conn->post = new Post(conn, Post::CHUNKED);
+		return true;
 	}
-	else if (!conn->request->GetHeader("content-length").empty())
+	if (!conn->request->GetHeader("content-length").empty())
 		conn->post = new Post(conn,Post::CONTENT_LENGTH);
 	else
 	{
@@ -283,6 +306,6 @@ void 		HttpServer::FillLocationMisseddata(Connection *conn)
 		conn->location->error_pages = conn->server->error_pages;
 	if (conn->location->max_body_size == 0 && conn->server->max_body_size > 0)
 		conn->location->max_body_size = conn->server->max_body_size;
-	if (*(--conn->location->upload_store.end()) != '/')
+	if (!conn->location->upload_store.empty() && *(--conn->location->upload_store.end()) != '/')
 		conn->location->upload_store.push_back('/');
 }

@@ -6,11 +6,23 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/12 15:45:38 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/13 21:46:40 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
+
+
+HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs),headerCaseMap(HeaderValueCase::get())
+{
+    event_fd = CreateEvent();
+    if (event_fd == -1)
+        throw HttpServerError("Event queue creation failed");
+#if defined(__APPLE__)
+    change_count = 0;
+#endif 
+    this->init();
+}
 
 
 bool HttpServer::CheckForEventFd(int fd)
@@ -24,16 +36,6 @@ bool HttpServer::CheckForEventFd(int fd)
     return false;
 }
 
-HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs)
-{
-    event_fd = CreateEvent();
-    if (event_fd == -1)
-        throw HttpServerError("Event queue creation failed");
-#if defined(__APPLE__)
-    change_count = 0;
-#endif 
-    this->init();
-}
 
 int HttpServer::CreateEvent()
 {
@@ -445,7 +447,7 @@ void		HttpServer::ClientCleanUp(int fd)
 	delete conn;
 	conn = NULL;
 	clients.erase(fd);
-	// close(fd);
+	close(fd);
 }
 void		HttpServer::cleanup()
 {

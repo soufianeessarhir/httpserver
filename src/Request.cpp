@@ -6,13 +6,16 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 10:08:40 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/13 21:46:51 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Request.hpp"
 
-std::string Request::GetUri() {return uri;}
+std::string Request::GetUri()
+{
+    return uri;
+}
 
 
 std::string Request::GetHeader(std::string name)const
@@ -20,7 +23,6 @@ std::string Request::GetHeader(std::string name)const
     std::map<std::string, std::string>::const_iterator it = headers.find(name);
     if (it != headers.end())
         return (it->second);
-    //here should implement a way to indecate n error 
     return "";
 }
 size_t          Request::GetContentLenght() const
@@ -104,6 +106,8 @@ bool        Request::ParseHeaders(std::string data)
         std::string value = line.substr(del + 1);
         trim(value);
         ToCanonical(name);
+        if(HttpServer::isValueCaseInsensitive(name))
+            ToCanonical(value); 
         headers[name] = value;
     }
     return true;
