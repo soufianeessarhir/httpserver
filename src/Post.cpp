@@ -231,8 +231,7 @@ void Post::ProcessChunck()
             conn->state = Connection::SENDING_RESPONSE;
             break;
             case Post::CHUNK_ERROR:
-                return;
-            conn->state = Connection::SENDING_RESPONSE;
+            conn->state = Connection::SENDING_RESPONSE; // return removed
             break;
         }
     }
@@ -312,7 +311,7 @@ void Post::ProcessMultiPart()
                     {
                         if (output_file.is_open())
                             output_file.close();
-                        output_file.open(filename.c_str(),std::ios::out | std::ios::app);
+                        output_file.open(filename.c_str(),std::ios::out | std::ios::app | std::ios::binary);
                         parts.push_back(MultiPart(filename));
                     }
                     conn->buffer.erase(0 , CRLFCRLF + 4);
@@ -448,7 +447,6 @@ bool Post::CheckFileName(std::string &filename)
 }
 void Post::WriteDataToFile(size_t size)
 {
-
     output_file.write(conn->buffer.data(),size);
 }
 
@@ -466,7 +464,7 @@ void Post::GenerateUploadfile(const std::string &ext)
     }
     else
         filename = conn->location->upload_store + oss.str();
-    output_file.open(filename.c_str(),std::ios::app |  std::ios::out);
+    output_file.open(filename.c_str(),std::ios::out | std::ios::app | std::ios::binary);
     if (output_file.bad())
     {
         transfer_type = Post::ERROR;

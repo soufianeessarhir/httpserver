@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/12 18:07:41 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/13 21:52:45 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 	}
 	else if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
 	{
-		conn->response = new Response(414, Error); //[sessarhi] uri too large response
+		conn->response = new Response(414, Error);
 		SetSocketForWrite(conn);
 		return;
 	}
@@ -80,6 +80,12 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 
 void 		HttpServer::ProcessRequest(Connection *conn)
 {
+	if(!conn->request->CheckField("host"))
+	{
+		conn->response = new Response(400, Error);
+        conn->state = Connection::SENDING_RESPONSE;
+        return;
+	}
 	std::string host = conn->request->GetHeader("host");
 	std::string hostname = host;
     size_t colon_pos = host.find(':');
@@ -132,10 +138,15 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		return;
 	}
 	FillLocationMisseddata(conn);
-	// if (conn->request->GetStatus() == 200)
 	CheckCgiExist(conn); //added by eaboudi
 	if (conn->request->GetMethod() == "POST")
 	{
+		if (conn->location->methods.find("POST") == conn->location->methods.end())
+		{
+			conn->response = new Response(405, Error);
+			conn->state = Connection::SENDING_RESPONSE;
+			return;
+		}
 		if (!conn->request->CheckField("content-type"))
 		{
 			conn->response = new Response(400, Error);
@@ -144,12 +155,6 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		}
 		if (!ProcessPostRequest(conn))
 		{
-			conn->state = Connection::SENDING_RESPONSE;
-			return;
-		}
-		if (conn->location->methods.find("POST") == conn->location->methods.end())
-		{
-			conn->response = new Response(405, Error);
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
@@ -224,7 +229,7 @@ bool		HttpServer::ProcessPostRequest(Connection *conn)
 	}
 	if (!conn->location->upload)
 	{
-		conn->response = new Response(401 , Error);
+		conn->response = new Response(403 , Error);
 		return false;
 	}
 	if (conn->request->CheckField("transfer-encoding"))

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/31 12:07:15 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/13 21:53:51 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,7 @@ Response::~Response()
         delete Error;
     if (!POST)
         delete POST;
+
     GET = NULL;
     DELETE = NULL;
     Error = NULL;

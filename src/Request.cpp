@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/12 17:26:01 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/13 22:02:53 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,11 +57,6 @@ std::string Request::GetVersion()const
     return version;
 }
 
-bool        Request::GetIsComplet()const
-{
-    return IsComplete;
-}
-
 std::string     Request::GetMethod()
 {
     return method;
@@ -86,11 +81,6 @@ bool        Request::ParseHeaders(std::string data)
                 return false;
             }
         }
-        if (line.empty())
-        {
-            IsComplete = true;
-            return true;
-        }
         size_t del = line.find(':');
         if(del ==  std::string::npos)
         {
@@ -111,7 +101,6 @@ bool        Request::ParseHeaders(std::string data)
         headers[name] = value;
     }
     return true;
-    
 }
 
 bool        Request::OnlySpaces(std::string &line)
@@ -284,11 +273,6 @@ bool        Request::ExpectBody()const
 void    Request::SetUri(std::string NewUri)
 {
     uri = NewUri;
-}
-
-bool        Request::KeepAlive()const
-{
-    return true;
 }
 
 void        Request::ToCanonical(std::string &str)
