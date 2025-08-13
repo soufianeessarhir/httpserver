@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 21:53:51 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/13 22:10:55 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,13 +74,13 @@ Response::Response(int errorCode, Methods _Method) : GET(NULL), Error(NULL), DEL
 
 Response::~Response()
 {
-    if (!GET)
+    if (GET)
         delete GET;
-    if (!DELETE)
+    if (DELETE)
         delete DELETE;
-    if (!Error)
+    if (Error)
         delete Error;
-    if (!POST)
+    if (POST)
         delete POST;
 
     GET = NULL;

@@ -164,7 +164,6 @@ void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
     oss << ContentLength;
     if (conn->UseCgi == false)
     {
-        Headers["Content-Length"] = oss.str() + "\r\n";
         Headers["Content-Type"] = ContentType + "\r\n";
     }
     Headers["Content-Length"] = oss.str() + "\r\n";
@@ -231,6 +230,7 @@ void MainResponse::SendHeaders(Connection *conn)
     
     while (TotalSent < HeadersStr.size())
     {
+        std::cout << "well send ---->" << HeadersStr << std::endl;
         BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 
                           HeadersStr.size() - TotalSent, MSG_NOSIGNAL);
         
@@ -252,7 +252,12 @@ void MainResponse::SendHeaders(Connection *conn)
 bool    MainResponse::CheckForSending(Connection *conn)
 {
     struct stat FileState;
-    stat(conn->request->GetUri().c_str(), &FileState);
+    if (stat(conn->request->GetUri().c_str(), &FileState) == -1)
+    {
+        conn->response->SetMethod(Error);
+        conn->response->SetStatusCode(404);
+        return false;
+    }
     CheckProg.FileFd = open(conn->request->GetUri().c_str(), O_RDONLY);
     CheckProg.FileOffset = 0;
     CheckProg.FileSize = FileState.st_size;
@@ -310,6 +315,9 @@ bool    CheckFileRD(Connection *conn)
     if (conn->UseCgi)
     {    
         conn->request->SetUri(conn->CgiObj->OutFile);
+        // delete conn->CgiObj;
+        // conn->CgiObj = NULL;
+        // conn->UseCgi = false;
     }
     struct stat FileState;
     if (stat(conn->request->GetUri().c_str(), &FileState) == -1)

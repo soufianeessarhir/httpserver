@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/11 14:56:45 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/13 11:34:37 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,6 @@
 
 CGI::CGI()
 {
-    // InFile = "/tmp/cgi_in";
-    InFile = "input_cgi";
     OutFile = "/tmp/cgi_out";
     InSize = 0;
     OutputSize = 0;
@@ -61,7 +59,7 @@ void    CGI::BuildEnv(Connection *conn)
 void CGI::ExecuteCgi(Connection *conn)
 {
     if (Pid != -42)
-        return ;
+        return;
     std::stringstream id;
     id << conn->fd;
     OutFile += id.str();
@@ -109,7 +107,6 @@ void CGI::ExecuteCgi(Connection *conn)
             close(FdIn);
         }
         const char * argv[] = {conn->location->cgi[Ext].c_str(), SCRIPT_NAME.c_str(), NULL};
-        // std::cout << SCRIPT_NAME << std::endl;
         if (execve(argv[0], const_cast<char **>(argv), Env) == -1)
         {
             perror("execeve: ");
@@ -192,8 +189,8 @@ bool    CGI::IsCgiComplet(Connection *conn)
         conn->response->SetStatusCode(500);
         conn->response->SetMethod(Error);
     }
-    if (conn->response->GetMethod() == POST)
-        unlink(InFile.c_str());
+    // if (conn->response->GetMethod() == POST)
+    //     unlink(InFile.c_str());
     return true;
 }
 

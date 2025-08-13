@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 09:01:42 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/13 21:46:40 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,7 +183,9 @@ void HttpServer::init()
             hints.ai_socktype = SOCK_STREAM;
             hints.ai_flags    = cfgHost.empty() ? AI_PASSIVE : 0;
             const char* node   = cfgHost.empty() ? NULL : cfgHost.c_str();
-            std::string portStr = std::to_string(portNum);
+			std::stringstream ss;
+			ss << portNum;
+			std::string portStr = ss.str();
             if (getaddrinfo(node, portStr.c_str(), &hints, &res) != 0)
                 throw HttpServerError("Getaddrinfo failed");
             for (p = res; p != NULL; p = p->ai_next)

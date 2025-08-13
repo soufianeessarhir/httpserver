@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 22:02:53 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/13 22:11:02 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,7 @@ bool        Request::OnlySpaces(std::string &line)
 
 bool        Request::ParseRequestLine(std::string& data)
 {
-    
+    std::cout << data << std::endl;
     size_t first_space = data.find(' ');
     if (first_space == std::string::npos)
     {

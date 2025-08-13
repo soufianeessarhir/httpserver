@@ -11,7 +11,7 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
     {
         content_length = conn->request->GetContentLenght();
         content_bytes_read = 0;
-        if (content_type.find("multipart/form-data") != std::string::npos && !conn->UseCgi)
+        if (content_type.find("multipart/form-data") != std::string::npos && !conn->CgiObj)
         {
             is_multipart = true;
             multipart_state= Post::READING_PREAMBLE;
@@ -457,7 +457,7 @@ void Post::GenerateUploadfile(const std::string &ext)
     gettimeofday(&tm,NULL);
     oss << tm.tv_sec << &tm << tm.tv_usec << &oss<<ext;
     std::cout<<filename<<std::endl;
-    if (conn->UseCgi)
+    if (conn->CgiObj)
     {
         filename = "/tmp/" + oss.str();
         conn->CgiObj->InFile = filename;
