@@ -17,7 +17,8 @@ void    ExecuteError(Connection *conn)
     {   
         case SENDING_STATUSLINE :
         {
-            conn->response->Error->CheckForSending(conn);
+            if (conn->response->Error->CheckForSending(conn) == false)
+                return ;
             conn->response->Error->SetContentType(conn);
             conn->response->Error->SetStatusLine();
             conn->response->Error->SendStatusLine(conn);
@@ -30,13 +31,14 @@ void    ExecuteError(Connection *conn)
         {
             conn->response->Error->SetAndSendBody(conn);
             if (conn->response->Error->ResponseStat == SENDING_COMPLETE)
+            {    
                 conn->state = Connection::COMPLETE;
+                delete conn->response->Error;
+                conn->response->Error = NULL;
+            }
             break;
         }
         case SENDING_COMPLETE :
-        {
-            conn->state = Connection::COMPLETE;
             break ;
-        }
     }
 }

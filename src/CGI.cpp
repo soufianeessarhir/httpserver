@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/12 13:44:13 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/13 11:34:37 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 
 CGI::CGI()
 {
-    // InFile = "/tmp/cgi_in";
     OutFile = "/tmp/cgi_out";
     InSize = 0;
     OutputSize = 0;
@@ -60,7 +59,7 @@ void    CGI::BuildEnv(Connection *conn)
 void CGI::ExecuteCgi(Connection *conn)
 {
     if (Pid != -42)
-        return ;
+        return;
     std::stringstream id;
     id << conn->fd;
     OutFile += id.str();

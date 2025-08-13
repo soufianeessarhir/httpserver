@@ -5,12 +5,13 @@
         exit;
     }
 
-    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["username"]) && isset($_POST["password"])) {
+    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["username"]) && isset($_POST["password"])) 
+    {
         // In production, validate credentials securely (hashing, database, etc.)
         $_SESSION["logined"] = true;
         $_SESSION["username"] = $_POST["username"];
         $_SESSION["password"] = $_POST["password"]; // Avoid storing plain passwords in production!
-        header("Location: /Dashboard");
+        header("Location: /Dashboard"); 
         exit;
     }
 ?>

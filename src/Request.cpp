@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/06 09:49:49 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/13 10:08:40 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ bool        Request::OnlySpaces(std::string &line)
 
 bool        Request::ParseRequestLine(std::string& data)
 {
-    
+    std::cout << data << std::endl;
     size_t first_space = data.find(' ');
     if (first_space == std::string::npos)
     {

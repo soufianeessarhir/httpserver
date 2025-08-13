@@ -25,8 +25,8 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
             media_type = content_type.substr(0,semi_colon);
         else 
             media_type = content_type;
-        if (media_type.empty() && conn->UseCgi)
-            media_type = ".bin";
+        if (conn->UseCgi)
+            media_type = "application/octet-stream";
         std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
         if (it == mime_ext.end())
         {
@@ -442,7 +442,6 @@ void Post::GenerateUploadfile(const std::string &ext)
     std::cout<<filename<<std::endl;
     if (conn->CgiObj)
     {
-        std::cout << " here 0 " << std::endl;
         filename = "/tmp/" + oss.str();
         conn->CgiObj->InFile = filename;
     }
