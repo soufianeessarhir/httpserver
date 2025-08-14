@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/10 19:15:08 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/14 09:21:44 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,20 @@
 #elif defined(__APPLE__)
     #include <sys/event.h>
     #include <sys/time.h>
+#endif
+
+#ifdef __linux__
+    #define READ_EVENT EPOLLIN
+    #define WRITE_EVENT EPOLLOUT
+    #define ERROR_EVENT EPOLLERR
+    #define HUP_EVENT EPOLLHUP
+    #define EDGE_TRIGGERED EPOLLET
+#elif defined(__APPLE__)
+    #define READ_EVENT		0x01
+    #define WRITE_EVENT 	0x02
+    #define ERROR_EVENT 	0x04
+    #define HUP_EVENT		0x08
+    #define EDGE_TRIGGERED EV_CLEAR
 #endif
 
 #include		<unistd.h>
@@ -42,15 +56,42 @@
 
 class Connection;
 #define			MAX_EVENTS					1024
-#define			CLIENT_PER_CYCLE			12
-#define			MAX_REQUEST_LINE_LENGHT		8000 //RFC 9112,
+#define			CLIENT_PER_CYCLE			1024
+#define			MAX_REQUEST_LINE_LENGHT		8000
 #define			MAX_header_field_LENGHT		24000
+#define			READ_BUFFER_SIZE			64000
 
 struct PlatformEvent {
     int fd;
     int events;
     void* data;
 };
+
+
+struct HeaderValueCase {
+    static const std::map<std::string, bool>& get() 
+	{
+        static std::map<std::string, bool> headerCaseMap;
+            headerCaseMap["transfer-encoding"] = true;
+            headerCaseMap["content-encoding"] = true;
+            headerCaseMap["connection"] = true;
+            headerCaseMap["content-type"] = true;
+            headerCaseMap["accept"] = true;
+            headerCaseMap["accept-encoding"] = true;
+            headerCaseMap["expect"] = true;
+            headerCaseMap["allow"] = true;
+            headerCaseMap["etag"] = false;
+            headerCaseMap["if-match"] = false;
+            headerCaseMap["if-none-match"] = false;
+            headerCaseMap["set-cookie"] = false;
+            headerCaseMap["cookie"] = false;
+            headerCaseMap["content-disposition"] = false;
+            headerCaseMap["location"] = false;
+            headerCaseMap["referer"] = false;
+        return headerCaseMap;
+    }
+};
+
 
 
 
@@ -67,7 +108,7 @@ public:
 	
 	void		cleanup();
 
-
+	static bool 		isValueCaseInsensitive(const std::string& headerName);
 private:	
 
 	void		init();
@@ -103,14 +144,14 @@ private:
 	void 		SetClientSocketToNonblocking(int fd);
 
 	void 		SetServerSocketToNonblocking(int fd);
+
 	
-	
-	int CreateEvent();
-    int AddEvent(int fd, int events);
-    int ModifyEvent(int fd, int events);
-    int RemoveEvent(int fd);
-    int WaitForEvents(PlatformEvent* events, int max_events, int timeout);
-    int event_fd;
+	int 		CreateEvent();
+    int 		AddEvent(int fd, int events);
+    int 		ModifyEvent(int fd, int events);
+    int 		RemoveEvent(int fd);
+    int 		WaitForEvents(PlatformEvent* events, int max_events, int timeout);
+    int 		event_fd;
     
 #ifdef __linux__
     struct epoll_event ev, events[MAX_EVENTS];
@@ -120,14 +161,17 @@ private:
     int change_count;
 #endif
 	
+    char                            buf[READ_BUFFER_SIZE];
+    
 	std::vector<Server>				&servers;
 	
 	std::map<int, Server> 			server_map;
 	
 	std::map<int , Connection* > 	clients;
 	
-	 std::deque<PlatformEvent> active_clients;
-	
+	std::deque<PlatformEvent>		active_clients;
+
+	const std::map<std::string,bool>&		headerCaseMap;
 };
 
 

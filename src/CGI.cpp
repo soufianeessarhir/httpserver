@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/07 22:27:15 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/14 10:35:01 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,6 @@
 
 CGI::CGI()
 {
-    // InFile = "/tmp/cgi_in";
-    InFile = "input_cgi";
     OutFile = "/tmp/cgi_out";
     InSize = 0;
     OutputSize = 0;
@@ -68,48 +66,53 @@ void CGI::ExecuteCgi(Connection *conn)
     this->Pid = fork();
     if (this->Pid == 0)
     {
-        if (conn->request->GetMethod() == "POST")
-        {
-            struct stat FileIn;
-            if (stat(InFile.c_str(), &FileIn) == 0)
-                InSize = FileIn.st_size;
-            else
-                exit(EXIT_FAILURE);
-        if (conn->location->max_body_size && InSize > conn->location->max_body_size)
-            exit(CONTENT_TOO_LARGE);
-        }
+        // if (conn->request->GetMethod() == "POST")
+        // {
+        //     struct stat FileIn;
+        //     if (stat(InFile.c_str(), &FileIn) == 0)
+        //         InSize = FileIn.st_size;
+        //     else
+        //         exit(EXIT_FAILURE);
+        // if (conn->location->max_body_size && InSize > conn->location->max_body_size)
+        //     exit(CONTENT_TOO_LARGE);
+        // }
         BuildEnv(conn);
         int FdOut = open(OutFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (FdOut < 0)
         {
+            std::cerr << "fdout" << std::endl;
             delete [] Env;
             exit(EXIT_FAILURE);
         }
         if (dup2(FdOut, STDOUT_FILENO) < 0)
         {
+            std::cerr << "fdout" << std::endl;
             delete [] Env;
             close(FdOut);
             exit(EXIT_FAILURE);
         }
         close(FdOut);
-        if (conn->response->GetMethod() == POST)
-        {
-            int FdIn = open(InFile.c_str(), O_RDONLY);
-            if (FdIn < 0)
-            {
-                delete [] Env;
-                exit(EXIT_FAILURE);
-            }
-            if (dup2(FdIn, STDIN_FILENO) < 0)
-            {
-                close(FdIn);
-                delete [] Env;
-                exit(EXIT_FAILURE);
-            }
-            close(FdIn);
-        }
+        // if (conn->response->GetMethod() == POST)
+        // {
+        //     std::cerr << "fdout" << std::endl;
+        //     int FdIn = open(InFile.c_str(), O_RDONLY);
+        //     if (FdIn < 0)
+        //     {
+        //         delete [] Env;
+        //         exit(EXIT_FAILURE);
+        //     }
+        //     if (dup2(FdIn, STDIN_FILENO) < 0)
+        //     {
+        //         close(FdIn);
+        //         delete [] Env;
+        //         exit(EXIT_FAILURE);
+        //     }
+        //     close(FdIn);
+        // }
+        // std::cerr << "fdout" << std::endl;
         const char * argv[] = {conn->location->cgi[Ext].c_str(), SCRIPT_NAME.c_str(), NULL};
-        // std::cout << SCRIPT_NAME << std::endl;
+        std::cerr << SCRIPT_NAME << std::endl;
+        std::cerr << argv[0] << std::endl;
         if (execve(argv[0], const_cast<char **>(argv), Env) == -1)
         {
             perror("execeve: ");
@@ -148,7 +151,6 @@ bool    CGI::IsCgiComplet(Connection *conn)
             std::stringstream buff;
             std::string line;
             buff << OFile.rdbuf();
-
             while (std::getline(buff, line))
             {
                 if (line.empty() || line.find(':') == line.npos)
@@ -190,6 +192,8 @@ bool    CGI::IsCgiComplet(Connection *conn)
     }
     else
     {
+        std::cerr << "here" << WEXITSTATUS(Status) << std::endl;
+        perror("");
         conn->response->SetStatusCode(500);
         conn->response->SetMethod(Error);
     }

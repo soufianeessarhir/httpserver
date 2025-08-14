@@ -6,26 +6,28 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/10 20:20:29 by sessarhi         ###   ########.fr       */
+<<<<<<< HEAD
+/*   Updated: 2025/08/14 09:28:09 by eaboudi          ###   ########.fr       */
+=======
+/*   Updated: 2025/08/14 09:54:30 by sessarhi         ###   ########.fr       */
+>>>>>>> f3023a8d001b7cf0f000045b7e8f58b810b01260
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
 
 
-#ifdef __linux__
-    #define READ_EVENT EPOLLIN
-    #define WRITE_EVENT EPOLLOUT
-    #define ERROR_EVENT EPOLLERR
-    #define HUP_EVENT EPOLLHUP
-    #define EDGE_TRIGGERED EPOLLET
-#elif defined(__APPLE__)
-    #define READ_EVENT		0x01
-    #define WRITE_EVENT 	0x02
-    #define ERROR_EVENT 	0x04
-    #define HUP_EVENT		0x08
-    #define EDGE_TRIGGERED EV_CLEAR
-#endif
+HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs),headerCaseMap(HeaderValueCase::get())
+{
+    event_fd = CreateEvent();
+    if (event_fd == -1)
+        throw HttpServerError("Event queue creation failed");
+#if defined(__APPLE__)
+    change_count = 0;
+#endif 
+    this->init();
+}
+
 
 bool HttpServer::CheckForEventFd(int fd)
 {
@@ -38,16 +40,6 @@ bool HttpServer::CheckForEventFd(int fd)
     return false;
 }
 
-HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs)
-{
-    event_fd = CreateEvent();
-    if (event_fd == -1)
-        throw HttpServerError("Event queue creation failed");
-#if defined(__APPLE__)
-    change_count = 0;
-#endif 
-    this->init();
-}
 
 int HttpServer::CreateEvent()
 {
@@ -125,8 +117,8 @@ int HttpServer::RemoveEvent(int fd)
     result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
 #endif
-	if (result < 0)
-		throw HttpClientError("RemoveEvent",fd);
+	// if (result < 0)
+	// 	throw HttpClientError("RemoveEvent",fd);
     return result;
 }
 
@@ -173,65 +165,73 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
     return event_count;
 }
 
-void		HttpServer::init()
+void HttpServer::init()
 {
-	struct addrinfo hints, *res, *p;
-	for (size_t i = 0; i < servers.size(); ++i)
-	{
-		for (size_t j = 0; j < servers[i].listen.size(); ++j)
-		{
-			int sockfd = -1;
-			memset(&hints, 0, sizeof(hints));
-			hints.ai_family = AF_INET;
-			hints.ai_socktype = SOCK_STREAM;
-			hints.ai_flags = AI_PASSIVE;
-			std::string host = servers[i].listen[j].first.empty() ? "localhost" : servers[i].listen[j].first;
-			std::ostringstream port;
-			int port_num;
-			std::istringstream(port.str()) >> port_num;
-			port << servers[i].listen[j].second;
-			if (servers[i].isvirtual && std::find(servers[i].virtual_listen.begin()
-			,servers[i].virtual_listen.end(),std::make_pair(host,port_num)) != servers[i].virtual_listen.end())
-				continue;
-			if (getaddrinfo(host.c_str(), port.str().c_str(),&hints, &res) != 0)
+    struct addrinfo hints, *res, *p;
+
+    for (size_t i = 0; i < servers.size(); ++i)
+    {
+        for (size_t j = 0; j < servers[i].listen.size(); ++j)
+        {
+            int sockfd = -1;
+            const std::string& cfgHost = servers[i].listen[j].first;
+            const int          portNum = servers[i].listen[j].second;
+            const std::string hostForCompare = cfgHost.empty() ? "0.0.0.0" : cfgHost;
+			if (servers[i].isvirtual &&
+                std::find(servers[i].virtual_listen.begin(),
+                servers[i].virtual_listen.end(),
+                std::make_pair(hostForCompare, portNum)) != servers[i].virtual_listen.end())
+                continue;
+            memset(&hints, 0, sizeof(hints));
+            hints.ai_family   = AF_INET;
+            hints.ai_socktype = SOCK_STREAM;
+            hints.ai_flags    = cfgHost.empty() ? AI_PASSIVE : 0;
+            const char* node   = cfgHost.empty() ? NULL : cfgHost.c_str();
+			std::stringstream ss;
+			ss << portNum;
+			std::string portStr = ss.str();
+            if (getaddrinfo(node, portStr.c_str(), &hints, &res) != 0)
+                throw HttpServerError("Getaddrinfo failed");
+            for (p = res; p != NULL; p = p->ai_next)
+            {
+                sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+                if (sockfd == -1)
+                    continue;
+                int optval = 1;
+                if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0)
+                {
+                    close(sockfd);
+                    freeaddrinfo(res);
+                    throw HttpServerError("setsockopt(SO_REUSEADDR) failed");
+                }
+                SetServerSocketToNonblocking(sockfd);
+                if (bind(sockfd, p->ai_addr, p->ai_addrlen) != -1)
+                    break;
+                close(sockfd);
+                sockfd = -1;
+            }
+
+            freeaddrinfo(res);
+
+            if (p == NULL)
+                throw HttpServerError("Socket binding failed");
+
+            if (listen(sockfd, SOMAXCONN) == -1)
+            {
+                close(sockfd);
+                throw HttpServerError("Socket listening failed");
+            }
+            try
 			{
-				close(sockfd);
-				throw HttpServerError("Getaddrinfo failed");
+                AddEvent(sockfd, READ_EVENT);	
 			}
-			for (p = res; p != NULL; p = p->ai_next)
+            catch (const HttpClientError &e)
 			{
-				sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-				if (sockfd == -1)
-					continue;
-				int optval = 1;
-				if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0)
-					throw HttpServerError("setsockopt failed");
-				SetServerSocketToNonblocking(sockfd);
-				if (bind(sockfd, p->ai_addr, p->ai_addrlen)!= -1)
-					break;
-				if (sockfd != -1)
-					close(sockfd);
-				sockfd = -1;
+                std::cerr << e.what() << '\n';
 			}
-			freeaddrinfo(res);
-			if (p == NULL)
-				throw HttpServerError("Socket binding failed");
-			if (listen(sockfd, SOMAXCONN) == -1)
-			{
-				close(sockfd);
-				throw HttpServerError("Socket listening failed");
-			}
-			try 
-			{
-				AddEvent(sockfd, READ_EVENT);
-			}
-			catch(const HttpClientError &e)
-			{
-				std::cerr << e.what() << '\n';
-			}
-			server_map[sockfd] = servers[i];
-		}
-	}
+            server_map[sockfd] = servers[i];
+        }
+    }
 }
 
 void HttpServer::SetServerSocketToNonblocking(int fd)
@@ -300,12 +300,21 @@ void		HttpServer::HandlIncommingData(int fd)
 	Connection *conn = clients[fd];
 	if (!conn)
 		return ;
-	ssize_t rd_bytes = 0;
-	rd_bytes = recv(fd,conn->buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
-	if (rd_bytes > 0)
-		conn->buffer.append(conn->buf,rd_bytes);
-	else if (rd_bytes == 0 && conn->buffer.empty())
-		throw HttpClientError("connection close by peer",fd);
+	ssize_t n = 0;
+	for (;;) 
+	{
+        n = recv(fd,buf, READ_BUFFER_SIZE, MSG_DONTWAIT);
+        if (n > 0)
+            conn->buffer.append(buf, n);
+        else if (n == 0)
+		{
+            if (conn->buffer.empty())
+                throw HttpClientError("connection close by peer", fd);
+            break;
+        }
+		else
+			break;
+    }
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -384,12 +393,12 @@ void		HttpServer::run()
 		}
 		catch(const HttpClientError &e)
 		{
-			std::cerr << e.what() << '\n';
+			// std::cerr << e.what() << '\n';
 			ClientCleanUp(e.client_fd);
 		}
 		catch(const HttpServerError &e)
 		{
-			std::cerr << e.what() << '\n';
+			// std::cerr << e.what() << '\n';
 			return;
 		}
 	}
@@ -451,7 +460,7 @@ void		HttpServer::ClientCleanUp(int fd)
 	delete conn;
 	conn = NULL;
 	clients.erase(fd);
-	// close(fd);
+	close(fd);
 }
 void		HttpServer::cleanup()
 {

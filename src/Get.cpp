@@ -9,11 +9,12 @@ void    ExecuteGET(Connection *conn)
     {   
         case SENDING_STATUSLINE :
         {
-            conn->response->GET->CheckForSending(conn);
+            if (conn->response->GET->CheckForSending(conn) == false)
+                return ;
             conn->response->GET->SetContentType(conn);
             conn->response->GET->SetStatusLine();
             conn->response->GET->SendStatusLine(conn);
-            conn->response->GET->SetHeaders(false, conn->request);
+            conn->response->GET->SetHeaders(false, conn);
             conn->response->GET->SendHeaders(conn);
             conn->response->GET->ResponseStat = SENDING_BODY;
             break;
@@ -22,13 +23,14 @@ void    ExecuteGET(Connection *conn)
         {
             conn->response->GET->SetAndSendBody(conn);
             if (conn->response->GET->ResponseStat == SENDING_COMPLETE)
+            {    
                 conn->state = Connection::COMPLETE;
+                delete conn->response->GET;
+                conn->response->GET = NULL;
+            }
             break;
         }
         case SENDING_COMPLETE :
-        {
-            conn->state = Connection::COMPLETE;
             break ;
-        }
     }
 }
