@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/11 09:17:26 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/12 17:27:58 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,8 +56,8 @@
 
 class Connection;
 #define			MAX_EVENTS					1024
-#define			CLIENT_PER_CYCLE			12
-#define			MAX_REQUEST_LINE_LENGHT		8000 //RFC 9112,
+#define			CLIENT_PER_CYCLE			1024
+#define			MAX_REQUEST_LINE_LENGHT		8000
 #define			MAX_header_field_LENGHT		24000
 
 struct PlatformEvent {
@@ -65,6 +65,32 @@ struct PlatformEvent {
     int events;
     void* data;
 };
+
+
+struct HeaderValueCase {
+    static const std::map<std::string, bool>& get() 
+	{
+        static std::map<std::string, bool> headerCaseMap;
+            headerCaseMap["transfer-encoding"] = true;
+            headerCaseMap["content-encoding"] = true;
+            headerCaseMap["connection"] = true;
+            headerCaseMap["content-type"] = true;
+            headerCaseMap["accept"] = true;
+            headerCaseMap["accept-encoding"] = true;
+            headerCaseMap["expect"] = true;
+            headerCaseMap["allow"] = true;
+            headerCaseMap["etag"] = false;
+            headerCaseMap["if-match"] = false;
+            headerCaseMap["if-none-match"] = false;
+            headerCaseMap["set-cookie"] = false;
+            headerCaseMap["cookie"] = false;
+            headerCaseMap["content-disposition"] = false;
+            headerCaseMap["location"] = false;
+            headerCaseMap["referer"] = false;
+        return headerCaseMap;
+    }
+};
+
 
 
 
@@ -81,7 +107,7 @@ public:
 	
 	void		cleanup();
 
-
+	static bool 		isValueCaseInsensitive(const std::string& headerName);
 private:	
 
 	void		init();
@@ -117,14 +143,14 @@ private:
 	void 		SetClientSocketToNonblocking(int fd);
 
 	void 		SetServerSocketToNonblocking(int fd);
+
 	
-	
-	int CreateEvent();
-    int AddEvent(int fd, int events);
-    int ModifyEvent(int fd, int events);
-    int RemoveEvent(int fd);
-    int WaitForEvents(PlatformEvent* events, int max_events, int timeout);
-    int event_fd;
+	int 		CreateEvent();
+    int 		AddEvent(int fd, int events);
+    int 		ModifyEvent(int fd, int events);
+    int 		RemoveEvent(int fd);
+    int 		WaitForEvents(PlatformEvent* events, int max_events, int timeout);
+    int 		event_fd;
     
 #ifdef __linux__
     struct epoll_event ev, events[MAX_EVENTS];
@@ -140,8 +166,9 @@ private:
 	
 	std::map<int , Connection* > 	clients;
 	
-	 std::deque<PlatformEvent> active_clients;
-	
+	std::deque<PlatformEvent>		active_clients;
+
+	const std::map<std::string,bool>&		headerCaseMap;
 };
 
 

@@ -6,13 +6,16 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:53 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/06 09:49:49 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/13 22:11:02 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Request.hpp"
 
-std::string Request::GetUri() {return uri;}
+std::string Request::GetUri()
+{
+    return uri;
+}
 
 
 std::string Request::GetHeader(std::string name)const
@@ -20,7 +23,6 @@ std::string Request::GetHeader(std::string name)const
     std::map<std::string, std::string>::const_iterator it = headers.find(name);
     if (it != headers.end())
         return (it->second);
-    //here should implement a way to indecate n error 
     return "";
 }
 size_t          Request::GetContentLenght() const
@@ -55,11 +57,6 @@ std::string Request::GetVersion()const
     return version;
 }
 
-bool        Request::GetIsComplet()const
-{
-    return IsComplete;
-}
-
 std::string     Request::GetMethod()
 {
     return method;
@@ -84,11 +81,6 @@ bool        Request::ParseHeaders(std::string data)
                 return false;
             }
         }
-        if (line.empty())
-        {
-            IsComplete = true;
-            return true;
-        }
         size_t del = line.find(':');
         if(del ==  std::string::npos)
         {
@@ -104,10 +96,11 @@ bool        Request::ParseHeaders(std::string data)
         std::string value = line.substr(del + 1);
         trim(value);
         ToCanonical(name);
+        if(HttpServer::isValueCaseInsensitive(name))
+            ToCanonical(value); 
         headers[name] = value;
     }
     return true;
-    
 }
 
 bool        Request::OnlySpaces(std::string &line)
@@ -123,7 +116,7 @@ bool        Request::OnlySpaces(std::string &line)
 
 bool        Request::ParseRequestLine(std::string& data)
 {
-    
+    std::cout << data << std::endl;
     size_t first_space = data.find(' ');
     if (first_space == std::string::npos)
     {
@@ -280,11 +273,6 @@ bool        Request::ExpectBody()const
 void    Request::SetUri(std::string NewUri)
 {
     uri = NewUri;
-}
-
-bool        Request::KeepAlive()const
-{
-    return true;
 }
 
 void        Request::ToCanonical(std::string &str)

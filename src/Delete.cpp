@@ -41,7 +41,8 @@ void    ExecuteDelete(Connection *conn)
     {   
         case SENDING_STATUSLINE :
         {
-            conn->response->DELETE->CheckForSending(conn);
+            if (conn->response->DELETE->CheckForSending(conn) == false)
+                return ;
             conn->response->DELETE->SetContentType(conn);
             conn->response->DELETE->SetStatusLine();
             conn->response->DELETE->SendStatusLine(conn);
@@ -54,13 +55,14 @@ void    ExecuteDelete(Connection *conn)
         {
             conn->response->DELETE->SetAndSendBody(conn);
             if (conn->response->DELETE->ResponseStat == SENDING_COMPLETE)
+            {    
                 conn->state = Connection::COMPLETE;
+                delete conn->response->DELETE;
+                conn->response->DELETE = NULL;
+            }
             break;
         }
         case SENDING_COMPLETE :
-        {
-            conn->state = Connection::COMPLETE;
             break ;
-        }
     }
 }

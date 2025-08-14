@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/31 08:35:28 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/13 22:03:55 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@
 
 #include            <iostream>
 
+#include            "HttpServer.hpp"
+
 #include            "CGI.hpp" // added by eaboudi
 
 #define CGiDir "/home/eaboudi/Desktop/httpserver/CGI-SCRIPTS" // added by eaboudi
@@ -35,7 +37,7 @@ class Request
 
 public:
 
-    Request():RequestStatusCode(200) ,IsComplete(false){}
+    Request():RequestStatusCode(200){}
     
     ~Request(){}
     
@@ -46,9 +48,6 @@ public:
     bool            ExpectBody()const;
     
     size_t          GetContentLenght()const;
-    
-    
-    bool            KeepAlive()const;
     
     static void     ToCanonical(std::string &);
 
@@ -84,8 +83,7 @@ public:
     std::string     GetVersion()const;
 
     int             GetStatus()const;
-    
-    bool            GetIsComplet()const;
+
 
     std::string    GetMethod();
 
@@ -95,8 +93,6 @@ public:
 private:
 
     int                                 RequestStatusCode;
-
-    bool                                IsComplete;
     
     std::string                         method;
     
