@@ -7,4 +7,7 @@
 ✅ - add client cleanup when needed
 - implementing alias directive in config file
 
-- if the ip::port are the same for more than tow server the server names should be different or an error should throwed 
+- if the ip::port are the same for more than tow server the server names should be different or an error should throwed
+
+- autho index 
+- redirection

@@ -448,8 +448,6 @@ void Post::GenerateUploadfile(const std::string &ext)
     else
         filename = conn->location->upload_store + oss.str();
     output_file.open(filename.c_str(),std::ios::app |  std::ios::out);
-    // output_file.open(filename.c_str(),std::ios::out | std::ios::app);
-   
 }
 Post::~Post()
 {
