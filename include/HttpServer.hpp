@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/12 17:27:58 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/14 09:21:44 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,7 @@ class Connection;
 #define			CLIENT_PER_CYCLE			1024
 #define			MAX_REQUEST_LINE_LENGHT		8000
 #define			MAX_header_field_LENGHT		24000
+#define			READ_BUFFER_SIZE			64000
 
 struct PlatformEvent {
     int fd;
@@ -160,6 +161,8 @@ private:
     int change_count;
 #endif
 	
+    char                            buf[READ_BUFFER_SIZE];
+    
 	std::vector<Server>				&servers;
 	
 	std::map<int, Server> 			server_map;

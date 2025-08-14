@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 21:46:40 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/14 09:22:26 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -297,9 +297,9 @@ void		HttpServer::HandlIncommingData(int fd)
 	if (!conn)
 		return ;
 	ssize_t rd_bytes = 0;
-	rd_bytes = recv(fd,conn->buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
+	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
 	if (rd_bytes > 0)
-		conn->buffer.append(conn->buf,rd_bytes);
+		conn->buffer.append(buf,rd_bytes);
 	else if (rd_bytes == 0 && conn->buffer.empty())
 		throw HttpClientError("connection close by peer",fd);
 	bool continue_processing = true;
@@ -380,7 +380,7 @@ void		HttpServer::run()
 		}
 		catch(const HttpClientError &e)
 		{
-			std::cerr << e.what() << '\n';
+			// std::cerr << e.what() << '\n';
 			ClientCleanUp(e.client_fd);
 		}
 		catch(const HttpServerError &e)

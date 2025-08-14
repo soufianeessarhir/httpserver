@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/10 19:24:22 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/14 09:21:26 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@
 #include "Post.hpp"
 #include <string>
 #include <map>
-#define			READ_BUFFER_SIZE			64000
 
 class Request;
 class Response;
@@ -62,7 +61,7 @@ public:
     LocationData    *location;
     Post            *post;
     std::string     buffer;
-    char buf[READ_BUFFER_SIZE];
+    
     std::string     ip;
     int             port;
 };
