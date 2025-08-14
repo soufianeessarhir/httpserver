@@ -7,7 +7,7 @@ void    ExecuteError(Connection *conn)
     {  
         std::string Path;
         conn->response->Error = new MainResponse(conn->response->GetStatusCode());
-        if (conn->location && conn->location->error_pages.find(conn->response->GetStatusCode()) != conn->location->error_pages.end())
+        if (conn->location->error_pages.find(conn->response->GetStatusCode()) != conn->location->error_pages.end())
             Path = conn->location->root + conn->location->error_pages[conn->response->GetStatusCode()];
         else
             Path = conn->response->Error->ErrorHtmlPath.find(conn->response->GetStatusCode())->second;
