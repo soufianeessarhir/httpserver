@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/14 09:22:26 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/14 09:54:30 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -296,12 +296,21 @@ void		HttpServer::HandlIncommingData(int fd)
 	Connection *conn = clients[fd];
 	if (!conn)
 		return ;
-	ssize_t rd_bytes = 0;
-	rd_bytes = recv(fd,buf,READ_BUFFER_SIZE,MSG_DONTWAIT);
-	if (rd_bytes > 0)
-		conn->buffer.append(buf,rd_bytes);
-	else if (rd_bytes == 0 && conn->buffer.empty())
-		throw HttpClientError("connection close by peer",fd);
+	ssize_t n = 0;
+	for (;;) 
+	{
+        n = recv(fd,buf, READ_BUFFER_SIZE, MSG_DONTWAIT);
+        if (n > 0)
+            conn->buffer.append(buf, n);
+        else if (n == 0)
+		{
+            if (conn->buffer.empty())
+                throw HttpClientError("connection close by peer", fd);
+            break;
+        }
+		else
+			break;
+    }
 	bool continue_processing = true;
 	while (continue_processing)
 	{
