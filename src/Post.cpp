@@ -11,7 +11,7 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
     {
         content_length = conn->request->GetContentLenght();
         content_bytes_read = 0;
-        if (content_type.find("multipart/form-data") != std::string::npos && !conn->CgiObj)
+        if (content_type.find("multipart/form-data") != std::string::npos && !conn->UseCgi)
         {
             is_multipart = true;
             multipart_state= Post::READING_PREAMBLE;

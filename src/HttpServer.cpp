@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/14 09:54:30 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/14 22:07:22 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,18 +103,19 @@ int HttpServer::ModifyEvent(int fd, int events)
 int HttpServer::RemoveEvent(int fd)
 {
 	int result;
-#ifdef __linux__
-    result = epoll_ctl(event_fd, EPOLL_CTL_DEL, fd, NULL);
-#elif defined(__APPLE__)
+#ifdef __APPLE__
+    change_count = 0;
     EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     change_count++;
     EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
     change_count++;
     result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
+    if (result < 0 && errno != ENOENT)
+        perror("kevent EV_DELETE");
     change_count = 0;
+#else
+    result = epoll_ctl(event_fd, EPOLL_CTL_DEL, fd, NULL);
 #endif
-	// if (result < 0)
-	// 	throw HttpClientError("RemoveEvent",fd);
     return result;
 }
 
@@ -303,11 +304,7 @@ void		HttpServer::HandlIncommingData(int fd)
         if (n > 0)
             conn->buffer.append(buf, n);
         else if (n == 0)
-		{
-            if (conn->buffer.empty())
                 throw HttpClientError("connection close by peer", fd);
-            break;
-        }
 		else
 			break;
     }
@@ -377,7 +374,7 @@ void		HttpServer::run()
 				fd = platform_events[i].fd;
 				ev = platform_events[i].events;
 				if (ev & (HUP_EVENT | ERROR_EVENT))
-					throw HttpClientError("HUP_EVENT | ERROR_EVENT", fd);
+						ClientCleanUp(fd);
 				if (server_map.find(fd) != server_map.end())
 					HandleNewConnection(fd);
 				else if (ev & (READ_EVENT | WRITE_EVENT))
@@ -389,7 +386,8 @@ void		HttpServer::run()
 		}
 		catch(const HttpClientError &e)
 		{
-			// std::cerr << e.what() << '\n';
+			std::cerr << e.what() << '\n';
+			
 			ClientCleanUp(e.client_fd);
 		}
 		catch(const HttpServerError &e)
