@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Lexer.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:12:00 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/07/16 17:08:19 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/15 10:54:19 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define LEXER_HPP
 
 #include <iostream>
-#include <string>
+#include <string>  
 #include <fstream>
 #include <cctype>
 
