@@ -33,6 +33,4 @@ fclean: clean
 
 re: fclean all
 	@echo "Recompiled everything."
-.PHONY: all clean fclean re
-
-# To use this Makefile, place it in the same directory as your source files.
+.PHONY: clean  
