@@ -154,18 +154,17 @@ void Post::ReadChunkData()
         {
             std::string temp_buffer = conn->buffer.substr(0, available_in_chunk);
             std::string remaining_buffer = conn->buffer.substr(available_in_chunk);
-            conn->buffer = temp_buffer;
+            conn->buffer = part_buffer +  temp_buffer;
             ProcessMultiPart();
-            size_t consumed = temp_buffer.size() - conn->buffer.size();
-            chunk_bytes_read += consumed;
-            conn->buffer += remaining_buffer;
+            part_buffer =  conn->buffer;
+            conn->buffer = remaining_buffer;
         }
         else
         {
-            size_t initial_size = conn->buffer.size();
+            conn->buffer = part_buffer + conn->buffer;
             ProcessMultiPart();
-            size_t consumed = initial_size - conn->buffer.size();
-            chunk_bytes_read += consumed;
+            part_buffer = conn->buffer;
+            conn->buffer.clear();
         }
     }
     else 
@@ -175,19 +174,16 @@ void Post::ReadChunkData()
         conn->buffer.erase(0,size_to_read);
         chunk_bytes_read += size_to_read;
     }
-   if (current_chunk_size <= chunk_bytes_read)
+    size_t CRLF = conn->buffer.find("\r\n");
+    if (CRLF == 0)
     {
-        size_t CRLF = conn->buffer.find("\r\n");
-        if (CRLF == 0)
-        {
-            conn->buffer.erase(0, 2);
-            chunk_state = Post::READING_CHUNK_SIZE;
-            current_chunk_size = 0;
-            chunk_bytes_read = 0;
-        }
-        else if (CRLF != std::string::npos)
-            chunk_state = Post::CHUNK_ERROR;
+        conn->buffer.erase(0, 2);
+        chunk_state = Post::READING_CHUNK_SIZE;
+        current_chunk_size = 0;
+        chunk_bytes_read = 0;
     }
+    else if (CRLF != std::string::npos)
+        chunk_state = Post::CHUNK_ERROR;
 }
 
 void Post::ReadTrailerHeaders()
@@ -320,21 +316,24 @@ void Post::ProcessMultiPart()
                 }
             }
             break;
-            case READING_PART_DATA:
+            case READING_PART_DATA: 
             {
-                size_t del =  conn->buffer.find(delimiter);
-                if (del !=  std::string::npos)
-                {
+                size_t pos = conn->buffer.find(delimiter);
+                if (pos != std::string::npos) {
                     if (is_file_upload)
-                        WriteDataToFile(del);
-                    conn->buffer.erase(0,del);
-                    multipart_state =  Post::READING_BOUNDARY;
+                        output_file.write(conn->buffer.data(), pos);
+                    conn->buffer.erase(0, pos);
+                    multipart_state = Post::READING_BOUNDARY;
                     contunue = true;
                     break;
                 }
-                if (is_file_upload)
-                    WriteDataToFile(conn->buffer.size());
-                conn->buffer.clear();
+                size_t k = delimiter.size();
+                if (conn->buffer.size() >= k) {
+                    size_t safe =  conn->buffer.size() - (k - 1);
+                    if (is_file_upload && safe > 0)
+                        output_file.write( conn->buffer.data(),safe);
+                     conn->buffer.erase(0, safe);
+                }
                 break;
             }
             case MULTIPART_COMPLETE:

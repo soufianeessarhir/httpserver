@@ -58,6 +58,7 @@ private:
 
 	std::string filename;
 	bool is_file_upload;
+    std::string part_buffer;
     std::vector<MultiPart> parts;
     MultiPaertState multipart_state;
 
