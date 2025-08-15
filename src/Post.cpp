@@ -1,10 +1,69 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Post.cpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
+/*   Updated: 2025/08/15 20:47:30 by sessarhi         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+
 #include "Post.hpp"
-#include "MultiPart.hpp"
 
-const std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap();
+std::map<std::string, std::string>          Post::createMimeExtMap()
+{
+    std::map<std::string, std::string> mime_ext;
+    // text
+    mime_ext["text/plain"] = ".txt";
+    mime_ext["text/html"] = ".html";
+    mime_ext["text/css"] = ".css";
+    mime_ext["text/javascript"] = ".js";
+    mime_ext["text/csv"] = ".csv";
+    mime_ext["text/xml"] = ".xml";
+    
+    // Application 
+    mime_ext["application/json"] = ".json";
+    mime_ext["application/pdf"] = ".pdf";
+    mime_ext["application/zip"] = ".zip";
+    mime_ext["application/x-tar"] = ".tar";
+    mime_ext["application/x-gzip"] = ".gz";
+    mime_ext["application/xml"] = ".xml";
+    mime_ext["application/octet-stream"] = ".bin";
+    
+    // Image 
+    mime_ext["image/jpeg"] = ".jpg";
+    mime_ext["image/png"] = ".png";
+    mime_ext["image/gif"] = ".gif";
+    mime_ext["image/svg+xml"] = ".svg";
+    mime_ext["image/webp"] = ".webp";
+    mime_ext["image/bmp"] = ".bmp";
+    mime_ext["image/x-icon"] = ".ico";
+    
+    // Audio 
+    mime_ext["audio/mpeg"] = ".mp3";
+    mime_ext["audio/ogg"] = ".ogg";
+    mime_ext["audio/wav"] = ".wav";
+    
+    // Video 
+    mime_ext["video/mp4"] = ".mp4";
+    mime_ext["video/ogg"] = ".ogv";
+    mime_ext["video/webm"] = ".webm";
+    mime_ext["video/x-msvideo"] = ".avi";
+    
+    // Font 
+    mime_ext["font/woff"] = ".woff";
+    mime_ext["font/woff2"] = ".woff2";
+    mime_ext["font/ttf"] = ".ttf";
+    mime_ext["font/otf"] = ".otf";
+    return mime_ext;
+}
 
-Post::Post(Connection *conn , TransferType type):transfer_type(type)
-,conn(conn),is_multipart(false)
+const           std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap();
+
+Post::Post(Connection *conn , TransferType type):transfer_type(type),conn(conn),is_multipart(false)
 {
     std::string content_type = conn->request->GetHeader("content-type");
     if (type ==  CONTENT_LENGTH)
@@ -72,7 +131,7 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type)
 }
 
 
-bool Post::ExtractAndValidateBoundry()
+bool           Post::ExtractAndValidateBoundry()
 {
     std::string ct = conn->request->GetHeader("content-type");
     if (ct.empty())
@@ -118,75 +177,9 @@ bool Post::ExtractAndValidateBoundry()
     return true;
 }
 
-void Post::ReadChunkSize()
-{
-    size_t CRLF = conn->buffer.find("\r\n");
-    if (CRLF == std::string::npos)
-        return;
-    std::string size_str = conn->buffer.substr(0, CRLF);
-    conn->buffer.erase(0, CRLF + 2);
-    size_t hex_end = 0;
-    while (hex_end < size_str.size() && std::isxdigit(static_cast<unsigned char>(size_str[hex_end])))
-        ++hex_end;
-    errno = 0;
-    char *endp = NULL;
-    long val = std::strtol(size_str.c_str(), &endp, 16);
-    if (errno == ERANGE || endp == size_str.c_str() || val < 0) {
-        conn->response = new Response(400, Error);
-        chunk_state = Post::CHUNK_ERROR;
-        return;
-    }
-    current_chunk_size = static_cast<size_t>(val);
-    if (current_chunk_size == 0)
-        chunk_state = Post::READING_TRAILER_HEADERS;
-    else
-        chunk_state = Post::READING_CHUNK_DATA;
-}
 
 
-void Post::ReadChunkData()
-{
-    if (is_multipart)
-    {
-        size_t available_in_chunk = current_chunk_size - chunk_bytes_read;
-        size_t buffer_size = conn->buffer.size();
-        if (buffer_size > available_in_chunk)
-        {
-            std::string temp_buffer = conn->buffer.substr(0, available_in_chunk);
-            std::string remaining_buffer = conn->buffer.substr(available_in_chunk);
-            conn->buffer = part_buffer +  temp_buffer;
-            ProcessMultiPart();
-            part_buffer =  conn->buffer;
-            conn->buffer = remaining_buffer;
-        }
-        else
-        {
-            conn->buffer = part_buffer + conn->buffer;
-            ProcessMultiPart();
-            part_buffer = conn->buffer;
-            conn->buffer.clear();
-        }
-    }
-    else 
-    {
-        size_t size_to_read = std::min(conn->buffer.size(),current_chunk_size - chunk_bytes_read);
-        WriteDataToFile(size_to_read);
-        conn->buffer.erase(0,size_to_read);
-        chunk_bytes_read += size_to_read;
-    }
-    size_t CRLF = conn->buffer.find("\r\n");
-    if (CRLF == 0)
-    {
-        conn->buffer.erase(0, 2);
-        chunk_state = Post::READING_CHUNK_SIZE;
-        current_chunk_size = 0;
-        chunk_bytes_read = 0;
-    }
-    else if (CRLF != std::string::npos)
-        chunk_state = Post::CHUNK_ERROR;
-}
-
-void Post::ReadTrailerHeaders()
+void           Post::ReadTrailerHeaders()
 {
     if (output_file.is_open())
         output_file.close();
@@ -203,152 +196,8 @@ void Post::ReadTrailerHeaders()
     }
 }
 
-void Post::ProcessChunck()
-{
-    bool contunue = true;
-    while (contunue)
-    {
-        contunue = false;
-        switch (chunk_state)
-        {
-            case Post::READING_CHUNK_SIZE:
-            ReadChunkSize();
-            contunue = chunk_state != Post::READING_CHUNK_SIZE;
-            break;
-            case Post::READING_CHUNK_DATA:
-            ReadChunkData();
-            contunue = chunk_state != Post::READING_CHUNK_DATA;
-            break;
-            case Post::READING_TRAILER_HEADERS:
-            ReadTrailerHeaders();
-            contunue = chunk_state != Post::READING_TRAILER_HEADERS;
-            break;
-            case Post::CHUNK_COMPLETE:
-            conn->state = Connection::SENDING_RESPONSE;
-            break;
-            case Post::CHUNK_ERROR:
-            conn->state = Connection::SENDING_RESPONSE; // return removed
-            break;
-        }
-    }
-}
 
-void Post::ProcessMultiPart()
-{
-    bool contunue = true;
-    while (contunue)
-    {
-        contunue = false;
-        switch (multipart_state)
-        {
-            case READING_PREAMBLE:
-            {
-                size_t del = conn->buffer.find(initial_boundry);
-                if (del != std::string::npos)
-                {
-                    conn->buffer.erase(0,del + initial_boundry.length());
-                    multipart_state = Post::READING_PART_HEADERS;
-                    contunue = true;
-                }
-                break;
-            }
-            case READING_BOUNDARY:
-            {
-                size_t  CRLF = conn->buffer.find(subsequent_boundry);
-                if(CRLF != std::string::npos)
-                {
-                    conn->buffer.erase(0,subsequent_boundry.length());
-                    multipart_state = Post::READING_PART_HEADERS;
-                    contunue = true;
-                    break;
-                }
-                size_t close_del = conn->buffer.find(close_boundry);
-                if (close_del !=  std::string::npos)
-                {
-                    conn->buffer.erase(0, close_boundry.length());
-                    multipart_state = Post::MULTIPART_COMPLETE;
-                    contunue = true;
-                    break;
-                }
-                if (conn->buffer.length() > subsequent_boundry.length())
-                {
-                    multipart_state = Post::MULTIPART_ERROR;
-                    contunue = true;
-                }
-            }
-            break;
-            case READING_PART_HEADERS:
-            {
-				filename.clear();
-                headers.clear();
-                size_t CRLFCRLF = conn->buffer.find("\r\n\r\n");
-                if (CRLFCRLF != std::string::npos)
-                {
-                    if(!ProcessMultiPartHeaders(conn->buffer.substr(0,CRLFCRLF))) 
-                    {
-                        multipart_state = Post::MULTIPART_ERROR;
-                        contunue = true;
-                        break;
-                    }
-                    if (headers.find("content-disposition") == headers.end())
-                    {
-                        multipart_state = Post::MULTIPART_ERROR;
-                        contunue = true;
-                        break;
-                    }
-                    filename = conn->location->upload_store;
-                    if (!ConfigureMultipart())
-                    {
-                        multipart_state = Post::MULTIPART_ERROR;
-                        contunue = true;
-                        break;
-                    }
-                    if (is_file_upload)
-                    {
-                        if (output_file.is_open())
-                            output_file.close();
-                        output_file.open(filename.c_str(),std::ios::out | std::ios::app | std::ios::binary);
-                        parts.push_back(MultiPart(filename));
-                    }
-                    conn->buffer.erase(0 , CRLFCRLF + 4);
-                    multipart_state = Post::READING_PART_DATA;
-                    contunue = true;
-                }
-            }
-            break;
-            case READING_PART_DATA: 
-            {
-                size_t pos = conn->buffer.find(delimiter);
-                if (pos != std::string::npos) {
-                    if (is_file_upload)
-                        output_file.write(conn->buffer.data(), pos);
-                    conn->buffer.erase(0, pos);
-                    multipart_state = Post::READING_BOUNDARY;
-                    contunue = true;
-                    break;
-                }
-                size_t k = delimiter.size();
-                if (conn->buffer.size() >= k) {
-                    size_t safe =  conn->buffer.size() - (k - 1);
-                    if (is_file_upload && safe > 0)
-                        output_file.write( conn->buffer.data(),safe);
-                     conn->buffer.erase(0, safe);
-                }
-                break;
-            }
-            case MULTIPART_COMPLETE:
-                if(output_file.is_open())
-                    output_file.close();
-            break;
-            case MULTIPART_ERROR:
-                conn->response = new Response(400,Error);
-                conn->state = Connection::SENDING_RESPONSE;
-                if(output_file.is_open())
-                    output_file.close();
-            break;
-        }
-    }
-}
+
 void Post::ProcessContentLength()
 {
     size_t bytes_to_read = std::min(conn->buffer.size(), content_length - content_bytes_read);
@@ -379,62 +228,6 @@ void Post::ProcessContentLength()
     }
 }
 
-bool Post::ProcessMultiPartHeaders(std::string data)
-{
-    std::istringstream iss(data);
-    std::string line;
-    size_t del;
-    std::string name;
-    std::string value;
-    while (std::getline(iss,line))
-    {
-        if (!line.empty() && line[line.size() - 1] == '\r')
-            line.erase(line.size() - 1);
-        if (headers.size() == 0)
-            if (line.empty() || Request::OnlySpaces(line))
-                return false;
-        if (line.empty())
-            return true;
-        del = line.find(':');
-        if(del ==  std::string::npos)
-            return false;
-        name = line.substr(0,del);
-        if (name.empty() || Request::Haswhitespace(name))
-            return false;
-        value = line.substr(del + 1);
-        Request::trim(value);
-        Request::ToCanonical(name);
-        headers[name] = value;
-    }
-    return true;
-}
-
-bool Post::ConfigureMultipart()
-{
-    std::string content_type = headers["content-disposition"];
-    size_t name = content_type.find("name");
-    std::string tmp;
-    size_t fname;
-    if (name == std::string::npos)
-        return false;
-    fname = content_type.find("filename=\"");
-    if (fname != std::string::npos)
-    {
-        fname += 10;
-        size_t next_q = content_type.find('"' ,fname);
-        if (next_q == std::string::npos)
-            return false;
-        tmp =  content_type.substr(fname,next_q - fname);
-        if (!CheckFileName(tmp))
-            return false;
-        filename += tmp;
-    }
-    if (tmp.empty())
-        is_file_upload = false;
-    else
-        is_file_upload = true;
-    return true;
-}
 
 bool Post::CheckFileName(std::string &filename)
 {
@@ -444,6 +237,8 @@ bool Post::CheckFileName(std::string &filename)
             return false;
     return true;
 }
+
+
 void Post::WriteDataToFile(size_t size)
 {
     output_file.write(conn->buffer.data(),size);
