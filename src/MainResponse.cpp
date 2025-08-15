@@ -153,21 +153,19 @@ void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
     std::cout << ContentLength << std::endl;
     if (!CloseConn)
     {
-        Headers["Connection"] = "keep-alive\r\n";
-        std::string CookieContent = conn->request->GetHeader("cookie");
-        if (!CookieContent.empty())
-            Headers["Set-Cookie"] = CookieContent + "\r\n";
+        Headers["Connection"] = "keep-alive\r\n";     
     }
     else
         Headers["Connection"] = "close\r\n";
     std::ostringstream oss;
     oss << ContentLength;
-    if (conn->UseCgi == false)
+    if (!conn->CgiObj)
     {
         Headers["Content-Type"] = ContentType + "\r\n";
     }
+    // else
+    //     Headers["Content-Type"] = "text/html\r\n";
     Headers["Content-Length"] = oss.str() + "\r\n";
-    Headers["Content-Type"] = "text/html\r\n";
 }
 
 MainResponse::~MainResponse()
@@ -219,21 +217,19 @@ void MainResponse::SendHeaders(Connection *conn)
     std::map<std::string, std::string>::const_iterator it;
     for (it = Headers.begin(); it != Headers.end(); ++it)
         HeadersStr += it->first + ": " + it->second;
-    if (conn->UseCgi && (conn->request->GetMethod() == "POST" || conn->request->GetMethod() == "GET") 
+    if (conn->CgiObj && (conn->request->GetMethod() == "POST" || conn->request->GetMethod() == "GET") 
         && !conn->CgiObj->CgiHeaders.empty())
     {
-       std::map<std::string, std::string>::const_iterator it(conn->CgiObj->CgiHeaders.begin());
-       for(;it != Headers.end(); ++it)
-            HeadersStr += it->first + ": " + it->second;
+       std::map<std::string, std::string>::const_iterator itc(conn->CgiObj->CgiHeaders.begin());
+       for(;itc != conn->CgiObj->CgiHeaders.end(); ++itc)
+            HeadersStr += itc->first + ": " + itc->second + "\r\n";
     }
     HeadersStr += "\r\n";
-    
+    // std::cout << HeadersStr << std::endl;
     while (TotalSent < HeadersStr.size())
     {
-        std::cout << "well send ---->" << HeadersStr << std::endl;
         BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 
                           HeadersStr.size() - TotalSent, MSG_NOSIGNAL);
-        
         if (BytesWriten == 0)
         {
             conn->state = Connection::SENDING_RESPONSE;
@@ -245,7 +241,7 @@ void MainResponse::SendHeaders(Connection *conn)
             conn->state = Connection::COMPLETE;
             return;
         }
-        TotalSent += BytesWriten;
+        TotalSent += static_cast<size_t>(BytesWriten);
     }
 }
 
@@ -254,7 +250,10 @@ bool    MainResponse::CheckForSending(Connection *conn)
     struct stat FileState;
     if (stat(conn->request->GetUri().c_str(), &FileState) == -1)
     {
-        conn->response->SetMethod(Error);
+        if (conn->response->GetMethod() == Error)
+            conn->request->SetUri("Indexes/NotFound.html");
+        else
+            conn->response->SetMethod(Error);
         conn->response->SetStatusCode(404);
         return false;
     }
@@ -345,13 +344,11 @@ bool    CheckFileRD(Connection *conn)
 
 void    excuteGetMethod(Connection *conn)
 {
-    if (conn->UseCgi && conn->response->GetMethod() != Error)
+    if (conn->UseCgi && conn->response->GetMethod() != Error && conn->CgiObj->Pid == -42)
     {
         conn->CgiObj->ExecuteCgi(conn);
         if (conn->CgiObj->IsCgiComplet(conn) == false)
-            return;
-        else 
-            conn->CgiObj->Pid = -42;
+            return ;
     }
     if (conn->response->GetMethod() == GET)
     {
@@ -372,10 +369,9 @@ void    excuteGetMethod(Connection *conn)
     {
         ExecuteError(conn);
     }
-    if (conn->UseCgi && conn->state == Connection::COMPLETE)
-    {
-        if (conn->UseCgi)
-            unlink(conn->CgiObj->OutFile.c_str());
-    }
+    // if (conn->UseCgi && conn->state == Connection::COMPLETE)
+    // {
+    //     unlink(conn->CgiObj->OutFile.c_str());
+    // }
 }
 

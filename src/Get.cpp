@@ -11,7 +11,8 @@ void    ExecuteGET(Connection *conn)
         {
             if (conn->response->GET->CheckForSending(conn) == false)
                 return ;
-            conn->response->GET->SetContentType(conn);
+            if (!conn->CgiObj)
+                conn->response->GET->SetContentType(conn);
             conn->response->GET->SetStatusLine();
             conn->response->GET->SendStatusLine(conn);
             conn->response->GET->SetHeaders(false, conn);
@@ -27,6 +28,8 @@ void    ExecuteGET(Connection *conn)
                 conn->state = Connection::COMPLETE;
                 delete conn->response->GET;
                 conn->response->GET = NULL;
+                if (conn->CgiObj)
+                    conn->CgiObj->Pid = -42;
             }
             break;
         }

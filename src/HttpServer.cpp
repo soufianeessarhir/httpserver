@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 13:23:59 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/15 19:55:37 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -387,7 +387,7 @@ void		HttpServer::run()
 		}
 		catch(const HttpServerError &e)
 		{
-			std::cerr << e.what() << '\n';
+			// std::cerr << e.what() << '\n';
 			return;
 		}
 	}

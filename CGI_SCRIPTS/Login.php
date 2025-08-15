@@ -2,7 +2,7 @@
     session_start();
     if (isset($_SESSION["logined"]) && $_SESSION["logined"] === true) {
         header("Location: /Dashboard");
-        exit;
+        exit(0);
     }
 
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["username"]) && isset($_POST["password"])) 
@@ -12,7 +12,7 @@
         $_SESSION["username"] = $_POST["username"];
         $_SESSION["password"] = $_POST["password"]; // Avoid storing plain passwords in production!
         header("Location: /Dashboard"); 
-        exit;
+        exit(0);
     }
 ?>
 <!DOCTYPE html>
@@ -75,3 +75,4 @@
     </div>
 </body>
 </html>
+<?php exit(0) ?>

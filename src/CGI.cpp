@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/13 11:34:37 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/15 12:11:48 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,6 @@ void    CGI::BuildEnv(Connection *conn)
     EnvString.push_back("SERVER_SOFTWARE=Webserv/1.0");
     EnvString.push_back("SCRIPT_PATH=" + SCRIPT_PATH);
     EnvString.push_back("SCRIPT_NAME=" + SCRIPT_NAME);
-    EnvString.push_back("SERVER_NAME=" + SERVER_NAME);
     ss.clear();
     ss << SERVER_PORT;
     EnvString.push_back("SERVER_PORT=" + ss.str());
@@ -48,6 +47,7 @@ void    CGI::BuildEnv(Connection *conn)
     EnvString.push_back("REMOTE_IDENT=Webserv");
     EnvString.push_back("REDIRECT_STATUS=200");
     EnvString.push_back("REMOTE_USER=Webserv");
+    EnvString.push_back("SCRIPT_FILENAME=" + SCRIPT_PATH + SCRIPT_NAME);
 
     Env = new char*[EnvString.size() + 1];
 
@@ -59,55 +59,60 @@ void    CGI::BuildEnv(Connection *conn)
 void CGI::ExecuteCgi(Connection *conn)
 {
     if (Pid != -42)
-        return;
+        return ;
     std::stringstream id;
     id << conn->fd;
     OutFile += id.str();
     this->Pid = fork();
     if (this->Pid == 0)
     {
-        if (conn->request->GetMethod() == "POST")
-        {
-            struct stat FileIn;
-            if (stat(InFile.c_str(), &FileIn) == 0)
-                InSize = FileIn.st_size;
-            else
-                exit(EXIT_FAILURE);
-        if (conn->location->max_body_size && InSize > conn->location->max_body_size)
-            exit(CONTENT_TOO_LARGE);
-        }
+        // if (conn->request->GetMethod() == "POST")
+        // {
+        //     struct stat FileIn;
+        //     if (stat(InFile.c_str(), &FileIn) == 0)
+        //         InSize = FileIn.st_size;
+        //     else
+        //         exit(EXIT_FAILURE);
+        // if (conn->location->max_body_size && InSize > conn->location->max_body_size)
+        //     exit(CONTENT_TOO_LARGE);
+        // }
         BuildEnv(conn);
         int FdOut = open(OutFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (FdOut < 0)
         {
+            std::cerr << "fdout" << std::endl;
             delete [] Env;
             exit(EXIT_FAILURE);
         }
         if (dup2(FdOut, STDOUT_FILENO) < 0)
         {
+            std::cerr << "fdout" << std::endl;
             delete [] Env;
             close(FdOut);
             exit(EXIT_FAILURE);
         }
         close(FdOut);
-        if (conn->response->GetMethod() == POST)
-        {
-            int FdIn = open(InFile.c_str(), O_RDONLY);
-            if (FdIn < 0)
-            {
-                delete [] Env;
-                exit(EXIT_FAILURE);
-            }
-            if (dup2(FdIn, STDIN_FILENO) < 0)
-            {
-                close(FdIn);
-                delete [] Env;
-                exit(EXIT_FAILURE);
-            }
-            close(FdIn);
-        }
-        const char * argv[] = {conn->location->cgi[Ext].c_str(), SCRIPT_NAME.c_str(), NULL};
-        if (execve(argv[0], const_cast<char **>(argv), Env) == -1)
+        // if (conn->response->GetMethod() == POST)
+        // {
+        //     std::cerr << "fdout" << std::endl;
+        //     int FdIn = open(InFile.c_str(), O_RDONLY);
+        //     if (FdIn < 0)
+        //     {
+        //         delete [] Env;
+        //         exit(EXIT_FAILURE);
+        //     }
+        //     if (dup2(FdIn, STDIN_FILENO) < 0)
+        //     {
+        //         close(FdIn);
+        //         delete [] Env;
+        //         exit(EXIT_FAILURE);
+        //     }
+        //     close(FdIn);
+        // }
+        // std::cerr << "fdout" << std::endl;
+        std::string Script = SCRIPT_PATH + SCRIPT_NAME;
+        char *argv[3] = {const_cast<char*>(conn->location->cgi[Ext].c_str()), const_cast<char*>(Script.c_str()), NULL};
+        if (execve(argv[0],(&argv[1]), Env) == -1)
         {
             perror("execeve: ");
             delete [] Env;
@@ -123,8 +128,9 @@ bool    CGI::IsCgiComplet(Connection *conn)
         return true;
     int Status;
     pid_t   Res = waitpid(Pid, &Status, WNOHANG);
-    if (!Res)
-        return false;
+    std::cout << "Res :" << Res << std::endl;
+    // if (!Res)
+    //     return false;
     Is_Runing = 0;
     if (Res == -1)
     {
@@ -137,16 +143,19 @@ bool    CGI::IsCgiComplet(Connection *conn)
         conn->response->SetStatusCode(504);
         conn->response->SetMethod(Error);
     }
-    else if (WIFEXITED(Status) && WEXITSTATUS(Status) == 0)
+   if (WIFEXITED(Status) && WEXITSTATUS(Status) == 0)
 	{
-        std::fstream    OFile(OutFile.c_str());
+        std::cout << "here" << std::endl;
+        std::fstream    OFile(OutFile.c_str(), std::ios::in);
         if (OFile)
         {
+            std::cout << "entered to Ofile Condition fd =" << conn->fd << std::endl;
             std::stringstream buff;
             std::string line;
             buff << OFile.rdbuf();
             while (std::getline(buff, line))
             {
+                std::cout << "enter to the loop" << std::endl;
                 if (line.empty() || line.find(':') == line.npos)
                     break;
                 size_t  Pos(line.find('\r'));
@@ -167,11 +176,12 @@ bool    CGI::IsCgiComplet(Connection *conn)
                 content = buff.str().substr(DoubleCrCf + 4);
             else
                 content = buff.str();
-            OutputSize = content.size();
-            truncate(OutFile.c_str(), 0);
-            OFile << content;
-            conn->response->SetStatusCode(200);
             OFile.close();
+            OutputSize = content.size();
+            OFile.open(OutFile, std::ios::trunc | std::ios::out);
+            OFile << content;
+            OFile.close();
+            conn->response->SetStatusCode(200);
         }
         else
         {
@@ -189,8 +199,8 @@ bool    CGI::IsCgiComplet(Connection *conn)
         conn->response->SetStatusCode(500);
         conn->response->SetMethod(Error);
     }
-    // if (conn->response->GetMethod() == POST)
-    //     unlink(InFile.c_str());
+    if (conn->response->GetMethod() == POST)
+        unlink(InFile.c_str());
     return true;
 }
 

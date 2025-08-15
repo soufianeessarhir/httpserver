@@ -21,7 +21,7 @@
 int main()
 {
         char *Env[] = {"hoem", "test", NULL};
-        const char * argv[] = {"/usr/bin/python3", "/Users/eaboudi/Desktop/httpserver/CGI_SCRIPTS/pyet.py", NULL};
+        const char * argv[] = {"CGI_SCRIPTS/php_cgimac", "/Users/eaboudi/Desktop/httpserver/CGI_SCRIPTS/Login.php", NULL};
         if (execve(argv[0], const_cast<char **>(argv), Env) == -1)
         {
             perror("execve: ");

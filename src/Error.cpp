@@ -18,7 +18,10 @@ void    ExecuteError(Connection *conn)
         case SENDING_STATUSLINE :
         {
             if (conn->response->Error->CheckForSending(conn) == false)
+            {    
+                ExecuteError(conn);
                 return ;
+            }    
             conn->response->Error->SetContentType(conn);
             conn->response->Error->SetStatusLine();
             conn->response->Error->SendStatusLine(conn);
