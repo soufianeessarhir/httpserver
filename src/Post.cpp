@@ -6,16 +6,16 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 12:04:51 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 14:50:53 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "Post.hpp"
 
-std::map<std::string, std::string>          Post::createMimeExtMap()
+const std::map<std::string, std::string> &         Post::createMimeExtMap()
 {
-    std::map<std::string, std::string> mime_ext;
+    static std::map<std::string, std::string> mime_ext;
     // text
     mime_ext["text/plain"] = ".txt";
     mime_ext["text/html"] = ".html";
@@ -61,7 +61,7 @@ std::map<std::string, std::string>          Post::createMimeExtMap()
     return mime_ext;
 }
 
-const           std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap();
+const           std::map<std::string, std::string>& Post::mime_ext = Post::createMimeExtMap();
 
 Post::Post(Connection *conn , TransferType type):transfer_type(type),conn(conn),is_multipart(false)
 {
@@ -173,22 +173,20 @@ void Post::ProcessContentLength()
     if (is_multipart)
     {
         std::string tmp;
-        size_t origin_size = conn->buffer.length();
+        part_buffer.append(conn->buffer.substr(0,bytes_to_read));
         if (bytes_to_read < conn->buffer.length()) 
-        {
             tmp = conn->buffer.substr(bytes_to_read);
-            conn->buffer.substr(0,bytes_to_read);
-        }
+        conn->buffer = part_buffer;
         ProcessMultiPart();
-        conn->buffer.append(tmp);
-        content_bytes_read = origin_size -  conn->buffer.length();
+        part_buffer = conn->buffer;
+        conn->buffer = tmp;
     }
     else
     {
         WriteDataToFile(bytes_to_read); 
         conn->buffer.erase(0, bytes_to_read);
-        content_bytes_read += bytes_to_read;
     }
+    content_bytes_read += bytes_to_read;
     if (content_bytes_read >= content_length)
     {
         if (output_file.is_open())

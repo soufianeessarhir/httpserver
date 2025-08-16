@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:32:17 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 12:11:09 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 14:56:50 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,9 +47,8 @@ void Post::ReadChunkData()
         size_t buffer_size = conn->buffer.size();
         if (buffer_size > available_in_chunk)
         {
-            std::string temp_buffer = conn->buffer.substr(0, available_in_chunk);
             std::string remaining_buffer = conn->buffer.substr(available_in_chunk);
-            conn->buffer = part_buffer +  temp_buffer;
+            conn->buffer = part_buffer +  conn->buffer.substr(0, available_in_chunk);;
             ProcessMultiPart();
             part_buffer =  conn->buffer;
             conn->buffer = remaining_buffer;

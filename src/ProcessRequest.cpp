@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 22:10:53 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 14:26:09 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,13 @@
 
 bool HttpServer::isValueCaseInsensitive(const std::string& headerName) {
 
-    const std::map<std::string, bool>& map = HeaderValueCase::get();
+    const std::map<std::string, bool>& map = getHeaderCaseMap();
     std::map<std::string, bool>::const_iterator it = map.find(headerName);
     if (it != map.end())
         return it->second;
     return false;
 }
+
 void		HttpServer::ProcessRequestLine(Connection *conn)
 {
 

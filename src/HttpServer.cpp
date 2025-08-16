@@ -6,14 +6,16 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 09:24:51 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 15:02:06 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
 
 
-HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs),headerCaseMap(HeaderValueCase::get())
+
+
+HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs),headerCaseMap(getHeaderCaseMap())
 {
     event_fd = CreateEvent();
     if (event_fd == -1)
@@ -24,6 +26,28 @@ HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs),headerCaseMap(
     this->init();
 }
 
+
+const std::map<std::string, bool>& HttpServer::getHeaderCaseMap()
+{
+    static std::map<std::string, bool> headerCaseMap;
+	headerCaseMap["transfer-encoding"] = true;
+	headerCaseMap["content-encoding"] = true;
+	headerCaseMap["connection"] = true;
+	headerCaseMap["content-type"] = true;
+	headerCaseMap["accept"] = true;
+	headerCaseMap["accept-encoding"] = true;
+	headerCaseMap["expect"] = true;
+	headerCaseMap["allow"] = true;
+	headerCaseMap["etag"] = false;
+	headerCaseMap["if-match"] = false;
+	headerCaseMap["if-none-match"] = false;
+	headerCaseMap["set-cookie"] = false;
+	headerCaseMap["cookie"] = false;
+	headerCaseMap["content-disposition"] = false;
+	headerCaseMap["location"] = false;
+	headerCaseMap["referer"] = false;
+    return headerCaseMap;
+}
 
 bool HttpServer::CheckForEventFd(int fd)
 {
@@ -151,9 +175,9 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
 		if (kevents[i].flags & EV_EOF)
 			platform_events[i].events |= HUP_EVENT;
 	}
-#endif
 	if (event_count < 0  && errno != ENOENT && errno != EBADF)
 		throw HttpServerError("WaitForEvents failed");
+#endif
     return event_count;
 }
 
@@ -303,7 +327,7 @@ void		HttpServer::HandlIncommingData(int fd)
 		else
 			break;
     }
-	// std::cout <<  conn->buffer <<std::endl;
+	std::cout <<  conn->buffer.size() <<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{

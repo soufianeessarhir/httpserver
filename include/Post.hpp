@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:31:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 11:34:01 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 14:38:30 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ private:
 	bool is_file_upload;
     std::string part_buffer;
     MultiPaertState multipart_state;
-    static const std::map<std::string, std::string> mime_ext;
+    static const std::map<std::string, std::string>& mime_ext;
 
 
     void ReadChunkSize();
@@ -90,7 +90,7 @@ private:
     bool ConfigureMultipart();
     void WriteDataToFile(size_t size);
     bool CheckFileName(std::string &);
-    static std::map<std::string, std::string> createMimeExtMap();
+    static const std::map<std::string, std::string>& createMimeExtMap();
     void ReadBoundry();
     void ReadPartHeaders();
     void ReadPartData();

@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 13:26:24 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 14:26:23 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,38 +61,12 @@ class Connection;
 #define			MAX_header_field_LENGHT		24000
 #define			READ_BUFFER_SIZE			64000
 
-struct PlatformEvent {
+struct PlatformEvent 
+{
     int fd;
     int events;
     void* data;
 };
-
-
-struct HeaderValueCase {
-    static const std::map<std::string, bool>& get() 
-	{
-        static std::map<std::string, bool> headerCaseMap;
-            headerCaseMap["transfer-encoding"] = true;
-            headerCaseMap["content-encoding"] = true;
-            headerCaseMap["connection"] = true;
-            headerCaseMap["content-type"] = true;
-            headerCaseMap["accept"] = true;
-            headerCaseMap["accept-encoding"] = true;
-            headerCaseMap["expect"] = true;
-            headerCaseMap["allow"] = true;
-            headerCaseMap["etag"] = false;
-            headerCaseMap["if-match"] = false;
-            headerCaseMap["if-none-match"] = false;
-            headerCaseMap["set-cookie"] = false;
-            headerCaseMap["cookie"] = false;
-            headerCaseMap["content-disposition"] = false;
-            headerCaseMap["location"] = false;
-            headerCaseMap["referer"] = false;
-        return headerCaseMap;
-    }
-};
-
-
 
 
 class HttpServer
@@ -109,7 +83,9 @@ public:
 	void		cleanup();
 
 	static bool 		isValueCaseInsensitive(const std::string& headerName);
-private:	
+private:
+
+    static const       std::map<std::string, bool>& getHeaderCaseMap();
 
 	void		init();
 	
@@ -144,6 +120,8 @@ private:
 	void 		SetClientSocketToNonblocking(int fd);
 
 	void 		SetServerSocketToNonblocking(int fd);
+
+    
 
 	
 	int 		CreateEvent();
