@@ -153,10 +153,7 @@ void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
     std::cout << ContentLength << std::endl;
     if (!CloseConn)
     {
-        Headers["Connection"] = "keep-alive\r\n";
-        std::string CookieContent = conn->request->GetHeader("cookie");
-        if (!CookieContent.empty())
-            Headers["Set-Cookie"] = CookieContent + "\r\n";
+        Headers["Connection"] = "keep-alive\r\n";     
     }
     else
         Headers["Connection"] = "close\r\n";
@@ -166,8 +163,8 @@ void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
     {
         Headers["Content-Type"] = ContentType + "\r\n";
     }
-    else
-        Headers["Content-Type"] = "text/html\r\n";
+    // else
+    //     Headers["Content-Type"] = "text/html\r\n";
     Headers["Content-Length"] = oss.str() + "\r\n";
 }
 
@@ -225,9 +222,10 @@ void MainResponse::SendHeaders(Connection *conn)
     {
        std::map<std::string, std::string>::const_iterator itc(conn->CgiObj->CgiHeaders.begin());
        for(;itc != conn->CgiObj->CgiHeaders.end(); ++itc)
-            HeadersStr += itc->first + ": " + itc->second;
+            HeadersStr += itc->first + ": " + itc->second + "\r\n";
     }
     HeadersStr += "\r\n";
+    // std::cout << HeadersStr << std::endl;
     while (TotalSent < HeadersStr.size())
     {
         BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 
@@ -346,12 +344,10 @@ bool    CheckFileRD(Connection *conn)
 
 void    excuteGetMethod(Connection *conn)
 {
-    if (conn->UseCgi && conn->response->GetMethod() != Error)
+    if (conn->UseCgi && conn->response->GetMethod() != Error && conn->CgiObj->Pid == -42)
     {
         conn->CgiObj->ExecuteCgi(conn);
-        if (conn->CgiObj->IsCgiComplet(conn) == true)
-            conn->CgiObj->Pid = -42;
-        else
+        if (conn->CgiObj->IsCgiComplet(conn) == false)
             return ;
     }
     if (conn->response->GetMethod() == GET)

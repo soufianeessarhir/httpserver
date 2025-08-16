@@ -8,7 +8,7 @@ void PostResponse(Connection *conn)
     {
         conn->response->POST = new MainResponse(conn->response->GetStatusCode());
         std::string Path;
-        if (conn->CgiObj)
+     if (conn->UseCgi)
             Path = conn->CgiObj->OutFile;
         else
             Path = conn->response->POST->ErrorHtmlPath.find(conn->response->POST->GetStatusCode())->second;
@@ -36,6 +36,8 @@ void PostResponse(Connection *conn)
                 conn->state = Connection::COMPLETE;
                 delete conn->response->POST;
                 conn->response->POST = NULL;
+                if (conn->CgiObj)
+                    conn->CgiObj->Pid = -42;
             }
             break;
         }

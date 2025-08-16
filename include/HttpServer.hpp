@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/14 09:21:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/15 13:26:24 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,7 +157,7 @@ private:
     struct epoll_event ev, events[MAX_EVENTS];
 #elif defined(__APPLE__)
     struct kevent kevents[MAX_EVENTS];
-    struct kevent change_list[MAX_EVENTS];
+    struct kevent change_list[4];
     int change_count;
 #endif
 	
