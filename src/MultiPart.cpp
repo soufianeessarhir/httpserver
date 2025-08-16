@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:31:37 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 21:05:16 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 10:06:42 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,6 +112,7 @@ void Post::ProcessMultiPart()
         switch (multipart_state)
         {
             case READING_PREAMBLE:
+                ReadPreamble();
                 break;
             case READING_BOUNDARY:
                 ReadBoundry();

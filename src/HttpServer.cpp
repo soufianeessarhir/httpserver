@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 21:24:52 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 09:24:51 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -303,7 +303,7 @@ void		HttpServer::HandlIncommingData(int fd)
 		else
 			break;
     }
-	std::cout <<  conn->buffer <<std::endl;
+	// std::cout <<  conn->buffer <<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{
