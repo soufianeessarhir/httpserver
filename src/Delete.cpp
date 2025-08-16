@@ -44,7 +44,7 @@ void    ExecuteDelete(Connection *conn)
             if (conn->response->DELETE->CheckForSending(conn) == false)
                 return ;
             conn->response->DELETE->SetContentType(conn);
-            conn->response->DELETE->SetStatusLine();
+            conn->response->DELETE->SetStatusLine(conn);
             conn->response->DELETE->SendStatusLine(conn);
             conn->response->DELETE->SetHeaders(false, conn);
             conn->response->DELETE->SendHeaders(conn);

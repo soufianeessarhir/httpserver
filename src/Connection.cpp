@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 11:20:21 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/16 19:39:50 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,11 +115,11 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
                 conn->CgiObj->SCRIPT_PATH = ScriptPath;
                 conn->CgiObj->SCRIPT_NAME = ScriptName;
                 conn->CgiObj->PATH_INFO = PathInfo;
-                conn->CgiObj->REMOTE_PORT = conn->port;
+                // conn->CgiObj->REMOTE_PORT = conn->port;
                 conn->CgiObj->REMOTE_ADDR = conn->ip;
                 conn->CgiObj->SERVER_PROTOCOL = conn->request->GetVersion();
                 conn->CgiObj->REMOTE_IDENT = "webserv";
-                conn->CgiObj->CONTENT_LENGTH = conn->request->GetHeader("content-lenght");
+                conn->CgiObj->CONTENT_LENGTH = conn->request->GetHeader("content-length");
                 conn->CgiObj->CONTENT_TYPE = conn->request->GetHeader("content-type");
                 // conn->CgiObj->SERVER_PORT = conn->
                 conn->request->SetUri(Path);

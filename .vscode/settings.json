@@ -80,8 +80,6 @@
         "cinttypes": "cpp",
         "variant": "cpp",
         "text_encoding": "cpp",
-        "ranges": "cpp",
-        "__functional_base_03": "cpp",
-        "filesystem": "cpp"
+        "ranges": "cpp"
     }
 }

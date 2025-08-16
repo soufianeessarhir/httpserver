@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/11 14:21:29 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/16 15:48:46 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ class MainResponse
         
         void    SetHeaders(bool CloseConn, Connection *conn);
         void    SetContentType(Connection *conn);
-        void    SetStatusLine();
+        void    SetStatusLine(Connection *conn);
         
         const   std::string& GetContentType() const;
         int     GetStatusCode() const;

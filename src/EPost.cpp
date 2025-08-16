@@ -8,8 +8,8 @@ void PostResponse(Connection *conn)
     {
         conn->response->POST = new MainResponse(conn->response->GetStatusCode());
         std::string Path;
-     if (conn->UseCgi)
-            Path = conn->CgiObj->OutFile;
+        if (conn->UseCgi)
+                Path = conn->CgiObj->OutFile;
         else
             Path = conn->response->POST->ErrorHtmlPath.find(conn->response->POST->GetStatusCode())->second;
         conn->request->SetUri(Path);
@@ -18,11 +18,24 @@ void PostResponse(Connection *conn)
     {   
         case SENDING_STATUSLINE :
         {
+            if (conn->CgiObj->CgiHeaders.count("Location"))
+            {
+                conn->response->POST->SetStatusLine(conn);
+                conn->response->POST->SendStatusLine(conn);
+            }
+
             if (conn->response->POST->CheckForSending(conn) == false)
                 return ;
             conn->response->POST->SetContentType(conn);
-            conn->response->POST->SetStatusLine();
+            conn->response->POST->SetStatusLine(conn);
             conn->response->POST->SendStatusLine(conn);
+            if (conn->state == Connection::COMPLETE)
+            {
+                delete conn->response->POST;
+                conn->response->POST = NULL;
+                if (conn->CgiObj)
+                    conn->CgiObj->Pid = -42;
+            }
             conn->response->POST->SetHeaders(false, conn);
             conn->response->POST->SendHeaders(conn);
             conn->response->POST->ResponseStat = SENDING_BODY;
