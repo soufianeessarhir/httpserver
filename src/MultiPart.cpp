@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:31:37 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 10:06:42 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 11:55:58 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,6 +164,8 @@ bool Post::ProcessMultiPartHeaders(std::string data)
         Request::ToCanonical(name);
         headers[name] = value;
     }
+    // if (headers.find("name") == headers.end())
+    //     return false;
     return true;
 }
 

@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:31:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 21:02:35 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 11:34:01 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,8 @@ private:
     void ReadTrailerHeaders();
     void ProcessMultiPart();
     bool ExtractAndValidateBoundry();
+    void ChecKMultiPart(std::string &content_type);
+    void ProcessMediaType(std::string &content_type);
     void GenerateUploadfile(const std::string &ext);
 	bool ProcessMultiPartHeaders(std::string data);
     bool ConfigureMultipart();

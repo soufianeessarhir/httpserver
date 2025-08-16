@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 20:47:30 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 11:51:42 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,70 +66,58 @@ const           std::map<std::string, std::string> Post::mime_ext = Post::create
 Post::Post(Connection *conn , TransferType type):transfer_type(type),conn(conn),is_multipart(false)
 {
     std::string content_type = conn->request->GetHeader("content-type");
+    max_body_size = conn->location->max_body_size;
     if (type ==  CONTENT_LENGTH)
     {
         content_length = conn->request->GetContentLenght();
         content_bytes_read = 0;
-        if (content_type.find("multipart/form-data") != std::string::npos && !conn->UseCgi)
-        {
-            is_multipart = true;
-            multipart_state= Post::READING_PREAMBLE;
-            if (!ExtractAndValidateBoundry())
-                transfer_type = Post::ERROR;
+        ChecKMultiPart(content_type);
+        if (is_multipart)
             return;
-        }
-        std::string media_type;
-        size_t semi_colon = content_type.find(';');
-        if (semi_colon != std::string::npos)
-            media_type = content_type.substr(0,semi_colon);
-        else 
-            media_type = content_type;
-        if (conn->UseCgi)
-            media_type = "application/octet-stream";
-        std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
-        if (it == mime_ext.end())
-        {
-            conn->response = new Response(415,Error);
-            conn->state =  Connection::SENDING_RESPONSE;
-            transfer_type = Post::ERROR;
-            return;
-        }
-        GenerateUploadfile(it->second);
+        ProcessMediaType(content_type);
     }
     else
     {
-        if (content_type.find("multipart/form-data") != std::string::npos)
-        {
-            is_multipart = true;
-            multipart_state = Post::READING_PREAMBLE;
-            if (!ExtractAndValidateBoundry())
-                transfer_type = Post::ERROR;
-            chunk_state = READING_CHUNK_SIZE;
-            chunk_bytes_read = 0;
-            return;
-        }
-        std::string media_type;
-        size_t semi_colon = content_type.find(';');
-        if (semi_colon != std::string::npos)
-            media_type = content_type.substr(0,semi_colon);
-        else 
-            media_type = content_type;
-        std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
-        if (it == mime_ext.end())
-        {
-            conn->response = new Response(415,Error);
-            conn->state =  Connection::SENDING_RESPONSE;
-            transfer_type = Post::ERROR;
-            return;
-        }
-        GenerateUploadfile(it->second);
         chunk_state = READING_CHUNK_SIZE;
+        current_chunk_size = 0;
         chunk_bytes_read = 0;
+        ChecKMultiPart(content_type);
+        if (is_multipart)
+            return;
+        ProcessMediaType(content_type);
     }
-    max_body_size = conn->location->max_body_size;
-
 }
 
+void  Post::ChecKMultiPart(std::string &content_type)
+{
+    if (content_type.find("multipart/form-data") != std::string::npos && !conn->UseCgi)
+    {
+        is_multipart = true;
+        multipart_state= Post::READING_PREAMBLE;
+        if (!ExtractAndValidateBoundry())
+            transfer_type = Post::ERROR;
+    }
+}
+void Post::ProcessMediaType(std::string &content_type)
+{
+    std::string media_type;
+    size_t semi_colon = content_type.find(';');
+    if (semi_colon != std::string::npos)
+        media_type = content_type.substr(0,semi_colon);
+    else 
+        media_type = content_type;
+    if (transfer_type ==  CONTENT_LENGTH && conn->UseCgi)
+        media_type = "application/octet-stream";
+    std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
+    if (it == mime_ext.end())
+    {
+        conn->response = new Response(415,Error);
+        conn->state =  Connection::SENDING_RESPONSE;
+        transfer_type = Post::ERROR;
+        return;
+    }
+    GenerateUploadfile(it->second);
+}
 
 bool           Post::ExtractAndValidateBoundry()
 {
@@ -156,7 +144,8 @@ bool           Post::ExtractAndValidateBoundry()
         if (q != std::string::npos)
             boundry = origin.substr(begin,q - begin);
     }
-    else {
+    else 
+    {
         for (end=begin;end < ct.length()&&
         ct[end] != ' ' && ct[end] != '\t' && 
         ct[end] != ';' && ct[end] != '\r' && ct[end] != '\n';++end );
@@ -201,18 +190,18 @@ void           Post::ReadTrailerHeaders()
 void Post::ProcessContentLength()
 {
     size_t bytes_to_read = std::min(conn->buffer.size(), content_length - content_bytes_read);
-    
     if (is_multipart)
     {
-        std::string original_buffer = conn->buffer;
-        if (bytes_to_read < conn->buffer.size()) 
-            conn->buffer = conn->buffer.substr(0, bytes_to_read);
-        size_t initial_buffer_size = conn->buffer.size();
+        std::string tmp;
+        size_t origin_size = conn->buffer.length();
+        if (bytes_to_read < conn->buffer.length()) 
+        {
+            tmp = conn->buffer.substr(bytes_to_read);
+            conn->buffer.substr(0,bytes_to_read);
+        }
         ProcessMultiPart();
-        size_t consumed = initial_buffer_size - conn->buffer.size();
-        content_bytes_read += consumed;
-        if (bytes_to_read < original_buffer.size())
-            conn->buffer += original_buffer.substr(bytes_to_read);
+        conn->buffer.append(tmp);
+        content_bytes_read = origin_size -  conn->buffer.length();
     }
     else
     {
