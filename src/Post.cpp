@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 18:00:09 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 21:24:58 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ const std::map<std::string, std::string> &         Post::createMimeExtMap()
     mime_ext["application/x-gzip"] = ".gz";
     mime_ext["application/xml"] = ".xml"; 
     mime_ext["application/octet-stream"] = ".bin";
-    mime_ext["application/x-iso9660-image"] = ".iso";
+    // mime_ext["application/x-iso9660-image"] = ".iso";
     
     // Image 
     mime_ext["image/jpeg"] = ".jpg";

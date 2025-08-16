@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 14:26:09 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 21:26:51 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,7 +169,8 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
-		conn->response = new Response(conn->request->GetStatus(), GET);
+		if (!conn->response)
+			conn->response = new Response(conn->request->GetStatus(), GET);
 	}
 	else if (conn->request->GetMethod() == "DELETE")
 	{

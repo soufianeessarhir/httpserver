@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 22:03:55 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 21:26:24 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,13 +64,6 @@ public:
     void            NormalizePath();
 
     void            RemoveFromOutputpath(std::string &);
-
-
-
-    
-
-
-
     
     std::string     GetUri();
 
