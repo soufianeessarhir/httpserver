@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 11:51:42 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 12:04:51 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,26 +165,6 @@ bool           Post::ExtractAndValidateBoundry()
     delimiter = "\r\n--" + boundry;
     return true;
 }
-
-
-
-void           Post::ReadTrailerHeaders()
-{
-    if (output_file.is_open())
-        output_file.close();
-    size_t CRLF = conn->buffer.find("\r\n\r\n");
-    if (CRLF != std::string::npos)
-    {
-        conn->buffer.erase(0,CRLF + 4);
-        chunk_state = Post::CHUNK_COMPLETE;
-    }
-    else if ( conn->buffer.find("\r\n") == 0)
-    {
-        conn->buffer.erase(0,2);
-        chunk_state = Post::CHUNK_COMPLETE;
-    }
-}
-
 
 
 void Post::ProcessContentLength()

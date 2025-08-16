@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:32:17 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 20:50:55 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 12:11:09 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,7 @@ void Post::ReadChunkData()
             ProcessMultiPart();
             part_buffer =  conn->buffer;
             conn->buffer = remaining_buffer;
+            chunk_bytes_read += available_in_chunk;
         }
         else
         {
@@ -60,6 +61,8 @@ void Post::ReadChunkData()
             ProcessMultiPart();
             part_buffer = conn->buffer;
             conn->buffer.clear();
+            chunk_bytes_read += buffer_size;
+            
         }
     }
     else 
@@ -69,16 +72,36 @@ void Post::ReadChunkData()
         conn->buffer.erase(0,size_to_read);
         chunk_bytes_read += size_to_read;
     }
-    size_t CRLF = conn->buffer.find("\r\n");
-    if (CRLF == 0)
+    if (current_chunk_size <= chunk_bytes_read)
     {
-        conn->buffer.erase(0, 2);
-        chunk_state = Post::READING_CHUNK_SIZE;
-        current_chunk_size = 0;
-        chunk_bytes_read = 0;
+        size_t CRLF = conn->buffer.find("\r\n");
+        if (CRLF == 0)
+        {
+            conn->buffer.erase(0, 2);
+            chunk_state = Post::READING_CHUNK_SIZE;
+            current_chunk_size = 0;
+            chunk_bytes_read = 0;
+        }
+        else if (CRLF != std::string::npos)
+            chunk_state = Post::CHUNK_ERROR;
     }
-    else if (CRLF != std::string::npos)
-        chunk_state = Post::CHUNK_ERROR;
+}
+
+void           Post::ReadTrailerHeaders()
+{
+    if (output_file.is_open())
+        output_file.close();
+    size_t CRLF = conn->buffer.find("\r\n\r\n");
+    if (CRLF != std::string::npos)
+    {
+        conn->buffer.erase(0,CRLF + 4);
+        chunk_state = Post::CHUNK_COMPLETE;
+    }
+    else if ( conn->buffer.find("\r\n") == 0)
+    {
+        conn->buffer.erase(0,2);
+        chunk_state = Post::CHUNK_COMPLETE;
+    }
 }
 
 void Post::ProcessChunck()
