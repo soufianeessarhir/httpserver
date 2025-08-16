@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 14:26:23 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 18:33:09 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,11 @@ private:
     static const       std::map<std::string, bool>& getHeaderCaseMap();
 
 	void		init();
+
+	void		alocatBufferSize();
+	
+	
+	bool		read(Connection *);
 	
 	void		ClientCleanUp(int fd);
 	
@@ -125,10 +130,15 @@ private:
 
 	
 	int 		CreateEvent();
+	
     int 		AddEvent(int fd, int events);
+
     int 		ModifyEvent(int fd, int events);
+	
     int 		RemoveEvent(int fd);
+	
     int 		WaitForEvents(PlatformEvent* events, int max_events, int timeout);
+	
     int 		event_fd;
     
 #ifdef __linux__
@@ -140,6 +150,9 @@ private:
 #endif
 	
     char                            buf[READ_BUFFER_SIZE];
+
+	size_t							buf_size;
+	
     
 	std::vector<Server>				&servers;
 	

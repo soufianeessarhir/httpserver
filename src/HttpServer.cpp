@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 15:02:06 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 18:35:04 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -284,6 +284,24 @@ void		HttpServer::SetSocketForRead(Connection *conn)
     conn->state = Connection::READING_REQUEST_LINE;
 }
 
+bool		HttpServer::read(Connection *conn)
+{
+	ssize_t n = 0;
+	for (;;) 
+	{
+        n = recv(conn->fd,buf, READ_BUFFER_SIZE, MSG_DONTWAIT);
+        if (n > 0)
+            conn->buffer.append(buf, n);
+        else if (n == 0)
+                throw HttpClientError("connection close by peer", conn->fd);
+		else
+			if(conn->buffer.size() == 0)
+				return false;
+			return true;
+    }
+}
+
+
 void		HttpServer::HandleNewConnection(int fd)
 {
 	for (;;)
@@ -316,18 +334,8 @@ void		HttpServer::HandlIncommingData(int fd)
 	Connection *conn = clients[fd];
 	if (!conn)
 		return ;
-	ssize_t n = 0;
-	for (;;) 
-	{
-        n = recv(fd,buf, READ_BUFFER_SIZE, MSG_DONTWAIT);
-        if (n > 0)
-            conn->buffer.append(buf, n);
-        else if (n == 0)
-                throw HttpClientError("connection close by peer", fd);
-		else
-			break;
-    }
-	std::cout <<  conn->buffer.size() <<std::endl;
+	if (!read(conn))
+		return;
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -423,7 +431,7 @@ void		HttpServer::ProcessClientsRoundRobin()
 {
     if (active_clients.empty())
         return;
-    int clients_count =  std::min(active_clients.size(),(size_t)CLIENT_PER_CYCLE);
+    int clients_count =  std::min(active_clients.size(),(size_t)CLIENT_PER_CYCLE); //need to be small
     for (;clients_count--;)
     {
         struct PlatformEvent client_ev = active_clients.front();

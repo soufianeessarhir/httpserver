@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 14:50:53 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/16 18:00:09 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,9 @@ const std::map<std::string, std::string> &         Post::createMimeExtMap()
     mime_ext["application/zip"] = ".zip";
     mime_ext["application/x-tar"] = ".tar";
     mime_ext["application/x-gzip"] = ".gz";
-    mime_ext["application/xml"] = ".xml";
+    mime_ext["application/xml"] = ".xml"; 
     mime_ext["application/octet-stream"] = ".bin";
+    mime_ext["application/x-iso9660-image"] = ".iso";
     
     // Image 
     mime_ext["image/jpeg"] = ".jpg";
@@ -106,7 +107,7 @@ void Post::ProcessMediaType(std::string &content_type)
         media_type = content_type.substr(0,semi_colon);
     else 
         media_type = content_type;
-    if (transfer_type ==  CONTENT_LENGTH && conn->UseCgi)
+    if (conn->UseCgi)
         media_type = "application/octet-stream";
     std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
     if (it == mime_ext.end())
@@ -225,7 +226,7 @@ void Post::GenerateUploadfile(const std::string &ext)
     }
     else
         filename = conn->location->upload_store + oss.str();
-    output_file.open(filename.c_str(),std::ios::out | std::ios::app | std::ios::binary);
+    output_file.open(filename.c_str(),std::ios::out | std::ios::trunc | std::ios::binary);
     if (output_file.bad())
     {
         transfer_type = Post::ERROR;
