@@ -13,7 +13,7 @@ void    ExecuteGET(Connection *conn)
                 return ;
             if (!conn->CgiObj)
                 conn->response->GET->SetContentType(conn);
-            conn->response->GET->SetStatusLine(conn);
+            conn->response->GET->SetStatusLine();
             conn->response->GET->SendStatusLine(conn);
             conn->response->GET->SetHeaders(false, conn);
             conn->response->GET->SendHeaders(conn);

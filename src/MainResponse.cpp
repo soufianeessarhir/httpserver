@@ -135,14 +135,9 @@ MainResponse::MainResponse(int statusCode) : StatusCode(statusCode), IsBinaryFil
     ContentLength = 0;
 }
 
-void MainResponse::SetStatusLine(Connection *conn)
+void MainResponse::SetStatusLine()
 {
     std::stringstream BuildStatusLine;
-    if (conn->request->GetMethod() == "POST" && conn->CgiObj && conn->CgiObj->CgiHeaders.count("Location"))
-    {    
-        StatusLine = "HTTP/1.1 302 Found\r\n" + conn->CgiObj->CgiHeaders["Location"] + "\r\n" + "Connection: close\r\n\r\n";
-        return ;
-    }
     BuildStatusLine << "HTTP/1.1 ";
     std::map<int, std::string>::const_iterator it = ErrorPhrase.find(StatusCode);
     if (it != ErrorPhrase.end())
@@ -178,28 +173,25 @@ MainResponse::~MainResponse()
     
 }
 
-void MainResponse::SendStatusLine(Connection *conn)
+void MainResponse::SendStatusLine(Connection *Conn)
 {
     ssize_t BytesWriten = 0;
     size_t TotalSent = 0;
     
     while (TotalSent < StatusLine.size())
     {
-        BytesWriten = send(conn->fd, StatusLine.c_str() + TotalSent, 
+        BytesWriten = send(Conn->fd, StatusLine.c_str() + TotalSent, 
                           StatusLine.size() - TotalSent, MSG_NOSIGNAL);
         
         if (BytesWriten == 0)
         {
-            if (conn->request->GetMethod() == "POST" && conn->CgiObj && conn->CgiObj->CgiHeaders.count("Location"))
-                conn->state = Connection::COMPLETE;
-            else
-                conn->state = Connection::SENDING_RESPONSE;
+            Conn->state = Connection::SENDING_RESPONSE;
             return;
         }
         if (BytesWriten < 0)
         {
             perror("send status line");
-            conn->state = Connection::COMPLETE;
+            Conn->state = Connection::COMPLETE;
             return;
         }
         TotalSent += BytesWriten;
@@ -233,7 +225,7 @@ void MainResponse::SendHeaders(Connection *conn)
             HeadersStr += itc->first + ": " + itc->second + "\r\n";
     }
     HeadersStr += "\r\n";
-    std::cout << HeadersStr << std::endl;
+    // std::cout << HeadersStr << std::endl;
     while (TotalSent < HeadersStr.size())
     {
         BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 

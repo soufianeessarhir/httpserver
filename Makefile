@@ -4,8 +4,8 @@ CXXFLAGS=-Wall -Wextra -Werror -std=c++98
 
 SRCS= webserv.cpp src/HttpServer.cpp  src/Lexer.cpp  src/Parser.cpp\
 	  src/Connection.cpp src/Request.cpp src/Response.cpp src/Error.cpp src/Get.cpp\
-	  src/MainResponse.cpp src/ProcessRequest.cpp src/Post.cpp src/CGI.cpp src/Delete.cpp\
-	  src/EPost.cpp src/ConfigValidator.cpp src/Chunked.cpp src/MultiPart.cpp\
+	  src/MainResponse.cpp src/ProcessRequest.cpp src/Post.cpp src/MultiPart.cpp\
+	  src/CGI.cpp src/Delete.cpp src/EPost.cpp src/ConfigValidator.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 
@@ -33,4 +33,6 @@ fclean: clean
 
 re: fclean all
 	@echo "Recompiled everything."
-.PHONY: clean  
+.PHONY: all clean fclean re
+
+# To use this Makefile, place it in the same directory as your source files.

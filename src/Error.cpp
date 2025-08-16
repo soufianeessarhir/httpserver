@@ -23,7 +23,7 @@ void    ExecuteError(Connection *conn)
                 return ;
             }    
             conn->response->Error->SetContentType(conn);
-            conn->response->Error->SetStatusLine(conn);
+            conn->response->Error->SetStatusLine();
             conn->response->Error->SendStatusLine(conn);
             conn->response->Error->SetHeaders(true, conn);
             conn->response->Error->SendHeaders(conn);

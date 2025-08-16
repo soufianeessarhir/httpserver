@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/16 19:42:14 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/16 23:01:50 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,11 @@ CGI::CGI()
 
 void    CGI::BuildEnv(Connection *conn)
 {
+    std::cerr << "enter to BuildEnvv" << std::endl;
     std::stringstream ss;
     ss << conn->fd;
     EnvString.push_back("PATH_TRANSLATED=" + conn->location->root + conn->CgiObj->PATH_INFO);
-    EnvString.push_back("HTTP_USER_AGENT=" + conn->request->GetHeader("user-agent"));
+    EnvString.push_back("HTTP_USER_AGENT=Client ID:" + ss.str());
     EnvString.push_back("SERVER_PROTOCOL=" + SERVER_PROTOCOL);
     EnvString.push_back("CONTENT_LENGTH=" + CONTENT_LENGTH);
     EnvString.push_back("REQUEST_METHOD=" + conn->request->GetMethod());
@@ -37,29 +38,27 @@ void    CGI::BuildEnv(Connection *conn)
     EnvString.push_back("SERVER_SOFTWARE=Webserv/1.0");
     EnvString.push_back("SCRIPT_PATH=" + SCRIPT_PATH);
     EnvString.push_back("SCRIPT_NAME=" + SCRIPT_NAME);
-    EnvString.push_back("SERVER_NAME=localhost");
-    EnvString.push_back("DOCUMENT_ROOT=" + conn->location->root);
     ss.clear();
-    ss << conn->port;
+    ss << SERVER_PORT;
     EnvString.push_back("SERVER_PORT=" + ss.str());
     EnvString.push_back("REMOTE_ADDR=" + REMOTE_ADDR);
-    EnvString.push_back("REMOTE_PORT=" + REMOTE_PORT);
+    ss.clear();
+    ss << conn->port;
+    EnvString.push_back("REMOTE_PORT=" + ss.str());
     EnvString.push_back("GATEWAY_INTERFACE=CGI/1.1");
     EnvString.push_back("PATH_INFO=" + PATH_INFO);
     EnvString.push_back("REMOTE_IDENT=Webserv");
     EnvString.push_back("REDIRECT_STATUS=200");
     EnvString.push_back("REMOTE_USER=Webserv");
     EnvString.push_back("SCRIPT_FILENAME=" + SCRIPT_PATH + SCRIPT_NAME);
-    for (std::map<std::string,std::string>::iterator it = conn->request->headers.begin(); it != conn->request->headers.end(); ++it)
-    {
-        std::string headerName = it->first;
-        std::transform(headerName.begin(), headerName.end(), headerName.begin(), ::toupper);
-        std::replace(headerName.begin(), headerName.end(), '-', '_');
-        EnvString.push_back("HTTP_" + headerName + "=" + it->second);
-    }
 
+    
+    Env = new char*[EnvString.size() + 1];
     for (size_t i(0); i < EnvString.size(); i++)
+    {
         Env[i] = const_cast<char *>(EnvString[i].c_str());
+        std::cerr << Env[i] << '\n';
+    }
     Env[EnvString.size()] = NULL;
 }
 
@@ -80,9 +79,8 @@ void CGI::ExecuteCgi(Connection *conn)
         //         InSize = FileIn.st_size;
         //     else
         //         exit(EXIT_FAILURE);
-        //     if (conn->location->max_body_size && InSize > conn->location->max_body_size)
-        //         exit(CONTENT_TOO_LARGE);
-        //     std::cerr << "checking infile finished" << std::endl;
+        // if (conn->location->max_body_size && InSize > conn->location->max_body_size)
+        //     exit(CONTENT_TOO_LARGE);
         // }
         BuildEnv(conn);
         int FdOut = open(OutFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -100,26 +98,24 @@ void CGI::ExecuteCgi(Connection *conn)
             exit(EXIT_FAILURE);
         }
         close(FdOut);
-        // if (conn->request->GetMethod() == "POST")
+        // if (conn->response->GetMethod() == POST)
         // {
-           
+        //     std::cerr << "fdout" << std::endl;
         //     int FdIn = open(InFile.c_str(), O_RDONLY);
         //     if (FdIn < 0)
         //     {
         //         delete [] Env;
-        //         perror("");
         //         exit(EXIT_FAILURE);
         //     }
         //     if (dup2(FdIn, STDIN_FILENO) < 0)
         //     {
-        //         perror("");
         //         close(FdIn);
         //         delete [] Env;
         //         exit(EXIT_FAILURE);
         //     }
         //     close(FdIn);
-        //     std::cerr << "duping infile" << std::endl;
         // }
+        // std::cerr << "fdout" << std::endl;
         std::string Script = SCRIPT_PATH + SCRIPT_NAME;
         char *argv[3] = {const_cast<char*>(conn->location->cgi[Ext].c_str()), const_cast<char*>(Script.c_str()), NULL};
         if (execve(argv[0],(&argv[1]), Env) == -1)
@@ -157,13 +153,14 @@ bool    CGI::IsCgiComplet(Connection *conn)
 	{
         std::cout << "here" << std::endl;
         std::fstream    OFile(OutFile.c_str(), std::ios::in);
+        kill(Pid, SIGKILL);
         if (OFile)
         {
-            kill(Pid, SIGKILL);
+            std::cout << "entered to Ofile Condition fd =" << conn->fd << std::endl;
             std::stringstream buff;
             std::string line;
             buff << OFile.rdbuf();
-            std::cout << "------------------" << buff.str() << "---------------" << std::endl;
+            std::cout << "-------\n" << buff.str() << "\n---------" << std::endl;
             while (std::getline(buff, line))
             {
                 std::cout << "enter to the loop" << std::endl;

@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 17:28:54 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/14 09:21:26 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,7 @@ public:
     LocationData    *location;
     Post            *post;
     std::string     buffer;
+    
     std::string     ip;
     int             port;
 };

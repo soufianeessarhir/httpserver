@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 09:24:51 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/14 18:00:44 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs),headerCaseMap(
         throw HttpServerError("Event queue creation failed");
 #if defined(__APPLE__)
     change_count = 0;
-#endif
+#endif 
     this->init();
 }
 
@@ -66,9 +66,9 @@ int HttpServer::AddEvent(int fd, int events)
     }
     result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
-	if (result < 0 && errno != ENOENT && errno != EBADF)
-		throw HttpClientError("AddEvent failed",fd);
 #endif
+	if (result < 0)
+		throw HttpClientError("AddEvent failed",fd);
     return result;
 }
 
@@ -80,37 +80,41 @@ int HttpServer::ModifyEvent(int fd, int events)
     ev.data.fd = fd;
     result =  epoll_ctl(event_fd, EPOLL_CTL_MOD, fd, &ev);
 #elif defined(__APPLE__)
-	change_count = 0;
-	EV_SET(&change_list[change_count++], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-	EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-	if (events & READ_EVENT)
-		EV_SET(&change_list[change_count++], fd, EVFILT_READ, EV_ENABLE | EV_CLEAR, 0, 0, NULL);
-	if (events & WRITE_EVENT)
-		EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, EV_ENABLE | EV_CLEAR, 0, 0, NULL);
+
+    change_count = 0;
+    if (events & READ_EVENT)
+	{
+        EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
+        change_count++;
+    }
+    if (events & WRITE_EVENT)
+	{
+        EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
+        change_count++;
+    }
 	result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
-	if (result < 0 && errno != ENOENT && errno != EBADF)
-		throw HttpClientError("ModifyEvent",fd);
 #endif
+	if (result < 0)
+		throw HttpClientError("ModifyEvent",fd);
     return result;
 }
 
 int HttpServer::RemoveEvent(int fd)
 {
 	int result;
-#ifdef __APPLE__
-    change_count = 0;
+#ifdef __linux__
+    result = epoll_ctl(event_fd, EPOLL_CTL_DEL, fd, NULL);
+#elif defined(__APPLE__)
     EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     change_count++;
     EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
     change_count++;
     result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
-    if (result < 0 && errno != ENOENT && errno != EBADF)
-      throw HttpClientError("kevent EV_DELETE",fd);
     change_count = 0;
-#else
-    result = epoll_ctl(event_fd, EPOLL_CTL_DEL, fd, NULL);
 #endif
+	// if (result < 0)
+	// 	throw HttpClientError("RemoveEvent",fd);
     return result;
 }
 
@@ -130,7 +134,7 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
     struct timespec ts;
     struct timespec *pts = NULL;
     if (timeout == -1)
-        pts = NULL;
+        pts = NULL; // infinite wait
     else {
         ts.tv_sec = 0 ;
         ts.tv_nsec = 0;
@@ -152,7 +156,7 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
 			platform_events[i].events |= HUP_EVENT;
 	}
 #endif
-	if (event_count < 0  && errno != ENOENT && errno != EBADF)
+	if (event_count < 0)
 		throw HttpServerError("WaitForEvents failed");
     return event_count;
 }
@@ -299,11 +303,14 @@ void		HttpServer::HandlIncommingData(int fd)
         if (n > 0)
             conn->buffer.append(buf, n);
         else if (n == 0)
+		{
+            if (conn->buffer.empty())
                 throw HttpClientError("connection close by peer", fd);
+            break;
+        }
 		else
 			break;
     }
-	// std::cout <<  conn->buffer <<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -370,7 +377,7 @@ void		HttpServer::run()
 				fd = platform_events[i].fd;
 				ev = platform_events[i].events;
 				if (ev & (HUP_EVENT | ERROR_EVENT))
-						ClientCleanUp(fd);
+					throw HttpClientError("HUP_EVENT | ERROR_EVENT", fd);
 				if (server_map.find(fd) != server_map.end())
 					HandleNewConnection(fd);
 				else if (ev & (READ_EVENT | WRITE_EVENT))
@@ -382,8 +389,7 @@ void		HttpServer::run()
 		}
 		catch(const HttpClientError &e)
 		{
-			std::cerr << e.what() << '\n';
-			
+			// std::cerr << e.what() << '\n';
 			ClientCleanUp(e.client_fd);
 		}
 		catch(const HttpServerError &e)

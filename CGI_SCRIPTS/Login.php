@@ -11,7 +11,7 @@
         $_SESSION["logined"] = true;
         $_SESSION["username"] = $_POST["username"];
         $_SESSION["password"] = $_POST["password"]; // Avoid storing plain passwords in production!
-        header("Location: /Dashboard");
+        header("Location: /Dashboard"); 
         exit(0);
     }
 ?>
@@ -75,3 +75,4 @@
     </div>
 </body>
 </html>
+<?php exit(0) ?>
