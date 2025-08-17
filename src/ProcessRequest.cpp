@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 22:10:53 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 09:42:27 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,13 @@
 
 bool HttpServer::isValueCaseInsensitive(const std::string& headerName) {
 
-    const std::map<std::string, bool>& map = HeaderValueCase::get();
+    const std::map<std::string, bool>& map = getHeaderCaseMap();
     std::map<std::string, bool>::const_iterator it = map.find(headerName);
     if (it != map.end())
         return it->second;
     return false;
 }
+
 void		HttpServer::ProcessRequestLine(Connection *conn)
 {
 
@@ -158,7 +159,8 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
-		conn->response = new Response(conn->request->GetStatus(), POST);
+		if (!conn->response)
+			conn->response = new Response(conn->request->GetStatus(), POST);
 	}
 	else if (conn->request->GetMethod() == "GET")
 	{
@@ -168,7 +170,8 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
-		conn->response = new Response(conn->request->GetStatus(), GET);
+		if (!conn->response)
+			conn->response = new Response(conn->request->GetStatus(), GET);
 	}
 	else if (conn->request->GetMethod() == "DELETE")
 	{

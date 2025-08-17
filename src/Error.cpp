@@ -38,6 +38,7 @@ void    ExecuteError(Connection *conn)
                 conn->state = Connection::COMPLETE;
                 delete conn->response->Error;
                 conn->response->Error = NULL;
+                
             }
             break;
         }

@@ -6,24 +6,73 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 09:24:51 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 18:00:47 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
 
 
-HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs),headerCaseMap(HeaderValueCase::get())
+
+
+HttpServer::HttpServer(std::vector<Server> &srvs) :buf(claculateBufferSize()), servers(srvs),headerCaseMap(getHeaderCaseMap())
 {
     event_fd = CreateEvent();
     if (event_fd == -1)
-        throw HttpServerError("Event queue creation failed");
+        perror("Event queue creation failed");
 #if defined(__APPLE__)
     change_count = 0;
 #endif
     this->init();
 }
 
+int HttpServer::claculateBufferSize()
+{
+    int recv_size;
+    int send_size;
+    socklen_t optlen = sizeof(int);
+
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0)
+        perror("failed to create a socket");
+	int target_buf;
+	for (int i = 10; i > 0; --i) 
+	{
+		target_buf = (1024 * 1024) * i;
+		if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &target_buf, sizeof(target_buf)) == 0 &&
+			setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &target_buf, sizeof(target_buf)) == 0)
+			break;
+	}
+
+    getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &send_size, &optlen);
+    getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &recv_size, &optlen);
+    close(fd);
+    buf_size = std::max(recv_size, send_size);
+    return buf_size;
+}
+
+
+const std::map<std::string, bool>& HttpServer::getHeaderCaseMap()
+{
+    static std::map<std::string, bool> headerCaseMap;
+	headerCaseMap["transfer-encoding"] = true;
+	headerCaseMap["content-encoding"] = true;
+	headerCaseMap["connection"] = true;
+	headerCaseMap["content-type"] = true;
+	headerCaseMap["accept"] = true;
+	headerCaseMap["accept-encoding"] = true;
+	headerCaseMap["expect"] = true;
+	headerCaseMap["allow"] = true;
+	headerCaseMap["etag"] = false;
+	headerCaseMap["if-match"] = false;
+	headerCaseMap["if-none-match"] = false;
+	headerCaseMap["set-cookie"] = false;
+	headerCaseMap["cookie"] = false;
+	headerCaseMap["content-disposition"] = false;
+	headerCaseMap["location"] = false;
+	headerCaseMap["referer"] = false;
+    return headerCaseMap;
+}
 
 bool HttpServer::CheckForEventFd(int fd)
 {
@@ -129,13 +178,13 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
 #elif defined(__APPLE__)
     struct timespec ts;
     struct timespec *pts = NULL;
-    if (timeout == -1)
-        pts = NULL;
-    else {
+    // if (timeout == -1)
+    //     pts = NULL;
+    // else {
         ts.tv_sec = 0 ;
         ts.tv_nsec = 0;
         pts = &ts;
-    }
+    // }
     event_count = kevent(event_fd, NULL, 0, kevents, max_events, pts);
 	for (int i = 0; i < event_count; i++)
 	{
@@ -151,9 +200,9 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
 		if (kevents[i].flags & EV_EOF)
 			platform_events[i].events |= HUP_EVENT;
 	}
-#endif
 	if (event_count < 0  && errno != ENOENT && errno != EBADF)
-		throw HttpServerError("WaitForEvents failed");
+		perror("WaitForEvents failed");
+#endif
     return event_count;
 }
 
@@ -183,7 +232,7 @@ void HttpServer::init()
 			ss << portNum;
 			std::string portStr = ss.str();
             if (getaddrinfo(node, portStr.c_str(), &hints, &res) != 0)
-                throw HttpServerError("Getaddrinfo failed");
+                perror("Getaddrinfo failed");
             for (p = res; p != NULL; p = p->ai_next)
             {
                 sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
@@ -194,7 +243,7 @@ void HttpServer::init()
                 {
                     close(sockfd);
                     freeaddrinfo(res);
-                    throw HttpServerError("setsockopt(SO_REUSEADDR) failed");
+                    perror("setsockopt(SO_REUSEADDR) failed");
                 }
                 SetServerSocketToNonblocking(sockfd);
                 if (bind(sockfd, p->ai_addr, p->ai_addrlen) != -1)
@@ -206,12 +255,12 @@ void HttpServer::init()
             freeaddrinfo(res);
 
             if (p == NULL)
-                throw HttpServerError("Socket binding failed");
+                perror("Socket binding failed");
 
             if (listen(sockfd, SOMAXCONN) == -1)
             {
                 close(sockfd);
-                throw HttpServerError("Socket listening failed");
+                perror("Socket listening failed");
             }
             try
 			{
@@ -232,21 +281,21 @@ void HttpServer::SetServerSocketToNonblocking(int fd)
     if (flags == -1)
 	{
 		close(fd);
-        throw HttpServerError("fcntl get failed");
+        perror("fcntl get failed");
 	}
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
 	{
 		close(fd);
-        throw HttpServerError("fcntl set failed");
+        perror("fcntl set failed");
 	}
 }
 void HttpServer::SetClientSocketToNonblocking(int fd)
 {
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1)
-        throw HttpServerError("fcntl get failed");
+        perror("fcntl get failed");
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
-        throw HttpServerError("fcntl set failed");
+        perror("fcntl set failed");
 }
 void		HttpServer::SetSocketForWrite(Connection *conn)
 {
@@ -260,6 +309,25 @@ void		HttpServer::SetSocketForRead(Connection *conn)
     conn->state = Connection::READING_REQUEST_LINE;
 }
 
+
+bool		HttpServer::read(Connection *conn)
+{
+	ssize_t n = 0;
+	for (;;) 
+	{
+        n = recv(conn->fd,buf.data(),buf_size, MSG_DONTWAIT);
+        if (n > 0)
+            conn->buffer.append(buf.data(), n);
+        else if (n == 0)
+                throw HttpClientError("connection close by peer", conn->fd);
+		else
+			if(conn->buffer.size() == 0)
+				return false;
+			return true;
+    }
+}
+
+
 void		HttpServer::HandleNewConnection(int fd)
 {
 	for (;;)
@@ -272,7 +340,7 @@ void		HttpServer::HandleNewConnection(int fd)
 			if (errno == EAGAIN || errno == EWOULDBLOCK)
 				break;
 			else
-				throw HttpServerError("Accept failed");
+				perror("Accept failed");
 		}
 		Connection *conn = new Connection(client_fd);
 		struct sockaddr_in *s = (struct sockaddr_in *)&client_sock;
@@ -292,18 +360,8 @@ void		HttpServer::HandlIncommingData(int fd)
 	Connection *conn = clients[fd];
 	if (!conn)
 		return ;
-	ssize_t n = 0;
-	for (;;) 
-	{
-        n = recv(fd,buf, READ_BUFFER_SIZE, MSG_DONTWAIT);
-        if (n > 0)
-            conn->buffer.append(buf, n);
-        else if (n == 0)
-                throw HttpClientError("connection close by peer", fd);
-		else
-			break;
-    }
-	// std::cout <<  conn->buffer <<std::endl;
+	if (!read(conn))
+		return;
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -362,10 +420,11 @@ void		HttpServer::run()
 	short ev;
 	for(;;)
 	{
-		try
+		
+		event_count = WaitForEvents(platform_events, MAX_EVENTS);
+		for (int i = 0; i < event_count; ++i)
 		{
-			event_count = WaitForEvents(platform_events, MAX_EVENTS);
-			for (int i = 0; i < event_count; ++i)
+			try
 			{
 				fd = platform_events[i].fd;
 				ev = platform_events[i].events;
@@ -377,21 +436,17 @@ void		HttpServer::run()
 					if (!CheckForEventFd(fd))
 						active_clients.push_back(platform_events[i]);
 			}
-			if (!active_clients.empty())
-				ProcessClientsRoundRobin();
+			catch(const HttpClientError &e)
+			{
+				std::cerr << e.what() << '\n';
+				ClientCleanUp(e.client_fd);
+			}
 		}
-		catch(const HttpClientError &e)
-		{
-			std::cerr << e.what() << '\n';
-			
-			ClientCleanUp(e.client_fd);
-		}
-		catch(const HttpServerError &e)
-		{
-			// std::cerr << e.what() << '\n';
-			return;
-		}
+		if (!active_clients.empty())
+			ProcessClientsRoundRobin();
 	}
+	
+
 }
 
 
@@ -416,10 +471,12 @@ void		HttpServer::ProcessClientsRoundRobin()
         else if (client_ev.events & WRITE_EVENT)
 		{
             HandlOutgoingData(client_ev.fd);
+			if (clients.find(client_ev.fd) == clients.end())
+				continue;
 			if (conn->state == Connection::READING_REQUEST_LINE)
                 client_ev.events = READ_EVENT;
 		}
-		if (conn->state != Connection::COMPLETE )
+		if (conn && conn->state != Connection::COMPLETE )
 			active_clients.push_back(client_ev);
     }
 }
@@ -428,12 +485,21 @@ void        HttpServer::HandlOutgoingData(int fd)
 {
     Connection *conn = clients[fd];
 	excuteGetMethod(conn);
-	if ( conn->state == Connection::COMPLETE && conn->response->GetMethod() != Error)
+	if (conn->state == Connection::COMPLETE)
 	{
+		if (conn->response->GetMethod() == Error)
+		{
+			ClientCleanUp(conn->fd);
+			return;
+		}
+		else if (conn->request->CheckField("connection") && conn->request->GetHeader("connection") != "keep-alive")
+		{
+			ClientCleanUp(conn->fd);
+			return;
+		}
 		SetSocketForRead(conn);
 		conn->Reset();
 	}
-	
 }
 void		HttpServer::ClientCleanUp(int fd)
 {
@@ -447,6 +513,7 @@ void		HttpServer::ClientCleanUp(int fd)
 			++it;
 	}
 	Connection *conn = clients[fd];
+	conn->Reset();
 	delete conn;
 	conn = NULL;
 	clients.erase(fd);
