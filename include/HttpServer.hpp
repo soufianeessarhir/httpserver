@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 21:00:47 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 09:34:55 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ private:
 
 	void		init();
 
-	void		alocatBufferSize();
+	int			claculateBufferSize();
 	
 	
 	bool		read(Connection *);
@@ -149,10 +149,9 @@ private:
     int change_count;
 #endif
 	
-    char                            buf[READ_BUFFER_SIZE];
-
 	size_t							buf_size;
 	
+	std::vector<char>				buf;
     
 	std::vector<Server>				&servers;
 	

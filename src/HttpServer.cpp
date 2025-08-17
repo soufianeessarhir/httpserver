@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 21:21:21 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 09:36:51 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 
 
-HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs),headerCaseMap(getHeaderCaseMap())
+HttpServer::HttpServer(std::vector<Server> &srvs) :buf(claculateBufferSize()), servers(srvs),headerCaseMap(getHeaderCaseMap())
 {
     event_fd = CreateEvent();
     if (event_fd == -1)
@@ -26,6 +26,21 @@ HttpServer::HttpServer(std::vector<Server> &srvs) : servers(srvs),headerCaseMap(
     this->init();
 }
 
+int			HttpServer::claculateBufferSize()
+{
+	int recv_size;
+	int send_size;
+
+    socklen_t optlen = sizeof(int);
+	int fd = socket(AF_INET,SOCK_STREAM,0);
+	if (fd < 0)
+		throw HttpServerError("failed to create a socket");
+    getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &send_size, &optlen);
+    getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &recv_size, &optlen);
+	close(fd);
+;	buf_size =  std::max(recv_size,send_size);
+	return buf_size;
+}
 
 const std::map<std::string, bool>& HttpServer::getHeaderCaseMap()
 {
@@ -284,14 +299,15 @@ void		HttpServer::SetSocketForRead(Connection *conn)
     conn->state = Connection::READING_REQUEST_LINE;
 }
 
+
 bool		HttpServer::read(Connection *conn)
 {
 	ssize_t n = 0;
 	for (;;) 
 	{
-        n = recv(conn->fd,buf, READ_BUFFER_SIZE, MSG_DONTWAIT);
+        n = recv(conn->fd,buf.data(),buf_size, MSG_DONTWAIT);
         if (n > 0)
-            conn->buffer.append(buf, n);
+            conn->buffer.append(buf.data(), n);
         else if (n == 0)
                 throw HttpClientError("connection close by peer", conn->fd);
 		else
@@ -336,6 +352,7 @@ void		HttpServer::HandlIncommingData(int fd)
 		return ;
 	if (!read(conn))
 		return;
+	std::cout<<conn->buffer.size()<<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{
