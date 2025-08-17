@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/14 09:21:26 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 11:42:30 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,16 +29,18 @@ struct Timeouts
     bool read_fails;
 	time_t last_activity; // Last activity timestamp
     time_t read_timeout;  // Read timeout value
+    time_t Child_track; // cgi process
 };
 
 class Connection
 {
 
 public:
-    Connection(int fd);
+    Connection(int fd, int event);
     void Reset();
     void UpdateTime(time_t &t);
     ~Connection();
+    int event_fd;
     enum State 
     {
         READING_REQUEST_LINE,

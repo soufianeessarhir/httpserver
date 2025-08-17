@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/06 11:16:10 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/17 08:50:30 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ class CGI
         CGI();
         ~CGI();
         void            ExecuteCgi(Connection *conn);
-        void            BuildEnv(Connection *conn);
+        char **            BuildEnv(Connection *conn);
         bool            IsCgiComplet(Connection *conn);
 };
 

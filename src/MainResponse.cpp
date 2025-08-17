@@ -369,9 +369,9 @@ void    excuteGetMethod(Connection *conn)
     {
         ExecuteError(conn);
     }
-    // if (conn->UseCgi && conn->state == Connection::COMPLETE)
-    // {
-    //     unlink(conn->CgiObj->OutFile.c_str());
-    // }
+    if (conn->UseCgi && conn->state == Connection::COMPLETE)
+    {
+        unlink(conn->CgiObj->OutFile.c_str());
+    }
 }
 

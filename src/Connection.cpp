@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 23:00:51 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/17 11:43:17 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,13 @@
 #include <string>
 #include <sstream>
 
-Connection::Connection(int fd): UseCgi(false), CgiObj(NULL),state(READING_REQUEST_LINE),fd(fd)
-            ,request(new Request()),response(NULL),server(NULL),location(NULL),post(NULL)
+Connection::Connection(int fd, int event): UseCgi(false), CgiObj(NULL), state(READING_REQUEST_LINE),fd(fd)
+            ,request(new Request()),response(NULL),server(NULL),location(NULL) ,post(NULL),event_fd(event)
 {
     timeouts.read_fails = false;   
     timeouts.last_activity = time(NULL);     
-    timeouts.read_timeout = time(NULL);     
+    timeouts.read_timeout = time(NULL);  
+    timeouts.Child_track = time(NULL);  
 }
 
 void Connection::UpdateTime(time_t &t)
@@ -115,7 +116,6 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
                 conn->CgiObj->SCRIPT_PATH = ScriptPath;
                 conn->CgiObj->SCRIPT_NAME = ScriptName;
                 conn->CgiObj->PATH_INFO = PathInfo;
-                // conn->CgiObj->REMOTE_PORT = conn->port;
                 conn->CgiObj->REMOTE_ADDR = conn->ip;
                 conn->CgiObj->SERVER_PROTOCOL = conn->request->GetVersion();
                 conn->CgiObj->REMOTE_IDENT = "webserv";

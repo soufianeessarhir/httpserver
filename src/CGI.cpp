@@ -6,12 +6,13 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/16 23:01:50 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/17 14:11:15 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGI.hpp"
 #include <unistd.h>
+#include <signal.h>
 
 CGI::CGI()
 {
@@ -21,20 +22,38 @@ CGI::CGI()
     SERVER_PORT = 0;
     Pid = -42;
     Env = NULL;
+    SCRIPT_PATH.clear();
+    SCRIPT_NAME.clear();
+    QUERY_STRING.clear();
+    PATH_INFO.clear();
+    SERVER_PROTOCOL.clear();
+    SERVER_NAME.clear();
+    REMOTE_ADDR.clear();
+    REMOTE_PORT.clear();
+    REMOTE_IDENT.clear();
+    CONTENT_TYPE.clear();
+    CONTENT_LENGTH.clear();
+    REQUEST_METHOD.clear();
+    SERVER_PORT = 0;
+    
 }
 
-void    CGI::BuildEnv(Connection *conn)
+char **    CGI::BuildEnv(Connection *conn)
 {
     std::cerr << "enter to BuildEnvv" << std::endl;
     std::stringstream ss;
     ss << conn->fd;
+    if (conn->request->GetMethod() == "POST")
+    {
+        EnvString.push_back("CONTENT_LENGTH=" + CONTENT_LENGTH);
+        EnvString.push_back("CONTENT_TYPE=" + CONTENT_TYPE);
+    }
+    if (!conn->CgiObj->QUERY_STRING.empty())
+        EnvString.push_back("QUERY_STRING=" + QUERY_STRING);
     EnvString.push_back("PATH_TRANSLATED=" + conn->location->root + conn->CgiObj->PATH_INFO);
     EnvString.push_back("HTTP_USER_AGENT=Client ID:" + ss.str());
     EnvString.push_back("SERVER_PROTOCOL=" + SERVER_PROTOCOL);
-    EnvString.push_back("CONTENT_LENGTH=" + CONTENT_LENGTH);
     EnvString.push_back("REQUEST_METHOD=" + conn->request->GetMethod());
-    EnvString.push_back("CONTENT_TYPE=" + CONTENT_TYPE);
-    EnvString.push_back("QUERY_STRING=" + QUERY_STRING);
     EnvString.push_back("SERVER_SOFTWARE=Webserv/1.0");
     EnvString.push_back("SCRIPT_PATH=" + SCRIPT_PATH);
     EnvString.push_back("SCRIPT_NAME=" + SCRIPT_NAME);
@@ -51,15 +70,24 @@ void    CGI::BuildEnv(Connection *conn)
     EnvString.push_back("REDIRECT_STATUS=200");
     EnvString.push_back("REMOTE_USER=Webserv");
     EnvString.push_back("SCRIPT_FILENAME=" + SCRIPT_PATH + SCRIPT_NAME);
-
+    std::map<std::string, std::string>::iterator it = conn->request->headers.begin();
+    for (; it != conn->request->headers.end(); ++it)
+    {
+        std::string header = it->first;
+        std::transform(header.begin(), header.end(), header.begin(), ::toupper);
+        EnvString.push_back("HTTP_" + header + '=' + it->second);
+    }
     
     Env = new char*[EnvString.size() + 1];
+    std::cout << "ana out of loop" << std::endl;
     for (size_t i(0); i < EnvString.size(); i++)
     {
         Env[i] = const_cast<char *>(EnvString[i].c_str());
-        std::cerr << Env[i] << '\n';
+        std::cout << Env[i] << '\n';
     }
+    std::cout << "ana khrajt mn loop" << std::endl;
     Env[EnvString.size()] = NULL;
+    return Env;
 }
 
 void CGI::ExecuteCgi(Connection *conn)
@@ -82,7 +110,7 @@ void CGI::ExecuteCgi(Connection *conn)
         // if (conn->location->max_body_size && InSize > conn->location->max_body_size)
         //     exit(CONTENT_TOO_LARGE);
         // }
-        BuildEnv(conn);
+        char** env = BuildEnv(conn);
         int FdOut = open(OutFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (FdOut < 0)
         {
@@ -118,7 +146,7 @@ void CGI::ExecuteCgi(Connection *conn)
         // std::cerr << "fdout" << std::endl;
         std::string Script = SCRIPT_PATH + SCRIPT_NAME;
         char *argv[3] = {const_cast<char*>(conn->location->cgi[Ext].c_str()), const_cast<char*>(Script.c_str()), NULL};
-        if (execve(argv[0],(&argv[1]), Env) == -1)
+        if (execve(argv[0],(&argv[1]), env) == -1)
         {
             perror("execeve: ");
             delete [] Env;
@@ -138,6 +166,7 @@ bool    CGI::IsCgiComplet(Connection *conn)
     // if (!Res)
     //     return false;
     Is_Runing = 0;
+    sleep(1);
     if (Res == -1)
     {
         conn->response->SetStatusCode(500);
@@ -153,7 +182,7 @@ bool    CGI::IsCgiComplet(Connection *conn)
 	{
         std::cout << "here" << std::endl;
         std::fstream    OFile(OutFile.c_str(), std::ios::in);
-        kill(Pid, SIGKILL);
+        // kill(Pid, SIGKILL);
         if (OFile)
         {
             std::cout << "entered to Ofile Condition fd =" << conn->fd << std::endl;

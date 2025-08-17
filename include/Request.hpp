@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 22:03:55 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 08:23:50 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,7 @@ public:
 
     bool            CheckField(const std::string &);
     
+    std::map<std::string,std::string>   headers;
 
 private:
 
@@ -100,7 +101,6 @@ private:
     
     std::string                         version;
     
-    std::map<std::string,std::string>   headers;
 
 };
 
