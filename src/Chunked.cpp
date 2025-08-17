@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:32:17 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 10:35:00 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 22:08:56 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,23 +41,16 @@ void Post::ReadChunkSize()
 
 void Post::ReadChunkData()
 {
+    size_t size_to_read = std::min(conn->buffer.size(),current_chunk_size - chunk_bytes_read);
     if (is_multipart)
     {
-        size_t available_in_chunk = std::min(conn->buffer.size(),current_chunk_size - chunk_bytes_read);
-        std::string tmp = conn->buffer.substr(available_in_chunk);
-        conn->buffer = part_buffer +  conn->buffer.substr(0, available_in_chunk);
+        part_buffer.append(conn->buffer.data(),size_to_read);
         ProcessMultiPart();
-        part_buffer =  conn->buffer;
-        conn->buffer = tmp;
-        chunk_bytes_read += available_in_chunk;
     }
     else 
-    {
-        size_t size_to_read = std::min(conn->buffer.size(),current_chunk_size - chunk_bytes_read);
         WriteDataToFile(size_to_read);
-        conn->buffer.erase(0,size_to_read);
-        chunk_bytes_read += size_to_read;
-    }
+    conn->buffer.erase(0,size_to_read);
+    chunk_bytes_read += size_to_read;
     if (current_chunk_size <= chunk_bytes_read)
     {
         size_t CRLF = conn->buffer.find("\r\n");
