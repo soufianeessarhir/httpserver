@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 09:36:51 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 11:54:38 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,21 +26,31 @@ HttpServer::HttpServer(std::vector<Server> &srvs) :buf(claculateBufferSize()), s
     this->init();
 }
 
-int			HttpServer::claculateBufferSize()
+int HttpServer::claculateBufferSize()
 {
-	int recv_size;
-	int send_size;
-
+    int recv_size;
+    int send_size;
     socklen_t optlen = sizeof(int);
-	int fd = socket(AF_INET,SOCK_STREAM,0);
-	if (fd < 0)
-		throw HttpServerError("failed to create a socket");
+
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0)
+        throw HttpServerError("failed to create a socket");
+	int target_buf;
+	for (int i = 10; i > 0; --i) 
+	{
+		target_buf = (1024 * 1024) * i;
+		if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &target_buf, sizeof(target_buf)) == 0 &&
+			setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &target_buf, sizeof(target_buf)) == 0)
+			break;
+	}
+
     getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &send_size, &optlen);
     getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &recv_size, &optlen);
-	close(fd);
-;	buf_size =  std::max(recv_size,send_size);
-	return buf_size;
+    close(fd);
+    buf_size = std::max(recv_size, send_size);
+    return buf_size;
 }
+
 
 const std::map<std::string, bool>& HttpServer::getHeaderCaseMap()
 {
@@ -352,7 +362,6 @@ void		HttpServer::HandlIncommingData(int fd)
 		return ;
 	if (!read(conn))
 		return;
-	std::cout<<conn->buffer.size()<<std::endl;
 	bool continue_processing = true;
 	while (continue_processing)
 	{

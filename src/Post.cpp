@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 09:43:29 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 10:28:53 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ const std::map<std::string, std::string> &         Post::createMimeExtMap()
     mime_ext["application/xml"] = ".xml"; 
     mime_ext["application/octet-stream"] = ".bin";
     mime_ext["application/x-iso9660-image"] = ".iso";
+    mime_ext["application/x-www-form-urlencoded"] = ".txt"; 
     
     // Image 
     mime_ext["image/jpeg"] = ".jpg";
@@ -174,7 +175,7 @@ void Post::ProcessContentLength()
     if (is_multipart)
     {
         std::string tmp;
-        part_buffer.append(conn->buffer.substr(0,bytes_to_read));
+        part_buffer.append(conn->buffer,bytes_to_read);
         if (bytes_to_read < conn->buffer.length()) 
             tmp = conn->buffer.substr(bytes_to_read);
         conn->buffer = part_buffer;
