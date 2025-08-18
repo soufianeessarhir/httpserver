@@ -12,6 +12,12 @@ void    ExecuteError(Connection *conn)
         else
             Path = conn->response->Error->ErrorHtmlPath.find(conn->response->GetStatusCode())->second;
         conn->request->SetUri(Path);
+        if (conn->CgiObj)
+        {
+            delete conn->CgiObj;
+            conn->CgiObj = NULL;
+            conn->UseCgi = false;
+        }
     }
     switch (conn->response->Error->ResponseStat)
     {   

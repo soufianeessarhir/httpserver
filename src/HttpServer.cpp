@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 12:24:48 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/17 18:36:01 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -278,7 +278,7 @@ void		HttpServer::HandleNewConnection(int fd)
 			else
 				throw HttpServerError("Accept failed");
 		}
-		Connection *conn = new Connection(client_fd, event_fd);
+		Connection *conn = new Connection(client_fd);
 		struct sockaddr_in *s = (struct sockaddr_in *)&client_sock;
 		char ipstr[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));

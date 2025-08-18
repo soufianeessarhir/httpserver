@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 11:42:30 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/17 18:35:27 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,14 +29,13 @@ struct Timeouts
     bool read_fails;
 	time_t last_activity; // Last activity timestamp
     time_t read_timeout;  // Read timeout value
-    time_t Child_track; // cgi process
 };
 
 class Connection
 {
 
 public:
-    Connection(int fd, int event);
+    Connection(int fd);
     void Reset();
     void UpdateTime(time_t &t);
     ~Connection();

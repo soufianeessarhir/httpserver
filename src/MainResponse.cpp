@@ -14,6 +14,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <ctime>
 class MainResponse;
 
 std::map<std::string, std::string> CreateMimeTypes()
@@ -173,25 +174,31 @@ MainResponse::~MainResponse()
     
 }
 
-void MainResponse::SendStatusLine(Connection *Conn)
+void MainResponse::SendStatusLine(Connection *conn)
 {
+    if (conn->CgiObj)
+    {
+        std::string location = conn->CgiObj->CgiHeaders["Location"];
+        if (!location.empty())
+            StatusLine = "HTTP/1.1 302 Found\r\nLocation: " + location + "\r\nConnection:close\r\n\r\n";
+        std::cout << location << "'---------'" << std::endl;
+    }
     ssize_t BytesWriten = 0;
     size_t TotalSent = 0;
     
     while (TotalSent < StatusLine.size())
     {
-        BytesWriten = send(Conn->fd, StatusLine.c_str() + TotalSent, 
+        BytesWriten = send(conn->fd, StatusLine.c_str() + TotalSent, 
                           StatusLine.size() - TotalSent, MSG_NOSIGNAL);
-        
         if (BytesWriten == 0)
         {
-            Conn->state = Connection::SENDING_RESPONSE;
+            conn->state = Connection::SENDING_RESPONSE;
             return;
         }
         if (BytesWriten < 0)
         {
-            perror("send status line");
-            Conn->state = Connection::COMPLETE;
+            // perror("send status line");
+            conn->state = Connection::COMPLETE;
             return;
         }
         TotalSent += BytesWriten;
@@ -237,7 +244,7 @@ void MainResponse::SendHeaders(Connection *conn)
         }
         if (BytesWriten < 0)
         {
-            perror("send headers");
+            // perror("send headers");
             conn->state = Connection::COMPLETE;
             return;
         }
@@ -344,9 +351,18 @@ bool    CheckFileRD(Connection *conn)
 
 void    excuteGetMethod(Connection *conn)
 {
-    if (conn->UseCgi && conn->response->GetMethod() != Error && conn->CgiObj->Pid == -42)
+    if (conn->CgiObj && conn->response->GetMethod() != Error)
     {
-        conn->CgiObj->ExecuteCgi(conn);
+        if (conn->CgiObj->ExecuteCgi(conn) == false)
+        {
+            if (conn->CgiObj)
+            {
+                delete conn->CgiObj;
+                conn->CgiObj = NULL;
+                conn->UseCgi = false;
+            }
+            return;
+        }
         if (conn->CgiObj->IsCgiComplet(conn) == false)
             return ;
     }

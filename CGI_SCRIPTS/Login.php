@@ -1,8 +1,8 @@
 <?php
+
     session_start();
     if (isset($_SESSION["logined"]) && $_SESSION["logined"] === true) {
-        header("Location: /Dashboard");
-        exit(0);
+        header("Location: /CGI_SCRIPTS/Dashboard.php");
     }
 
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["username"]) && isset($_POST["password"])) 
@@ -11,8 +11,7 @@
         $_SESSION["logined"] = true;
         $_SESSION["username"] = $_POST["username"];
         $_SESSION["password"] = $_POST["password"]; // Avoid storing plain passwords in production!
-        header("Location: /Dashboard"); 
-        exit(0);
+        header("Location: /CGI_SCRIPTS/Dashboard.php");
     }
 ?>
 <!DOCTYPE html>

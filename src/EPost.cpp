@@ -23,6 +23,15 @@ void PostResponse(Connection *conn)
             conn->response->POST->SetContentType(conn);
             conn->response->POST->SetStatusLine();
             conn->response->POST->SendStatusLine(conn);
+            if (conn->CgiObj && conn->request->GetMethod() == "POST")
+            {
+                std::string location = conn->CgiObj->CgiHeaders["Location"];
+                if (!location.empty())
+                {    
+                    conn->response->POST->ResponseStat = SENDING_BODY;
+                    break ;
+                }
+            }
             conn->response->POST->SetHeaders(false, conn);
             conn->response->POST->SendHeaders(conn);
             conn->response->POST->ResponseStat = SENDING_BODY;

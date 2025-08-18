@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 11:43:17 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/17 18:36:20 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,12 @@
 #include <string>
 #include <sstream>
 
-Connection::Connection(int fd, int event): UseCgi(false), CgiObj(NULL), state(READING_REQUEST_LINE),fd(fd)
-            ,request(new Request()),response(NULL),server(NULL),location(NULL) ,post(NULL),event_fd(event)
+Connection::Connection(int fd): UseCgi(false), CgiObj(NULL), state(READING_REQUEST_LINE),fd(fd)
+            ,request(new Request()),response(NULL),server(NULL),location(NULL) ,post(NULL)
 {
     timeouts.read_fails = false;   
     timeouts.last_activity = time(NULL);     
     timeouts.read_timeout = time(NULL);  
-    timeouts.Child_track = time(NULL);  
 }
 
 void Connection::UpdateTime(time_t &t)
