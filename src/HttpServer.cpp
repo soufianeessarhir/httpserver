@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 18:00:47 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 22:13:28 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ HttpServer::HttpServer(std::vector<Server> &srvs) :buf(claculateBufferSize()), s
         perror("Event queue creation failed");
 #if defined(__APPLE__)
     change_count = 0;
+	pts = NULL;
 #endif
     this->init();
 }
@@ -85,6 +86,19 @@ bool HttpServer::CheckForEventFd(int fd)
     return false;
 }
 
+void		HttpServer::SetTimeOut()
+{
+#ifdef __APPLE__
+	if (!active_clients.empty())
+	{
+		ts.tv_nsec = 1000;
+		ts.tv_sec  = 0;
+		pts        = &ts;
+	}
+	else
+		pts = NULL;
+#endif
+}
 
 int HttpServer::CreateEvent()
 {
@@ -103,6 +117,7 @@ int HttpServer::AddEvent(int fd, int events)
     ev.data.fd = fd;
     result =  epoll_ctl(event_fd, EPOLL_CTL_ADD, fd, &ev);
 #elif defined(__APPLE__)
+	SetTimeOut();
     if (events & READ_EVENT)
 	{
         EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
@@ -113,7 +128,7 @@ int HttpServer::AddEvent(int fd, int events)
         EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
         change_count++;
     }
-    result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
+    result = kevent(event_fd, change_list, change_count, NULL, 0, pts);
     change_count = 0;
 	if (result < 0 && errno != ENOENT && errno != EBADF)
 		throw HttpClientError("AddEvent failed",fd);
@@ -129,6 +144,7 @@ int HttpServer::ModifyEvent(int fd, int events)
     ev.data.fd = fd;
     result =  epoll_ctl(event_fd, EPOLL_CTL_MOD, fd, &ev);
 #elif defined(__APPLE__)
+	SetTimeOut();
 	change_count = 0;
 	EV_SET(&change_list[change_count++], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
 	EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
@@ -136,7 +152,7 @@ int HttpServer::ModifyEvent(int fd, int events)
 		EV_SET(&change_list[change_count++], fd, EVFILT_READ, EV_ENABLE | EV_CLEAR, 0, 0, NULL);
 	if (events & WRITE_EVENT)
 		EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, EV_ENABLE | EV_CLEAR, 0, 0, NULL);
-	result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
+	result = kevent(event_fd, change_list, change_count, NULL, 0, pts);
     change_count = 0;
 	if (result < 0 && errno != ENOENT && errno != EBADF)
 		throw HttpClientError("ModifyEvent",fd);
@@ -153,7 +169,7 @@ int HttpServer::RemoveEvent(int fd)
     change_count++;
     EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
     change_count++;
-    result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
+    result = kevent(event_fd, change_list, change_count, NULL, 0, pts);
     if (result < 0 && errno != ENOENT && errno != EBADF)
       throw HttpClientError("kevent EV_DELETE",fd);
     change_count = 0;
@@ -176,15 +192,7 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
         platform_events[i].data = NULL;
     }
 #elif defined(__APPLE__)
-    struct timespec ts;
-    struct timespec *pts = NULL;
-    // if (timeout == -1)
-    //     pts = NULL;
-    // else {
-        ts.tv_sec = 0 ;
-        ts.tv_nsec = 0;
-        pts = &ts;
-    // }
+	SetTimeOut();
     event_count = kevent(event_fd, NULL, 0, kevents, max_events, pts);
 	for (int i = 0; i < event_count; i++)
 	{
@@ -264,7 +272,7 @@ void HttpServer::init()
             }
             try
 			{
-                AddEvent(sockfd, READ_EVENT);	
+                AddEvent(sockfd, READ_EVENT | EDGE_TRIGGERED);	
 			}
             catch (const HttpClientError &e)
 			{
@@ -348,7 +356,6 @@ void		HttpServer::HandleNewConnection(int fd)
 		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
 		conn->ip = ipstr;
 		conn->port = ntohs(s->sin_port);
-		std::cout<< " " << ipstr << " " << conn->port<< std::endl;
 		clients[client_fd] = conn;
 		SetClientSocketToNonblocking(client_fd);
 		AddEvent(client_fd,READ_EVENT | EDGE_TRIGGERED);
@@ -420,30 +427,37 @@ void		HttpServer::run()
 	short ev;
 	for(;;)
 	{
-		
-		event_count = WaitForEvents(platform_events, MAX_EVENTS);
-		for (int i = 0; i < event_count; ++i)
+		try
 		{
-			try
+			event_count = WaitForEvents(platform_events, MAX_EVENTS);
+			for (int i = 0; i < event_count; ++i)
 			{
-				fd = platform_events[i].fd;
-				ev = platform_events[i].events;
-				if (ev & (HUP_EVENT | ERROR_EVENT))
-						ClientCleanUp(fd);
-				if (server_map.find(fd) != server_map.end())
-					HandleNewConnection(fd);
-				else if (ev & (READ_EVENT | WRITE_EVENT))
-					if (!CheckForEventFd(fd))
-						active_clients.push_back(platform_events[i]);
+				try
+				{
+					fd = platform_events[i].fd;
+					ev = platform_events[i].events;
+					if (ev & (HUP_EVENT | ERROR_EVENT))
+							ClientCleanUp(fd);
+					if (server_map.find(fd) != server_map.end())
+						HandleNewConnection(fd);
+					else if (ev & (READ_EVENT | WRITE_EVENT))
+						if (!CheckForEventFd(fd))
+							active_clients.push_back(platform_events[i]);
+				}
+				catch(const HttpClientError &e)
+				{
+					std::cerr << e.what() << '\n';
+					ClientCleanUp(e.client_fd);
+				}
 			}
-			catch(const HttpClientError &e)
-			{
-				std::cerr << e.what() << '\n';
-				ClientCleanUp(e.client_fd);
-			}
+			if (!active_clients.empty())
+				ProcessClientsRoundRobin();
 		}
-		if (!active_clients.empty())
-			ProcessClientsRoundRobin();
+		catch(const HttpClientError &e)
+		{
+			std::cerr << e.what() << '\n';
+			ClientCleanUp(e.client_fd);
+		}
 	}
 	
 
@@ -501,24 +515,28 @@ void        HttpServer::HandlOutgoingData(int fd)
 		conn->Reset();
 	}
 }
-void		HttpServer::ClientCleanUp(int fd)
+void HttpServer::ClientCleanUp(int fd)
 {
-	shutdown(fd,SHUT_WR);
-	RemoveEvent(fd);
-	for (std::deque<PlatformEvent>::iterator it = active_clients.begin();it != active_clients.end(); )
+    RemoveEvent(fd);
+    for (std::deque<PlatformEvent>::iterator it = active_clients.begin();
+         it != active_clients.end(); )
+    {
+        if (it->fd == fd)
+            it = active_clients.erase(it);
+        else
+            ++it;
+    }
+    Connection *conn = clients[fd];
+    if (conn) 
 	{
-		if (it->fd == fd)
-			it = active_clients.erase(it);
-		else
-			++it;
-	}
-	Connection *conn = clients[fd];
-	conn->Reset();
-	delete conn;
-	conn = NULL;
-	clients.erase(fd);
-	close(fd);
+        conn->Reset();
+        delete conn;
+        clients.erase(fd);
+    }
+    shutdown(fd, SHUT_RDWR);
+    close(fd);
 }
+
 void		HttpServer::cleanup()
 {
 	for (std::map<int, Server>::iterator it = server_map.begin(); it != server_map.end(); ++it)

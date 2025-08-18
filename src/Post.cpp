@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 10:28:53 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 22:07:25 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -174,20 +174,13 @@ void Post::ProcessContentLength()
     size_t bytes_to_read = std::min(conn->buffer.size(), content_length - content_bytes_read);
     if (is_multipart)
     {
-        std::string tmp;
-        part_buffer.append(conn->buffer,bytes_to_read);
-        if (bytes_to_read < conn->buffer.length()) 
-            tmp = conn->buffer.substr(bytes_to_read);
-        conn->buffer = part_buffer;
+        part_buffer.append(conn->buffer.data(),bytes_to_read);
+        conn->buffer.erase(0,bytes_to_read);
         ProcessMultiPart();
-        part_buffer = conn->buffer;
-        conn->buffer = tmp;
     }
     else
-    {
         WriteDataToFile(bytes_to_read); 
         conn->buffer.erase(0, bytes_to_read);
-    }
     content_bytes_read += bytes_to_read;
     if (content_bytes_read >= content_length)
     {
@@ -196,7 +189,6 @@ void Post::ProcessContentLength()
         conn->state = Connection::SENDING_RESPONSE;
     }
 }
-
 
 bool Post::CheckFileName(std::string &filename)
 {
