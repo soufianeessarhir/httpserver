@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 22:13:28 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/19 10:05:17 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,30 +111,40 @@ int HttpServer::CreateEvent()
 
 int HttpServer::AddEvent(int fd, int events)
 {
-	int result;
+    int result;
 #ifdef __linux__
-    ev.events = events | EDGE_TRIGGERED;
+    ev.events = events;
+    if (events & EDGE_TRIGGERED)
+        ev.events |= EPOLLET;
     ev.data.fd = fd;
-    result =  epoll_ctl(event_fd, EPOLL_CTL_ADD, fd, &ev);
+    result = epoll_ctl(event_fd, EPOLL_CTL_ADD, fd, &ev);
+
 #elif defined(__APPLE__)
-	SetTimeOut();
+    SetTimeOut();
+
+    int flags = EV_ADD;
+    if (events & EDGE_TRIGGERED)
+        flags |= EV_CLEAR;
     if (events & READ_EVENT)
-	{
-        EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
+    {
+        EV_SET(&change_list[change_count], fd, EVFILT_READ, flags, 0, 0, NULL);
         change_count++;
     }
     if (events & WRITE_EVENT)
-	{
-        EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_ADD | EDGE_TRIGGERED, 0, 0, NULL);
+    {
+        EV_SET(&change_list[change_count], fd, EVFILT_WRITE, flags, 0, 0, NULL);
         change_count++;
     }
+
     result = kevent(event_fd, change_list, change_count, NULL, 0, pts);
     change_count = 0;
-	if (result < 0 && errno != ENOENT && errno != EBADF)
-		throw HttpClientError("AddEvent failed",fd);
+
+    if (result < 0 && errno != ENOENT && errno != EBADF)
+        throw HttpClientError("AddEvent failed", fd);
 #endif
     return result;
 }
+
 
 int HttpServer::ModifyEvent(int fd, int events)
 {
@@ -193,21 +203,22 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
     }
 #elif defined(__APPLE__)
 	SetTimeOut();
-    event_count = kevent(event_fd, NULL, 0, kevents, max_events, pts);
-	for (int i = 0; i < event_count; i++)
-	{
-		platform_events[i].fd = kevents[i].ident;
-		platform_events[i].data = kevents[i].udata;
-		platform_events[i].events = 0;
-		if (kevents[i].filter == EVFILT_READ)
-			platform_events[i].events |= READ_EVENT; 
-		if (kevents[i].filter == EVFILT_WRITE)
-			platform_events[i].events |= WRITE_EVENT;
-		if (kevents[i].flags & EV_ERROR)
-			platform_events[i].events |= ERROR_EVENT;
-		if (kevents[i].flags & EV_EOF)
-			platform_events[i].events |= HUP_EVENT;
-	}
+  event_count = kevent(event_fd, NULL, 0, kevents, max_events, pts);
+for (int i = 0; i < event_count; i++)
+{
+    platform_events[i].fd = kevents[i].ident;
+    platform_events[i].data = kevents[i].udata;
+    platform_events[i].events = 0;
+    if (kevents[i].filter == EVFILT_READ)
+        platform_events[i].events = READ_EVENT; 
+    if (kevents[i].filter == EVFILT_WRITE)
+        platform_events[i].events = WRITE_EVENT;
+    if (kevents[i].flags & EV_ERROR)
+        platform_events[i].events = ERROR_EVENT;
+    if (kevents[i].flags & EV_EOF)
+        platform_events[i].events = HUP_EVENT;
+}
+
 	if (event_count < 0  && errno != ENOENT && errno != EBADF)
 		perror("WaitForEvents failed");
 #endif
@@ -272,7 +283,7 @@ void HttpServer::init()
             }
             try
 			{
-                AddEvent(sockfd, READ_EVENT | EDGE_TRIGGERED);	
+                AddEvent(sockfd, READ_EVENT);	
 			}
             catch (const HttpClientError &e)
 			{
@@ -313,8 +324,8 @@ void		HttpServer::SetSocketForWrite(Connection *conn)
 
 void		HttpServer::SetSocketForRead(Connection *conn)
 {
-    ModifyEvent(conn->fd,READ_EVENT);
     conn->state = Connection::READING_REQUEST_LINE;
+    ModifyEvent(conn->fd,READ_EVENT);
 }
 
 
@@ -348,7 +359,10 @@ void		HttpServer::HandleNewConnection(int fd)
 			if (errno == EAGAIN || errno == EWOULDBLOCK)
 				break;
 			else
+			{
 				perror("Accept failed");
+				return;
+			}
 		}
 		Connection *conn = new Connection(client_fd);
 		struct sockaddr_in *s = (struct sockaddr_in *)&client_sock;
@@ -436,9 +450,9 @@ void		HttpServer::run()
 				{
 					fd = platform_events[i].fd;
 					ev = platform_events[i].events;
-					if (ev & (HUP_EVENT | ERROR_EVENT))
+					if (ev == HUP_EVENT || ev == ERROR_EVENT)
 							ClientCleanUp(fd);
-					if (server_map.find(fd) != server_map.end())
+					else if (server_map.find(fd) != server_map.end())
 						HandleNewConnection(fd);
 					else if (ev & (READ_EVENT | WRITE_EVENT))
 						if (!CheckForEventFd(fd))
@@ -501,6 +515,7 @@ void        HttpServer::HandlOutgoingData(int fd)
 	excuteGetMethod(conn);
 	if (conn->state == Connection::COMPLETE)
 	{
+		std::cout<< conn->buffer.data();
 		if (conn->response->GetMethod() == Error)
 		{
 			ClientCleanUp(conn->fd);
