@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/18 17:27:43 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/20 11:20:44 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,9 +91,11 @@ class MainResponse
         
         SendFile    CheckProg;
         State       ResponseStat;
+        bool        autoindex;
         
         void    SetAndSendBody(Connection *conn);
         bool    CheckForSending(Connection *conn);
+        std::string GenerateAutoIndex(Connection *conn);
         static const    std::map<int, std::string>          ErrorHtmlPath;
 
 };

@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 18:36:20 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/19 17:58:19 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,8 @@ void Connection::Reset()
 
 void    CheckCgiExist(Connection *conn) // add by eaboudi
 {
+    if (conn->location && conn->location->has_redirect)
+        return ;
     std::string Path = conn->location->root + conn->request->GetUri();
     std::string QueryString;
     std::string CheckDir;

@@ -13,17 +13,25 @@ void PostResponse(Connection *conn)
         else
             Path = conn->response->POST->ErrorHtmlPath.find(conn->response->POST->GetStatusCode())->second;
         conn->request->SetUri(Path);
+        if (conn->location && conn->location->has_redirect)
+        {
+            conn->response->POST->SendStatusLine(conn);
+            conn->response->POST->ResponseStat = SENDING_COMPLETE;
+            conn->state = Connection::COMPLETE;
+            return ;
+        }
     }
     switch (conn->response->POST->ResponseStat)
     {   
         case SENDING_STATUSLINE :
         {
+
             if (conn->response->POST->CheckForSending(conn) == false)
                 return ;
             conn->response->POST->SetContentType(conn);
             conn->response->POST->SetStatusLine();
             conn->response->POST->SendStatusLine(conn);
-            if (conn->CgiObj && conn->request->GetMethod() == "POST")
+            if (conn->CgiObj)
             {
                 std::string location = conn->CgiObj->CgiHeaders["Location"];
                 if (!location.empty())

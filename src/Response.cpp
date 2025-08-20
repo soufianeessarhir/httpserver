@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:24 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/13 22:10:55 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/19 18:45:39 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,14 @@ const std::map<int, std::string> Response::ErrorPhrase = createErrorPhrase();
 std::map<int, std::string> createErrorPhrase()
 {
     std::map<int, std::string> m;
+    m[300] = "Multiple Choices";
+    m[301] = "Moved Permanently";
+    m[302] = "Found";
+    m[303] = "See Other";
+    m[304] = "Not Modified";
+    m[305] = "Use Proxy";
+    m[307] = "Temporary Redirect";
+    m[308] = "Permanent Redirect";
     m[400] = "Bad Request";
     m[401] = "Unauthorized";
     m[403] = "Forbidden";

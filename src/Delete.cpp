@@ -19,7 +19,14 @@ void    ExecuteDelete(Connection *conn)
             conn->response->SetMethod(Error);
             return ;
         }
-    
+        if (conn->location && conn->location->has_redirect)
+        {
+            conn->response->DELETE = new MainResponse(conn->response->GetStatusCode());
+            conn->response->DELETE->SendStatusLine(conn);
+            conn->response->DELETE->ResponseStat = SENDING_COMPLETE;
+            conn->state = Connection::COMPLETE;
+            return ;
+        }
         if (unlink(conn->request->GetUri().c_str()) == 0) 
         {
             conn->response->SetStatusCode(204);
