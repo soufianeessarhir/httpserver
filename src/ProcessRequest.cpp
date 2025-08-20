@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 09:42:27 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/20 10:53:16 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,8 @@ void 		HttpServer::ProcessRequest(Connection *conn)
                 break;
             }
         }
-        if (!port_matches) continue;
+        if (!port_matches) 
+			continue;
         if (!default_server) 
             default_server = &servers[i]; 
         for (size_t k = 0; k < servers[i].server_names.size(); ++k) {

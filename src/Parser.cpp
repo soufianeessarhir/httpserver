@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/10 19:36:25 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/20 15:38:25 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -354,6 +354,7 @@ void		Parser::IndexDirective(std::string &index)
 	currentToken = lexer.getNextToken();
 	if (currentToken.type != TOKEN_IDENTIFIER)
 		throw ParseException("Expected path after 'index'");
+	index = currentToken.value;
 	currentToken = lexer.getNextToken();
 	while (currentToken.type == TOKEN_IDENTIFIER)
 	{

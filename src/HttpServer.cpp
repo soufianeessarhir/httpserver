@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/19 10:05:17 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/20 15:39:38 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,6 @@ int HttpServer::claculateBufferSize()
 			setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &target_buf, sizeof(target_buf)) == 0)
 			break;
 	}
-
     getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &send_size, &optlen);
     getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &recv_size, &optlen);
     close(fd);
@@ -86,19 +85,22 @@ bool HttpServer::CheckForEventFd(int fd)
     return false;
 }
 
-void		HttpServer::SetTimeOut()
+void HttpServer::SetTimeOut()
 {
+	
 #ifdef __APPLE__
-	if (!active_clients.empty())
-	{
-		ts.tv_nsec = 1000;
-		ts.tv_sec  = 0;
-		pts        = &ts;
-	}
-	else
-		pts = NULL;
+    if (active_clients.empty())
+        pts = NULL;
+    else
+    {
+        ts.tv_sec  = 0;
+        ts.tv_nsec = 5 * 1000 * 1000; 
+        pts        = &ts;
+    }
 #endif
+
 }
+
 
 int HttpServer::CreateEvent()
 {
@@ -112,36 +114,31 @@ int HttpServer::CreateEvent()
 int HttpServer::AddEvent(int fd, int events)
 {
     int result;
-#ifdef __linux__
-    ev.events = events;
-    if (events & EDGE_TRIGGERED)
-        ev.events |= EPOLLET;
-    ev.data.fd = fd;
-    result = epoll_ctl(event_fd, EPOLL_CTL_ADD, fd, &ev);
+#ifdef		__linux__
 
-#elif defined(__APPLE__)
+	ev.events = events;
+	if (events & EDGE_TRIGGERED)
+		ev.events |= EPOLLET;
+	ev.data.fd = fd;
+	result = epoll_ctl(event_fd, EPOLL_CTL_ADD, fd, &ev);
+
+#elif		defined(__APPLE__)
+
     SetTimeOut();
-
     int flags = EV_ADD;
     if (events & EDGE_TRIGGERED)
         flags |= EV_CLEAR;
     if (events & READ_EVENT)
-    {
-        EV_SET(&change_list[change_count], fd, EVFILT_READ, flags, 0, 0, NULL);
-        change_count++;
-    }
+        EV_SET(&change_list[change_count++], fd, EVFILT_READ, flags, 0, 0, NULL);
     if (events & WRITE_EVENT)
-    {
-        EV_SET(&change_list[change_count], fd, EVFILT_WRITE, flags, 0, 0, NULL);
-        change_count++;
-    }
-
+        EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, flags, 0, 0, NULL);
     result = kevent(event_fd, change_list, change_count, NULL, 0, pts);
     change_count = 0;
-
     if (result < 0 && errno != ENOENT && errno != EBADF)
-        throw HttpClientError("AddEvent failed", fd);
+       throw  HttpClientError("AddEvent failed",fd);
+
 #endif
+
     return result;
 }
 
@@ -150,10 +147,12 @@ int HttpServer::ModifyEvent(int fd, int events)
 {
 	int result;
 #ifdef __linux__
+
     ev.events = events | EDGE_TRIGGERED;
     ev.data.fd = fd;
     result =  epoll_ctl(event_fd, EPOLL_CTL_MOD, fd, &ev);
 #elif defined(__APPLE__)
+
 	SetTimeOut();
 	change_count = 0;
 	EV_SET(&change_list[change_count++], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
@@ -167,13 +166,16 @@ int HttpServer::ModifyEvent(int fd, int events)
 	if (result < 0 && errno != ENOENT && errno != EBADF)
 		throw HttpClientError("ModifyEvent",fd);
 #endif
+
     return result;
 }
 
 int HttpServer::RemoveEvent(int fd)
 {
 	int result;
+	
 #ifdef __APPLE__
+
     change_count = 0;
     EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     change_count++;
@@ -183,9 +185,13 @@ int HttpServer::RemoveEvent(int fd)
     if (result < 0 && errno != ENOENT && errno != EBADF)
       throw HttpClientError("kevent EV_DELETE",fd);
     change_count = 0;
+	
 #else
+
     result = epoll_ctl(event_fd, EPOLL_CTL_DEL, fd, NULL);
+	
 #endif
+
     return result;
 }
 
@@ -194,40 +200,65 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
 	int event_count;
 	if (active_clients.empty())
 		timeout = -1;
+		
 #ifdef __linux__
+
     event_count = epoll_wait(event_fd, events, max_events, timeout);
     for (int i = 0; i < event_count; i++) {
         platform_events[i].fd = events[i].data.fd;
         platform_events[i].events = events[i].events;
         platform_events[i].data = NULL;
     }
+	
 #elif defined(__APPLE__)
-	SetTimeOut();
-  event_count = kevent(event_fd, NULL, 0, kevents, max_events, pts);
-for (int i = 0; i < event_count; i++)
-{
-    platform_events[i].fd = kevents[i].ident;
-    platform_events[i].data = kevents[i].udata;
-    platform_events[i].events = 0;
-    if (kevents[i].filter == EVFILT_READ)
-        platform_events[i].events = READ_EVENT; 
-    if (kevents[i].filter == EVFILT_WRITE)
-        platform_events[i].events = WRITE_EVENT;
-    if (kevents[i].flags & EV_ERROR)
-        platform_events[i].events = ERROR_EVENT;
-    if (kevents[i].flags & EV_EOF)
-        platform_events[i].events = HUP_EVENT;
-}
 
+	SetTimeOut(); 
+  	event_count = kevent(event_fd, NULL, 0, kevents, max_events, pts);
+	for (int i = 0; i < event_count; i++)
+	{
+		platform_events[i].fd = kevents[i].ident;
+		platform_events[i].data = kevents[i].udata;
+		platform_events[i].events = 0;
+		if (kevents[i].filter == EVFILT_READ) 	platform_events[i].events = READ_EVENT; 
+		if (kevents[i].filter == EVFILT_WRITE) 	platform_events[i].events = WRITE_EVENT;
+		if (kevents[i].flags  == EV_ERROR) 		platform_events[i].events = ERROR_EVENT;
+		if (kevents[i].flags  == EV_EOF)			platform_events[i].events = HUP_EVENT;
+	}
 	if (event_count < 0  && errno != ENOENT && errno != EBADF)
 		perror("WaitForEvents failed");
+		
 #endif
     return event_count;
 }
 
+void		HttpServer::CreateSocket(struct addrinfo *p,int &sockfd,struct addrinfo *res)
+{
+	for (p = res; p != NULL; p = p->ai_next)
+	{
+		sockfd = socket(p->ai_family, p->ai_socktype, 0);
+		if (sockfd == -1) continue;
+		int optval = 1;
+		if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0)
+		{
+			close(sockfd);	freeaddrinfo(res);	perror("setsockopt(SO_REUSEADDR) failed");
+		}
+		SetServerSocketToNonblocking(sockfd);
+		if (bind(sockfd, p->ai_addr, p->ai_addrlen) != -1) break;
+		close(sockfd);
+		sockfd = -1;
+	}
+	freeaddrinfo(res);
+	if (p == NULL)
+		perror("Socket binding failed");
+	if (listen(sockfd, 1024) == -1)
+	{ 
+		close(sockfd); perror("Socket listening failed");
+	}
+}
+
 void HttpServer::init()
 {
-    struct addrinfo hints, *res, *p;
+    struct addrinfo hints, *res, *p = NULL;
 
     for (size_t i = 0; i < servers.size(); ++i)
     {
@@ -237,58 +268,23 @@ void HttpServer::init()
             const std::string& cfgHost = servers[i].listen[j].first;
             const int          portNum = servers[i].listen[j].second;
             const std::string hostForCompare = cfgHost.empty() ? "0.0.0.0" : cfgHost;
-			if (servers[i].isvirtual &&
-                std::find(servers[i].virtual_listen.begin(),
-                servers[i].virtual_listen.end(),
-                std::make_pair(hostForCompare, portNum)) != servers[i].virtual_listen.end())
-                continue;
+			if (servers[i].isvirtual && std::find(servers[i].virtual_listen.begin(),
+                servers[i].virtual_listen.end(), std::make_pair(hostForCompare, portNum)) != servers[i].virtual_listen.end()) continue;
             memset(&hints, 0, sizeof(hints));
             hints.ai_family   = AF_INET;
             hints.ai_socktype = SOCK_STREAM;
             hints.ai_flags    = cfgHost.empty() ? AI_PASSIVE : 0;
-            const char* node   = cfgHost.empty() ? NULL : cfgHost.c_str();
+            const char* node  = cfgHost.empty() ? NULL : cfgHost.c_str();
 			std::stringstream ss;
 			ss << portNum;
 			std::string portStr = ss.str();
             if (getaddrinfo(node, portStr.c_str(), &hints, &res) != 0)
                 perror("Getaddrinfo failed");
-            for (p = res; p != NULL; p = p->ai_next)
-            {
-                sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-                if (sockfd == -1)
-                    continue;
-                int optval = 1;
-                if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0)
-                {
-                    close(sockfd);
-                    freeaddrinfo(res);
-                    perror("setsockopt(SO_REUSEADDR) failed");
-                }
-                SetServerSocketToNonblocking(sockfd);
-                if (bind(sockfd, p->ai_addr, p->ai_addrlen) != -1)
-                    break;
-                close(sockfd);
-                sockfd = -1;
-            }
-
-            freeaddrinfo(res);
-
-            if (p == NULL)
-                perror("Socket binding failed");
-
-            if (listen(sockfd, SOMAXCONN) == -1)
-            {
-                close(sockfd);
-                perror("Socket listening failed");
-            }
+			CreateSocket(p,sockfd,res);
             try
-			{
-                AddEvent(sockfd, READ_EVENT);	
-			}
+				{ AddEvent(sockfd, READ_EVENT);}
             catch (const HttpClientError &e)
-			{
-                std::cerr << e.what() << '\n';
-			}
+				{ std::cerr << e.what() << '\n';}
             server_map[sockfd] = servers[i];
         }
     }
@@ -298,24 +294,20 @@ void HttpServer::SetServerSocketToNonblocking(int fd)
 {
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1)
-	{
-		close(fd);
-        perror("fcntl get failed");
-	}
+		{ close(fd); perror("fcntl get failed on server socket");}
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
-	{
-		close(fd);
-        perror("fcntl set failed");
-	}
+		{ close(fd); perror("fcntl set failed on server socket");}
 }
+
 void HttpServer::SetClientSocketToNonblocking(int fd)
 {
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1)
-        perror("fcntl get failed");
+        perror("fcntl get failed on client socket");
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
-        perror("fcntl set failed");
+        perror("fcntl set failed on client socket");
 }
+
 void		HttpServer::SetSocketForWrite(Connection *conn)
 {
 	ModifyEvent(conn->fd,WRITE_EVENT);
@@ -328,7 +320,6 @@ void		HttpServer::SetSocketForRead(Connection *conn)
     ModifyEvent(conn->fd,READ_EVENT);
 }
 
-
 bool		HttpServer::read(Connection *conn)
 {
 	ssize_t n = 0;
@@ -340,9 +331,7 @@ bool		HttpServer::read(Connection *conn)
         else if (n == 0)
                 throw HttpClientError("connection close by peer", conn->fd);
 		else
-			if(conn->buffer.size() == 0)
-				return false;
-			return true;
+			{ if(conn->buffer.size() == 0) return false; return true;}
     }
 }
 
@@ -354,25 +343,22 @@ void		HttpServer::HandleNewConnection(int fd)
 		struct sockaddr_storage client_sock;
 		socklen_t socklen = sizeof(client_sock);
 		int client_fd = accept(fd, (sockaddr *)&client_sock, &socklen);
+		if (clients.size() > 1024)
+			return;
 		if (client_fd == -1)
 		{
-			if (errno == EAGAIN || errno == EWOULDBLOCK)
-				break;
-			else
-			{
-				perror("Accept failed");
-				return;
-			}
+			if (errno == EAGAIN || errno == EWOULDBLOCK ) break;
+			else { perror("Accept failed"); return;}
 		}
 		Connection *conn = new Connection(client_fd);
 		struct sockaddr_in *s = (struct sockaddr_in *)&client_sock;
 		char ipstr[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
-		conn->ip = ipstr;
-		conn->port = ntohs(s->sin_port);
-		clients[client_fd] = conn;
+		conn->ip 			= ipstr;
+		conn->port 			= ntohs(s->sin_port);
 		SetClientSocketToNonblocking(client_fd);
 		AddEvent(client_fd,READ_EVENT | EDGE_TRIGGERED);
+		clients[client_fd] 	= conn;
 	}
 }
 
@@ -392,24 +378,23 @@ void		HttpServer::HandlIncommingData(int fd)
 			case Connection::READING_REQUEST_LINE:
 			
 				ProcessRequestLine(conn);
-				if (conn->state == Connection::READING_HEADERS  || conn->state == Connection::SENDING_RESPONSE)
-					continue_processing = true;
+					continue_processing = conn->state != Connection::READING_REQUEST_LINE;
 				break;
 				
 			case Connection::READING_HEADERS:
 			
 				ProcessHeaders(conn);
-				if (conn->state == Connection::PROCESSING)
-					continue_processing = true;
+					continue_processing = conn->state == Connection::PROCESSING;
 				break;
 				
 			case Connection::PROCESSING:
 
 				ProcessRequest(conn);
+				//the next checks should be in ProcessRequest
 				if (conn->request->ExpectBody() && conn->request->GetMethod() == "POST")
 				{
 					if (conn->state == Connection::PROCESSING)
-						conn->state = Connection::READING_BODY;
+						conn->state     = Connection::READING_BODY;
 					continue_processing = true;
 				}
 				else
@@ -451,12 +436,11 @@ void		HttpServer::run()
 					fd = platform_events[i].fd;
 					ev = platform_events[i].events;
 					if (ev == HUP_EVENT || ev == ERROR_EVENT)
-							ClientCleanUp(fd);
+					{ClientCleanUp(fd); continue ;}
 					else if (server_map.find(fd) != server_map.end())
 						HandleNewConnection(fd);
 					else if (ev & (READ_EVENT | WRITE_EVENT))
-						if (!CheckForEventFd(fd))
-							active_clients.push_back(platform_events[i]);
+						if (!CheckForEventFd(fd)) active_clients.push_back(platform_events[i]);
 				}
 				catch(const HttpClientError &e)
 				{
@@ -474,7 +458,6 @@ void		HttpServer::run()
 		}
 	}
 	
-
 }
 
 
@@ -515,17 +498,11 @@ void        HttpServer::HandlOutgoingData(int fd)
 	excuteGetMethod(conn);
 	if (conn->state == Connection::COMPLETE)
 	{
-		std::cout<< conn->buffer.data();
 		if (conn->response->GetMethod() == Error)
-		{
-			ClientCleanUp(conn->fd);
-			return;
-		}
+			{ ClientCleanUp(conn->fd); return;}
 		else if (conn->request->CheckField("connection") && conn->request->GetHeader("connection") != "keep-alive")
-		{
-			ClientCleanUp(conn->fd);
-			return;
-		}
+			{ClientCleanUp(conn->fd);return;}
+		std::cerr<<"enter here\n";
 		SetSocketForRead(conn);
 		conn->Reset();
 	}
@@ -536,19 +513,12 @@ void HttpServer::ClientCleanUp(int fd)
     for (std::deque<PlatformEvent>::iterator it = active_clients.begin();
          it != active_clients.end(); )
     {
-        if (it->fd == fd)
-            it = active_clients.erase(it);
-        else
-            ++it;
+        if (it->fd == fd) it = active_clients.erase(it);
+        else ++it;
     }
     Connection *conn = clients[fd];
     if (conn) 
-	{
-        conn->Reset();
-        delete conn;
-        clients.erase(fd);
-    }
-    shutdown(fd, SHUT_RDWR);
+		{ clients.erase(fd);delete conn;}
     close(fd);
 }
 

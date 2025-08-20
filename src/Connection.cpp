@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 11:20:21 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/20 10:34:08 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,36 +31,20 @@ void Connection::Reset()
 {
     UseCgi = false;
     if (request)
-    {
-        delete request;
-        request = NULL;
-        request = new Request();
-    }
+        { delete request; request = NULL; request = new Request();}
     if (response)
-    {
-        delete response;
-        response = NULL;
-    }
+        { delete response; response = NULL;}
     if (server)
-    {
-        // delete server;
         server = NULL;
-    }
     if (location)
-    {
-        // delete location;
         location = NULL;
-    }
     if (post)
-    {
-        delete post;
-        post = NULL;
-    }
+        { delete post; post = NULL;}
     
 }
 
 
-void    CheckCgiExist(Connection *conn) // add by eaboudi
+void    CheckCgiExist(Connection *conn)
 {
     std::string Path = conn->location->root + conn->request->GetUri();
     std::string QueryString;
@@ -133,7 +117,16 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
 
 Connection::~Connection()
 {
-    Reset();
+    if (request)
+        { delete request; request = NULL;}
+    if (response)
+        { delete response; response = NULL;}
+    if (server)
+        {server = NULL;}
+    if (location)
+        location = NULL;
+    if (post)
+        {delete post; post = NULL;}
 }
 
 
