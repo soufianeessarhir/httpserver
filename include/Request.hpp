@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/16 21:26:24 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/21 13:35:06 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,7 @@ public:
 
     bool            CheckField(const std::string &);
     
+    std::map<std::string,std::string>   headers;
 
 private:
 
@@ -93,7 +94,6 @@ private:
     
     std::string                         version;
     
-    std::map<std::string,std::string>   headers;
 
 };
 

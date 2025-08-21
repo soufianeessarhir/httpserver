@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/18 20:25:47 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/21 13:33:48 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,9 +132,9 @@ int HttpServer::AddEvent(int fd, int events)
     }
     result = kevent(event_fd, change_list, change_count, NULL, 0, pts);
     change_count = 0;
-	if (result < 0 && errno != ENOENT && errno != EBADF)
-		throw HttpClientError("AddEvent failed",fd);
 #endif
+	if (result < 0)
+		throw HttpClientError("AddEvent failed",fd);
     return result;
 }
 
@@ -156,17 +156,18 @@ int HttpServer::ModifyEvent(int fd, int events)
 		EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, EV_ENABLE | EV_CLEAR, 0, 0, NULL);
 	result = kevent(event_fd, change_list, change_count, NULL, 0, pts);
     change_count = 0;
-	if (result < 0 && errno != ENOENT && errno != EBADF)
-		throw HttpClientError("ModifyEvent",fd);
 #endif
+	if (result < 0)
+		throw HttpClientError("ModifyEvent",fd);
     return result;
 }
 
 int HttpServer::RemoveEvent(int fd)
 {
 	int result;
-#ifdef __APPLE__
-    change_count = 0;
+#ifdef __linux__
+    result = epoll_ctl(event_fd, EPOLL_CTL_DEL, fd, NULL);
+#elif defined(__APPLE__)
     EV_SET(&change_list[change_count], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     change_count++;
     EV_SET(&change_list[change_count], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
@@ -175,9 +176,9 @@ int HttpServer::RemoveEvent(int fd)
     if (result < 0 && errno != ENOENT && errno != EBADF)
       throw HttpClientError("kevent EV_DELETE",fd);
     change_count = 0;
-#else
-    result = epoll_ctl(event_fd, EPOLL_CTL_DEL, fd, NULL);
 #endif
+	// if (result < 0)
+	// 	throw HttpClientError("RemoveEvent",fd);
     return result;
 }
 

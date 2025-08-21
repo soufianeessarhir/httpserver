@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:31:30 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/12 08:52:14 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/20 08:26:53 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ enum Methods
     POST,
     DELETE,
     Error,
+    AUTOINDEX,
 };
 class MainResponse;
 

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>504 Gateway Timeout - Service Temporarily Unavailable</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .error-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+            position: relative;
+        }
+
+        .clock-container {
+            width: 100%;
+            height: 100%;
+            border: 6px solid #e74c3c;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .clock-hands {
+            position: absolute;
+            width: 2px;
+            background: white;
+            border-radius: 1px;
+            transform-origin: bottom center;
+        }
+
+        .hour-hand {
+            height: 25px;
+            top: 35%;
+            animation: rotate-hour 3s linear infinite;
+        }
+
+        .minute-hand {
+            height: 35px;
+            top: 25%;
+            animation: rotate-minute 2s linear infinite;
+        }
+
+        @keyframes rotate-hour {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes rotate-minute {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error-code {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #e74c3c;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .error-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            color: #5a6c7d;
+            margin-bottom: 2rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+
+
+        .status-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #3498db;
+            border-radius: 0 8px 8px 0;
+            text-align: left;
+        }
+
+        .status-info h3 {
+            color: #2980b9;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-info p {
+            color: #5a6c7d;
+            font-size: 0.9rem;
+        }
+
+        .loading-dots {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .loading-dots span {
+            display: inline-block;
+            animation: loading 1.4s infinite both;
+        }
+
+        .loading-dots span:nth-child(1) { animation-delay: 0s; }
+        .loading-dots span:nth-child(2) { animation-delay: 0.16s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.32s; }
+
+        @keyframes loading {
+            0%, 80%, 100% { opacity: 0.3; }
+            40% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .error-card {
+                padding: 2rem 1rem;
+            }
+            
+            .error-code {
+                font-size: 3rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-card">
+            <div class="error-icon">
+                <div class="clock-container">
+                    <div class="clock-hands hour-hand"></div>
+                    <div class="clock-hands minute-hand"></div>
+                </div>
+            </div>
+            
+            <div class="error-code">504</div>
+            <h1 class="error-title">Gateway Timeout</h1>
+            <p class="error-message">
+                The server is temporarily unable to handle your request due to maintenance or capacity issues. 
+                This is usually a temporary condition and will be resolved shortly.
+            </p>
+            
+
+            
+            <div class="status-info">
+                <h3>What happened?</h3>
+                <p>
+                    A gateway timeout occurs when our server didn't receive a timely response from an upstream server. 
+                    This could be due to high traffic, server maintenance, or temporary network issues.
+                </p>
+                <br>
+                <p>
+                    <strong>Auto-refresh in progress</strong>
+                    <span class="loading-dots">
+                        <span>.</span>
+                        <span>.</span>
+                        <span>.</span>
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh functionality
+        let refreshAttempts = 0;
+        const maxRefreshAttempts = 5;
+        const refreshInterval = 30000; // 30 seconds
+
+        function autoRefresh() {
+            if (refreshAttempts < maxRefreshAttempts) {
+                refreshAttempts++;
+                console.log(`Auto-refresh attempt ${refreshAttempts}/${maxRefreshAttempts}`);
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, refreshInterval);
+            } else {
+                console.log('Max refresh attempts reached. Stopping auto-refresh.');
+                const statusInfo = document.querySelector('.status-info p:last-child');
+                if (statusInfo) {
+                    statusInfo.innerHTML = '<strong>Auto-refresh stopped.</strong> Please try refreshing manually.';
+                }
+            }
+        }
+
+        // Add smooth fade-in effect when page loads
+        window.addEventListener('load', () => {
+            autoRefresh();
+        });
+    </script>
+</body>
+</html>

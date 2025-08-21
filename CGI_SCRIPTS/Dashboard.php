@@ -3,7 +3,7 @@
     
     if (!isset($_SESSION["logined"]))
     {
-        header("Location: /Login");
+        header("Location: /CGI_SCRIPTS/Login.php");
         exit;
     }
 
@@ -11,7 +11,7 @@
     {
         session_unset();
         session_destroy();
-        header("Location: /Login");
+        header("Location: /CGI_SCRIPTS/Login.php");
     }
 
     $theme = isset($_COOKIE['theme']) ? $_COOKIE['theme'] : 'light';

@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/06 11:16:10 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/18 10:24:47 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,11 @@
 #include <exception>
 #include <fstream>
 #include <string>
+#include <sys/time.h>
 
 #define CONTENT_TOO_LARGE 19
+
+typedef struct timeval t_time;
 
 class Connection;
 
@@ -64,15 +67,16 @@ class CGI
         std::string     PostBodyFile;
         std::vector<std::string> EnvString;
         pid_t   Pid;
-        bool    Is_Runing;
+        int    Is_Runing;
+        time_t start;
 
         // add time to check timeout
         
         
         CGI();
         ~CGI();
-        void            ExecuteCgi(Connection *conn);
-        void            BuildEnv(Connection *conn);
+        bool          ExecuteCgi(Connection *conn);
+        char **            BuildEnv(Connection *conn);
         bool            IsCgiComplet(Connection *conn);
 };
 

@@ -6,16 +6,16 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/18 20:26:46 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/21 13:47:33 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "Post.hpp"
 
-const std::map<std::string, std::string> &         Post::createMimeExtMap()
+std::map<std::string, std::string>          Post::createMimeExtMap()
 {
-    static std::map<std::string, std::string> mime_ext;
+    std::map<std::string, std::string> mime_ext;
     // text
     mime_ext["text/plain"] = ".txt";
     mime_ext["text/html"] = ".html";
@@ -30,10 +30,8 @@ const std::map<std::string, std::string> &         Post::createMimeExtMap()
     mime_ext["application/zip"] = ".zip";
     mime_ext["application/x-tar"] = ".tar";
     mime_ext["application/x-gzip"] = ".gz";
-    mime_ext["application/xml"] = ".xml"; 
+    mime_ext["application/xml"] = ".xml";
     mime_ext["application/octet-stream"] = ".bin";
-    mime_ext["application/x-iso9660-image"] = ".iso";
-    mime_ext["application/x-www-form-urlencoded"] = ".txt"; 
     
     // Image 
     mime_ext["image/jpeg"] = ".jpg";
@@ -63,7 +61,7 @@ const std::map<std::string, std::string> &         Post::createMimeExtMap()
     return mime_ext;
 }
 
-const           std::map<std::string, std::string>& Post::mime_ext = Post::createMimeExtMap();
+const           std::map<std::string, std::string> Post::mime_ext = Post::createMimeExtMap();
 
 Post::Post(Connection *conn , TransferType type):transfer_type(type),conn(conn),is_multipart(false)
 {
@@ -108,7 +106,7 @@ void Post::ProcessMediaType(std::string &content_type)
         media_type = content_type.substr(0,semi_colon);
     else 
         media_type = content_type;
-    if (conn->UseCgi)
+    if (transfer_type ==  CONTENT_LENGTH && conn->UseCgi)
         media_type = "application/octet-stream";
     std::map<std::string,std::string>::const_iterator it = mime_ext.find(media_type);
     if (it == mime_ext.end())
@@ -174,14 +172,23 @@ void Post::ProcessContentLength()
     size_t bytes_to_read = std::min(conn->buffer.size(), content_length - content_bytes_read);
     if (is_multipart)
     {
-        part_buffer.append(conn->buffer.data(),bytes_to_read);
-        conn->buffer.erase(0,bytes_to_read);
+        std::string tmp;
+        size_t origin_size = conn->buffer.length();
+        if (bytes_to_read < conn->buffer.length()) 
+        {
+            tmp = conn->buffer.substr(bytes_to_read);
+            conn->buffer.substr(0,bytes_to_read);
+        }
         ProcessMultiPart();
+        conn->buffer.append(tmp);
+        content_bytes_read = origin_size -  conn->buffer.length();
     }
     else
+    {
         WriteDataToFile(bytes_to_read); 
-    conn->buffer.erase(0, bytes_to_read);
-    content_bytes_read += bytes_to_read;
+        conn->buffer.erase(0, bytes_to_read);
+        content_bytes_read += bytes_to_read;
+    }
     if (content_bytes_read >= content_length)
     {
         if (output_file.is_open())
@@ -189,6 +196,7 @@ void Post::ProcessContentLength()
         conn->state = Connection::SENDING_RESPONSE;
     }
 }
+
 
 bool Post::CheckFileName(std::string &filename)
 {
@@ -219,7 +227,7 @@ void Post::GenerateUploadfile(const std::string &ext)
     }
     else
         filename = conn->location->upload_store + oss.str();
-    output_file.open(filename.c_str(),std::ios::out | std::ios::trunc | std::ios::binary);
+    output_file.open(filename.c_str(),std::ios::out | std::ios::app | std::ios::binary);
     if (output_file.bad())
     {
         transfer_type = Post::ERROR;

@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 11:20:21 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/19 17:58:19 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,12 @@
 #include <string>
 #include <sstream>
 
-Connection::Connection(int fd): UseCgi(false), CgiObj(NULL),state(READING_REQUEST_LINE),fd(fd)
-            ,request(new Request()),response(NULL),server(NULL),location(NULL),post(NULL)
+Connection::Connection(int fd): UseCgi(false), CgiObj(NULL), state(READING_REQUEST_LINE),fd(fd)
+            ,request(new Request()),response(NULL),server(NULL),location(NULL) ,post(NULL)
 {
     timeouts.read_fails = false;   
     timeouts.last_activity = time(NULL);     
-    timeouts.read_timeout = time(NULL);     
+    timeouts.read_timeout = time(NULL);  
 }
 
 void Connection::UpdateTime(time_t &t)
@@ -62,6 +62,8 @@ void Connection::Reset()
 
 void    CheckCgiExist(Connection *conn) // add by eaboudi
 {
+    if (conn->location && conn->location->has_redirect)
+        return ;
     std::string Path = conn->location->root + conn->request->GetUri();
     std::string QueryString;
     std::string CheckDir;
@@ -115,11 +117,10 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
                 conn->CgiObj->SCRIPT_PATH = ScriptPath;
                 conn->CgiObj->SCRIPT_NAME = ScriptName;
                 conn->CgiObj->PATH_INFO = PathInfo;
-                conn->CgiObj->REMOTE_PORT = conn->port;
                 conn->CgiObj->REMOTE_ADDR = conn->ip;
                 conn->CgiObj->SERVER_PROTOCOL = conn->request->GetVersion();
                 conn->CgiObj->REMOTE_IDENT = "webserv";
-                conn->CgiObj->CONTENT_LENGTH = conn->request->GetHeader("content-lenght");
+                conn->CgiObj->CONTENT_LENGTH = conn->request->GetHeader("content-length");
                 conn->CgiObj->CONTENT_TYPE = conn->request->GetHeader("content-type");
                 // conn->CgiObj->SERVER_PORT = conn->
                 conn->request->SetUri(Path);
