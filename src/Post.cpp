@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 22:07:25 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/18 20:26:46 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,7 +180,7 @@ void Post::ProcessContentLength()
     }
     else
         WriteDataToFile(bytes_to_read); 
-        conn->buffer.erase(0, bytes_to_read);
+    conn->buffer.erase(0, bytes_to_read);
     content_bytes_read += bytes_to_read;
     if (content_bytes_read >= content_length)
     {

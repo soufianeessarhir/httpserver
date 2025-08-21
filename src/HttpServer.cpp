@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 22:13:28 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/18 20:25:47 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,9 @@ int HttpServer::claculateBufferSize()
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0)
+	{
         perror("failed to create a socket");
+	}
 	int target_buf;
 	for (int i = 10; i > 0; --i) 
 	{
@@ -329,8 +331,10 @@ bool		HttpServer::read(Connection *conn)
         else if (n == 0)
                 throw HttpClientError("connection close by peer", conn->fd);
 		else
+		{
 			if(conn->buffer.size() == 0)
 				return false;
+		}
 			return true;
     }
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/15 12:11:48 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/18 20:27:09 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,7 +178,7 @@ bool    CGI::IsCgiComplet(Connection *conn)
                 content = buff.str();
             OFile.close();
             OutputSize = content.size();
-            OFile.open(OutFile, std::ios::trunc | std::ios::out);
+            OFile.open(OutFile.c_str(), std::ios::trunc | std::ios::out);
             OFile << content;
             OFile.close();
             conn->response->SetStatusCode(200);
