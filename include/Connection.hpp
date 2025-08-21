@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/15 17:28:54 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/17 18:35:27 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ public:
     void Reset();
     void UpdateTime(time_t &t);
     ~Connection();
+    int event_fd;
     enum State 
     {
         READING_REQUEST_LINE,
@@ -61,6 +62,7 @@ public:
     LocationData    *location;
     Post            *post;
     std::string     buffer;
+    
     std::string     ip;
     int             port;
 };

@@ -14,6 +14,8 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <ctime>
+#include <dirent.h>
 class MainResponse;
 
 std::map<std::string, std::string> CreateMimeTypes()
@@ -133,6 +135,7 @@ MainResponse::MainResponse(int statusCode) : StatusCode(statusCode), IsBinaryFil
 {
     ResponseStat = SENDING_STATUSLINE;
     ContentLength = 0;
+    autoindex = false;
 }
 
 void MainResponse::SetStatusLine()
@@ -153,7 +156,10 @@ void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
     std::cout << ContentLength << std::endl;
     if (!CloseConn)
     {
-        Headers["Connection"] = "keep-alive\r\n";     
+        if (conn->request->headers["connection"] != "Keep-alive")
+            Headers["Connection"] = "close\r\n";     
+        else
+            Headers["Connection"] = "keep-alive\r\n";
     }
     else
         Headers["Connection"] = "close\r\n";
@@ -173,29 +179,58 @@ MainResponse::~MainResponse()
     
 }
 
-void MainResponse::SendStatusLine(Connection *Conn)
+void MainResponse::SendStatusLine(Connection *conn)
 {
+    if (conn->location && conn->location->has_redirect)
+    {
+        std::stringstream redirect_response;
+        int status_code = conn->location->redirect.first;
+        std::string location = conn->location->redirect.second;
+        
+        // Build proper redirect response
+        redirect_response << "HTTP/1.1 " << status_code;
+        std::map<int, std::string>::const_iterator it = ErrorPhrase.find(status_code);
+        if (it != ErrorPhrase.end())
+            redirect_response << " " << it->second << "\r\n";
+        else
+            redirect_response << " Found\r\n";
+            
+        redirect_response << "Location: " << location << "\r\n";
+        redirect_response << "Content-Length: 0\r\n";
+        redirect_response << "Connection: close\r\n";
+        redirect_response << "\r\n";
+        
+        StatusLine = redirect_response.str();
+        std::cout << "Redirect Response:\n" << StatusLine << std::endl;
+    }
+    if (conn->CgiObj)
+    {
+        std::string location = conn->CgiObj->CgiHeaders["Location"];
+        if (!location.empty())
+            StatusLine = "HTTP/1.1 302 Found\r\nLocation: " + location + "\r\nConnection:close\r\n\r\n";
+        // std::cout << location << "'---------'" << std::endl;
+    }
     ssize_t BytesWriten = 0;
     size_t TotalSent = 0;
     
     while (TotalSent < StatusLine.size())
     {
-        BytesWriten = send(Conn->fd, StatusLine.c_str() + TotalSent, 
+        BytesWriten = send(conn->fd, StatusLine.c_str() + TotalSent, 
                           StatusLine.size() - TotalSent, MSG_NOSIGNAL);
-        
         if (BytesWriten == 0)
         {
-            Conn->state = Connection::SENDING_RESPONSE;
+            conn->state = Connection::SENDING_RESPONSE;
             return;
         }
         if (BytesWriten < 0)
         {
-            perror("send status line");
-            Conn->state = Connection::COMPLETE;
+            // perror("send status line");
+            conn->state = Connection::COMPLETE;
             return;
         }
         TotalSent += BytesWriten;
     }
+
 }
 
 const std::string& MainResponse::GetContentType() const
@@ -237,7 +272,7 @@ void MainResponse::SendHeaders(Connection *conn)
         }
         if (BytesWriten < 0)
         {
-            perror("send headers");
+            // perror("send headers");
             conn->state = Connection::COMPLETE;
             return;
         }
@@ -257,6 +292,40 @@ bool    MainResponse::CheckForSending(Connection *conn)
         conn->response->SetStatusCode(404);
         return false;
     }
+    
+    if (S_ISDIR(FileState.st_mode) && conn->response->GET->ResponseStat == SENDING_STATUSLINE)
+    {
+        if (conn->location && !conn->location->index.empty())
+            conn->request->SetUri(conn->location->index);
+        else if (conn->location && conn->location->autoindex)
+        {
+            std::string autoindexHTML = conn->response->GET->GenerateAutoIndex(conn);
+            std::stringstream filefd;
+            filefd << conn->fd;
+            std::string tempFile = "/tmp/autoindex_" + filefd.str() + ".html";
+            std::ofstream file(tempFile.c_str());
+            if (file.is_open())
+            {
+                file << autoindexHTML;
+                file.close();
+                conn->request->SetUri(tempFile);
+            }
+            else
+            {
+                conn->response->SetStatusCode(500);
+                conn->response->SetMethod(Error);
+                return false;
+            }
+        }
+        else
+        {
+            conn->response->SetStatusCode(403);
+            conn->response->SetMethod(Error);
+            return false;
+        }
+        conn->response->GET->autoindex = true;
+    }
+    stat(conn->request->GetUri().c_str(), &FileState);
     CheckProg.FileFd = open(conn->request->GetUri().c_str(), O_RDONLY);
     CheckProg.FileOffset = 0;
     CheckProg.FileSize = FileState.st_size;
@@ -295,7 +364,6 @@ void MainResponse::SetAndSendBody(Connection* conn)
                                 CheckProg.Buff + CheckProg.BuffOffs,
                                 CheckProg.BuffSize - CheckProg.BuffOffs,
                                 MSG_NOSIGNAL);
-    
     if (bytes_sent == 0)
         return;
     if (bytes_sent < 0)
@@ -308,9 +376,84 @@ void MainResponse::SetAndSendBody(Connection* conn)
     CheckProg.BuffOffs += bytes_sent;
 }
 
+std::string MainResponse::GenerateAutoIndex(Connection *conn)
+{
+    std::ostringstream html;
+    std::string uri = conn->request->GetUri();
+    std::string path = conn->request->GetUri();
+    
+    // Generate HTML header
+    html << "<!DOCTYPE html>\n";
+    html << "<html>\n<head>\n";
+    html << "<title>Index of " << uri << "</title>\n";
+    html << "<style>\n";
+    html << "body { font-family: Arial, sans-serif; margin: 40px; }\n";
+    html << "h1 { color: #333; }\n";
+    html << "table { border-collapse: collapse; width: 100%; }\n";
+    html << "th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }\n";
+    html << "th { background-color: #f2f2f2; }\n";
+    html << "a { color: #0066cc; text-decoration: none; }\n";
+    html << "a:hover { text-decoration: underline; }\n";
+    html << "</style>\n";
+    html << "</head>\n<body>\n";
+    html << "<h1>Index of " << uri << "</h1>\n";
+    html << "<table>\n";
+    html << "<tr><th>Name</th><th>Size</th><th>Last Modified</th></tr>\n";
+    
+    // Add parent directory link if not root
+    if (uri != "/") {
+        html << "<tr><td><a href=\"../\">../</a></td><td>-</td><td>-</td></tr>\n";
+    }
+    
+    DIR *dir = opendir(path.c_str());
+    if (dir != NULL) 
+    {
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL)
+        {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                continue;
+            std::string fullPath = path + "/" + entry->d_name;
+            struct stat fileStat;
+            if (stat(fullPath.c_str(), &fileStat) == 0)
+            {
+                std::string name = entry->d_name;
+                if (S_ISDIR(fileStat.st_mode))
+                    name += "/";
+                std::string size;
+                if (S_ISDIR(fileStat.st_mode))
+                    size = "-";
+                else
+                {
+                    std::ostringstream sizeStr;
+                    sizeStr << fileStat.st_size;
+                    size = sizeStr.str();
+                }
+                
+                // Format modification time
+                char timeStr[100];
+                struct tm *timeinfo = localtime(&fileStat.st_mtime);
+                strftime(timeStr, sizeof(timeStr), "%d-%b-%Y %H:%M", timeinfo);
+                
+                html << "<tr><td><a href=\"" << entry->d_name;
+                if (S_ISDIR(fileStat.st_mode)) html << "/";
+                html << "\">" << name << "</a></td>";
+                html << "<td>" << size << "</td>";
+                html << "<td>" << timeStr << "</td></tr>\n";
+            }
+        }
+        closedir(dir);
+    }
+    
+    html << "</table>\n</body>\n</html>\n";
+    return html.str();
+}
+
 
 bool    CheckFileRD(Connection *conn)
 {
+    if (conn->location && conn->location->has_redirect)
+        return true;
     if (conn->UseCgi)
     {    
         conn->request->SetUri(conn->CgiObj->OutFile);
@@ -325,12 +468,8 @@ bool    CheckFileRD(Connection *conn)
         conn->response->SetMethod(Error);
         return false;
     }
-    if (!S_ISREG(FileState.st_mode))
-    {
-        conn->response->SetStatusCode(409);
-        conn->response->SetMethod(Error);
-        return false;
-    }
+    if (S_ISDIR(FileState.st_mode))
+        return true;
     int fd = open(conn->request->GetUri().c_str(), O_RDONLY);
     if (fd == -1 && conn->response->GetMethod() != Error)
     {
@@ -344,9 +483,18 @@ bool    CheckFileRD(Connection *conn)
 
 void    excuteGetMethod(Connection *conn)
 {
-    if (conn->UseCgi && conn->response->GetMethod() != Error && conn->CgiObj->Pid == -42)
+    if (conn->CgiObj && conn->response->GetMethod() != Error)
     {
-        conn->CgiObj->ExecuteCgi(conn);
+        if (conn->CgiObj->ExecuteCgi(conn) == false)
+        {
+            if (conn->CgiObj)
+            {
+                delete conn->CgiObj;
+                conn->CgiObj = NULL;
+                conn->UseCgi = false;
+            }
+            return;
+        }
         if (conn->CgiObj->IsCgiComplet(conn) == false)
             return ;
     }
@@ -369,9 +517,9 @@ void    excuteGetMethod(Connection *conn)
     {
         ExecuteError(conn);
     }
-    // if (conn->UseCgi && conn->state == Connection::COMPLETE)
-    // {
-    //     unlink(conn->CgiObj->OutFile.c_str());
-    // }
+    if (conn->UseCgi && conn->state == Connection::COMPLETE)
+    {
+        unlink(conn->CgiObj->OutFile.c_str());
+    }
 }
 

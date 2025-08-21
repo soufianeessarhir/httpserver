@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/21 20:24:41 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/21 20:48:30 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,10 +161,7 @@ int HttpServer::ModifyEvent(int fd, int events)
 		EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, EV_ENABLE | EV_CLEAR, 0, 0, NULL);
 	result = kevent(event_fd, change_list, change_count, NULL, 0, pts);
     change_count = 0;
-	if (result < 0 && errno != ENOENT && errno != EBADF)
-		throw HttpClientError("ModifyEvent",fd);
 #endif
-
     return result;
 }
 
@@ -503,7 +500,6 @@ void        HttpServer::HandlOutgoingData(int fd)
 			{ ClientCleanUp(conn->fd); return;}
 		else if (conn->request->CheckField("connection") && conn->request->GetHeader("connection") != "keep-alive")
 			{ClientCleanUp(conn->fd);return;}
-		std::cerr<<"enter here\n";
 		SetSocketForRead(conn);
 		conn->Reset();
 	}

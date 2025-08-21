@@ -4,7 +4,16 @@
 void    ExecuteGET(Connection *conn)
 {
     if (!conn->response->GET)
+    {
         conn->response->GET = new MainResponse(conn->response->GetStatusCode());
+        if (conn->location && conn->location->has_redirect)
+        {
+            conn->response->GET->SendStatusLine(conn);
+            conn->response->GET->ResponseStat = SENDING_COMPLETE;
+            conn->state = Connection::COMPLETE;
+            return ;
+        }
+    }
     switch (conn->response->GET->ResponseStat)
     {   
         case SENDING_STATUSLINE :
@@ -24,7 +33,9 @@ void    ExecuteGET(Connection *conn)
         {
             conn->response->GET->SetAndSendBody(conn);
             if (conn->response->GET->ResponseStat == SENDING_COMPLETE)
-            {    
+            {
+                if (conn->response->GET->autoindex)
+                    unlink(conn->request->GetUri().c_str());
                 conn->state = Connection::COMPLETE;
                 delete conn->response->GET;
                 conn->response->GET = NULL;
