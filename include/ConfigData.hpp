@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:14:10 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/10 19:33:42 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/20 16:32:02 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,14 +23,13 @@ struct CommonConfig
     std::string index;
     bool has_redirect;
     std::pair<int, std::string> redirect;
-    bool autoindex_set /*= false*/;
+    bool autoindex_set;
     bool autoindex;
     std::map<std::string, std::string> cgi;
-    // bool upload_set /*= false*/;
     bool upload;
     std::string upload_store;
 	std::map<int,std::string> error_pages;
-    size_t max_body_size /*0*/;
+    size_t max_body_size;
     CommonConfig():root(""),index(""),has_redirect(false),
     autoindex_set(false),upload(false),upload_store(""),
     max_body_size(0){}

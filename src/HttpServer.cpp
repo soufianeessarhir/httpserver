@@ -6,13 +6,11 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/20 15:39:38 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/21 20:24:41 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
-
-
 
 
 HttpServer::HttpServer(std::vector<Server> &srvs) :buf(claculateBufferSize()), servers(srvs),headerCaseMap(getHeaderCaseMap())
@@ -27,16 +25,16 @@ HttpServer::HttpServer(std::vector<Server> &srvs) :buf(claculateBufferSize()), s
     this->init();
 }
 
-int HttpServer::claculateBufferSize()
+int			HttpServer::claculateBufferSize()
 {
     int recv_size;
     int send_size;
     socklen_t optlen = sizeof(int);
+	int target_buf;
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0)
         perror("failed to create a socket");
-	int target_buf;
 	for (int i = 10; i > 0; --i) 
 	{
 		target_buf = (1024 * 1024) * i;
@@ -219,9 +217,9 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
 		platform_events[i].fd = kevents[i].ident;
 		platform_events[i].data = kevents[i].udata;
 		platform_events[i].events = 0;
-		if (kevents[i].filter == EVFILT_READ) 	platform_events[i].events = READ_EVENT; 
-		if (kevents[i].filter == EVFILT_WRITE) 	platform_events[i].events = WRITE_EVENT;
-		if (kevents[i].flags  == EV_ERROR) 		platform_events[i].events = ERROR_EVENT;
+		if (kevents[i].filter == EVFILT_READ) 		platform_events[i].events = READ_EVENT; 
+		if (kevents[i].filter == EVFILT_WRITE) 		platform_events[i].events = WRITE_EVENT;
+		if (kevents[i].flags  == EV_ERROR) 			platform_events[i].events = ERROR_EVENT;
 		if (kevents[i].flags  == EV_EOF)			platform_events[i].events = HUP_EVENT;
 	}
 	if (event_count < 0  && errno != ENOENT && errno != EBADF)
@@ -250,7 +248,7 @@ void		HttpServer::CreateSocket(struct addrinfo *p,int &sockfd,struct addrinfo *r
 	freeaddrinfo(res);
 	if (p == NULL)
 		perror("Socket binding failed");
-	if (listen(sockfd, 1024) == -1)
+	if (listen(sockfd, SOMAXCONN) == -1)
 	{ 
 		close(sockfd); perror("Socket listening failed");
 	}
@@ -282,9 +280,13 @@ void HttpServer::init()
                 perror("Getaddrinfo failed");
 			CreateSocket(p,sockfd,res);
             try
-				{ AddEvent(sockfd, READ_EVENT);}
+			{ 
+				AddEvent(sockfd, READ_EVENT);
+			}
             catch (const HttpClientError &e)
-				{ std::cerr << e.what() << '\n';}
+			{ 
+				std::cerr << e.what() << '\n';
+			}
             server_map[sockfd] = servers[i];
         }
     }
@@ -331,7 +333,11 @@ bool		HttpServer::read(Connection *conn)
         else if (n == 0)
                 throw HttpClientError("connection close by peer", conn->fd);
 		else
-			{ if(conn->buffer.size() == 0) return false; return true;}
+		{ 
+			if(conn->buffer.size() == 0) 
+				return false; 
+			return true;
+		}
     }
 }
 
@@ -340,22 +346,18 @@ void		HttpServer::HandleNewConnection(int fd)
 {
 	for (;;)
 	{
-		struct sockaddr_storage client_sock;
-		socklen_t socklen = sizeof(client_sock);
-		int client_fd = accept(fd, (sockaddr *)&client_sock, &socklen);
+		struct sockaddr_in s;
+		socklen_t socklen = sizeof(s);
+		int client_fd = accept(fd, (sockaddr *)&s, &socklen);
 		if (clients.size() > 1024)
 			return;
 		if (client_fd == -1)
-		{
-			if (errno == EAGAIN || errno == EWOULDBLOCK ) break;
-			else { perror("Accept failed"); return;}
-		}
+			return;
 		Connection *conn = new Connection(client_fd);
-		struct sockaddr_in *s = (struct sockaddr_in *)&client_sock;
 		char ipstr[INET_ADDRSTRLEN];
-		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
+		inet_ntop(AF_INET, &s.sin_addr, ipstr, sizeof(ipstr));//should be removed
 		conn->ip 			= ipstr;
-		conn->port 			= ntohs(s->sin_port);
+		conn->port 			= ntohs(s.sin_port);
 		SetClientSocketToNonblocking(client_fd);
 		AddEvent(client_fd,READ_EVENT | EDGE_TRIGGERED);
 		clients[client_fd] 	= conn;
@@ -457,7 +459,6 @@ void		HttpServer::run()
 			ClientCleanUp(e.client_fd);
 		}
 	}
-	
 }
 
 
@@ -518,7 +519,10 @@ void HttpServer::ClientCleanUp(int fd)
     }
     Connection *conn = clients[fd];
     if (conn) 
-		{ clients.erase(fd);delete conn;}
+	{
+		clients.erase(fd);
+		delete conn;
+	}
     close(fd);
 }
 
