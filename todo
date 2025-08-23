@@ -5,12 +5,8 @@
 - need to remove errno when sending
 - check for normal request vs multiple requests
 ✅ - add client cleanup when needed
-- implementing alias directive in config file
 
-- if the ip::port are the same for more than tow server the server names should be different or an error should throwed
 - remove all not allowed functions
-- autho index 
-- redirection
+
+
 - change the buffer size
-- defualt index
-- close the send: Broken pipe on fails

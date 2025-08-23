@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/21 13:35:23 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 16:26:46 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <ctime>
 #include <signal.h>
+#include <errno.h>
 
 CGI::CGI()
 {
@@ -39,12 +40,13 @@ CGI::CGI()
     REQUEST_METHOD.clear();
     SERVER_PORT = 0;
     Is_Runing = 42;
+    State = Start;
     
 }
 
 char **    CGI::BuildEnv(Connection *conn)
 {
-    std::cerr << "enter to BuildEnvv" << std::endl;
+    // std::cerr << "enter to BuildEnvv" << std::endl;
     std::stringstream ss;
     ss << conn->fd;
     if (!PATH_INFO.empty())
@@ -87,7 +89,6 @@ char **    CGI::BuildEnv(Connection *conn)
     for (size_t i(0); i < EnvString.size(); i++)
     {
         Env[i] = const_cast<char *>(EnvString[i].c_str());
-        std::cout << Env[i] << std::endl;
     }
     Env[EnvString.size()] = NULL;
     return Env;
@@ -95,21 +96,24 @@ char **    CGI::BuildEnv(Connection *conn)
 
 bool CGI::ExecuteCgi(Connection *conn)
 {
-    if (Is_Runing == 1)
+    if (State == Runing)
     {
-        // std::cout << "is runing---->" << Is_Runing << std::endl;
         time_t current(std::time(NULL));
-        // std::cout << "start time----> " << start << std::endl;
-        // std::cout << "current time----> " << current << std::endl;
         if (current - start > 10)
         {
             conn->response->SetMethod(Error);
             conn->response->SetStatusCode(504);
             kill(Pid, SIGTERM);
+            usleep(100000);
+            kill(Pid, SIGKILL);
+            waitpid(Pid, NULL, WNOHANG);
+            State = Finished;
             return false;
         }
         return true;
     }
+    if (State == Finished)
+        return true;
     std::stringstream id;
     id << conn->fd;
     OutFile += id.str();
@@ -126,7 +130,6 @@ bool CGI::ExecuteCgi(Connection *conn)
     {
         if (conn->request->GetMethod() == "POST")
         {
-            std::cout << "dkhol ydupi input" << std::endl;
             struct stat FileIn;
             if (stat(InFile.c_str(), &FileIn) == 0)
                 InSize = FileIn.st_size;
@@ -139,13 +142,11 @@ bool CGI::ExecuteCgi(Connection *conn)
         int FdOut = open(OutFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (FdOut < 0)
         {
-            std::cerr << "fdout" << std::endl;
             delete [] Env;
             exit(EXIT_FAILURE);
         }
         if (dup2(FdOut, STDOUT_FILENO) < 0)
         {
-            std::cerr << "fdout" << std::endl;
             delete [] Env;
             close(FdOut);
             exit(EXIT_FAILURE);
@@ -153,7 +154,6 @@ bool CGI::ExecuteCgi(Connection *conn)
         close(FdOut);
         if (conn->response->GetMethod() == POST)
         {
-            std::cerr << "dkhol l dup infile\n";
             int FdIn = open(InFile.c_str(), O_RDONLY);
             if (FdIn < 0)
             {
@@ -168,44 +168,47 @@ bool CGI::ExecuteCgi(Connection *conn)
             }
             close(FdIn);
         }
-        // std::cerr << "fdout" << std::endl;
         std::string Script = SCRIPT_PATH + SCRIPT_NAME;
         char *argv[3] = {const_cast<char*>(conn->location->cgi[Ext].c_str()), const_cast<char*>(Script.c_str()), NULL};
-        if (execve(argv[0],(&argv[1]), env) == -1)
+        
+        if (execve(argv[0],(&argv[0]), env) == -1)
         {
             perror("execeve: ");
             delete [] Env;
             exit(EXIT_FAILURE);
         }
     }
-    Is_Runing = 1;
+    State = Runing;
     return true;
 }
 
 bool    CGI::IsCgiComplet(Connection *conn)
 { 
-    // sleep(1);
+    if (State == Finished)
+        return true;
+    
     int Status;
     pid_t   Res = waitpid(Pid, &Status, WNOHANG);
-    // std::cout << "Res :" << Res << std::endl;
     if (Res == 0)
         return false;
-    Is_Runing = 0;
+    if (Res == -1)
+    {
+        conn->response->SetMethod(Error);
+        conn->response->SetStatusCode(500);
+        State = Finished;
+        return true;
+    }
+    State = Finished;
     if (Res == Pid)
     {
-         std::cout << "here" << std::endl;
         std::fstream    OFile(OutFile.c_str(), std::ios::in);
-        // kill(Pid, SIGKILL);
         if (OFile)
         {
-            std::cout << "entered to Ofile Condition fd =" << conn->fd << std::endl;
             std::stringstream buff;
             std::string line;
             buff << OFile.rdbuf();
-            // std::cout << "-------\n" << buff.str() << "\n---------" << std::endl;
             while (std::getline(buff, line))
             {
-                std::cout << "enter to the loop" << std::endl;
                 if (line.empty() || line.find(':') == line.npos)
                     break;
                 size_t  Pos(line.find('\r'));
@@ -233,19 +236,31 @@ bool    CGI::IsCgiComplet(Connection *conn)
             OFile.close();
             conn->response->SetStatusCode(200);
         }
-    }
-    else if (Res == -1)
-    {
-        conn->response->SetMethod(Error);
-        conn->response->SetStatusCode(500);
-        kill(conn->CgiObj->Pid, SIGTERM);
+        else
+        {
+            conn->response->SetMethod(Error);
+            conn->response->SetStatusCode(500);
+        }
     }
     if (conn->response->GetMethod() == POST)
-        unlink(InFile.c_str());
+        removeFile(InFile.c_str());
     return true;
 }
 
 CGI::~CGI()
 {
-
+    if (Pid > 0 && State != Finished)
+    {
+        kill(Pid, SIGTERM);
+        usleep(100000);
+        if (waitpid(Pid, NULL, WNOHANG) == 0)
+        {
+            kill(Pid, SIGKILL);
+            waitpid(Pid, NULL, 0);
+        }
+    }
+    if (!OutFile.empty())
+        removeFile(OutFile.c_str());
+    if (!InFile.empty())
+        removeFile(InFile.c_str());
 }

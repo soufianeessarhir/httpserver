@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 13:31:04 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 17:23:48 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include		"Connection.hpp"
 #include		<errno.h>
 #include		<deque>
+#include		<cstdio>
 #include		<algorithm>
 #include		<cstdio>
 #include 		<arpa/inet.h>
@@ -181,6 +182,8 @@ private:
 
 	const std::map<std::string,bool>&		headerCaseMap;
 };
+
+int removeFile(const char* filepath);
 
 
 #endif

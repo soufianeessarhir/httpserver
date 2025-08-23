@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/21 20:33:28 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 16:27:05 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,12 @@ void    CheckCgiExist(Connection *conn)
         {
             Ext = Path.substr(Pos);
             Pos = Path.size();
+        }
+        if (Ext != ".php" && Ext != ".py")
+        {
+            conn->request->SetUri(Path);
+            conn->UseCgi = false;
+            return ;
         }
         CheckDir = Path.substr(0, Pos);
         Pos = CheckDir.find_last_of('/');

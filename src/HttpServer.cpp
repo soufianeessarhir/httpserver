@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 14:13:20 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 17:29:53 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,8 +136,8 @@ int HttpServer::ModifyEvent(int fd, int events)
 #elif defined(__APPLE__)
 
 	change_count = 0;
-	// EV_SET(&change_list[change_count++], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-	// EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+	EV_SET(&change_list[change_count++], fd, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+	EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
 	if (events & READ_EVENT)
 		EV_SET(&change_list[change_count++], fd, EVFILT_READ, EV_ENABLE | EV_CLEAR, 0, 0, NULL);
 	if (events & WRITE_EVENT)
@@ -188,12 +188,17 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
     }
 	
 #elif defined(__APPLE__)
-
-	ts.tv_sec  = 0;
-    ts.tv_nsec = 10000000; 
-	std::cerr	<< "enter wait ======\n"<<std::endl;
+	if (!active_clients.empty())
+	{
+		ts.tv_sec  = 0;
+    	ts.tv_nsec = 0; 
+	}
+	else
+	{
+		ts.tv_sec  = 0;
+		ts.tv_nsec = 10000000; 
+	}
   	event_count = kevent(event_fd, NULL, 0, kevents, max_events, &ts);
-	std::cerr	<<" event count "<< event_count <<"exit wait ======\n"<<std::endl;
 	for (int i = 0; i < event_count; i++)
 	{
 		platform_events[i].fd = kevents[i].ident;
@@ -537,5 +542,17 @@ HttpServer::~HttpServer()
 	{
 		close(event_fd);
 	}
+}
+
+// C++98 compatible file removal function
+int removeFile(const char* filepath) {
+    if (!filepath) {
+        return -1;
+    }
+    
+    // Use the standard C library function remove() which is C++98 compatible
+    // remove() works for both files and empty directories
+    int result = std::remove(filepath);
+    return result;
 }
 
