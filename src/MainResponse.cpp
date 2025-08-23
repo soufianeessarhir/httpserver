@@ -153,10 +153,9 @@ void MainResponse::SetStatusLine()
 
 void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
 {
-    std::cout << ContentLength << std::endl;
     if (!CloseConn)
     {
-        if (conn->request->headers["connection"] != "Keep-alive")
+        if (!conn->request->CheckField("connection") || conn->request->GetHeader("connection") == "Keep-alive")
             Headers["Connection"] = "close\r\n";     
         else
             Headers["Connection"] = "keep-alive\r\n";
@@ -208,7 +207,6 @@ void MainResponse::SendStatusLine(Connection *conn)
         std::string location = conn->CgiObj->CgiHeaders["Location"];
         if (!location.empty())
             StatusLine = "HTTP/1.1 302 Found\r\nLocation: " + location + "\r\nConnection:close\r\n\r\n";
-        // std::cout << location << "'---------'" << std::endl;
     }
     ssize_t BytesWriten = 0;
     size_t TotalSent = 0;
@@ -260,7 +258,6 @@ void MainResponse::SendHeaders(Connection *conn)
             HeadersStr += itc->first + ": " + itc->second + "\r\n";
     }
     HeadersStr += "\r\n";
-    // std::cout << HeadersStr << std::endl;
     while (TotalSent < HeadersStr.size())
     {
         BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 
@@ -309,6 +306,7 @@ bool    MainResponse::CheckForSending(Connection *conn)
                 file << autoindexHTML;
                 file.close();
                 conn->request->SetUri(tempFile);
+                conn->response->GET->autoindex = true;
             }
             else
             {
@@ -323,7 +321,6 @@ bool    MainResponse::CheckForSending(Connection *conn)
             conn->response->SetMethod(Error);
             return false;
         }
-        conn->response->GET->autoindex = true;
     }
     stat(conn->request->GetUri().c_str(), &FileState);
     CheckProg.FileFd = open(conn->request->GetUri().c_str(), O_RDONLY);
@@ -365,10 +362,9 @@ void MainResponse::SetAndSendBody(Connection* conn)
                                 CheckProg.BuffSize - CheckProg.BuffOffs,
                                 MSG_NOSIGNAL);
     if (bytes_sent == 0)
-        return;
+        return ;
     if (bytes_sent < 0)
     {
-            perror("send");
             conn->state = Connection::COMPLETE;
             close(CheckProg.FileFd);
             return;
@@ -473,18 +469,26 @@ bool    CheckFileRD(Connection *conn)
     int fd = open(conn->request->GetUri().c_str(), O_RDONLY);
     if (fd == -1 && conn->response->GetMethod() != Error)
     {
-        conn->response->SetStatusCode(403);
-        conn->response->SetMethod(Error);
+        if (conn->CgiObj)
+        {
+            conn->response->SetStatusCode(500);
+            conn->response->SetMethod(Error);
+        }
+        else
+        {
+            conn->response->SetStatusCode(403);
+            conn->response->SetMethod(Error);
+        }
         return false;
     }
     close(fd);
     return true;
 }
-
 void    excuteGetMethod(Connection *conn)
 {
     if (conn->CgiObj && conn->response->GetMethod() != Error)
     {
+        
         if (conn->CgiObj->ExecuteCgi(conn) == false)
         {
             if (conn->CgiObj)
@@ -519,7 +523,7 @@ void    excuteGetMethod(Connection *conn)
     }
     if (conn->UseCgi && conn->state == Connection::COMPLETE)
     {
-        unlink(conn->CgiObj->OutFile.c_str());
+        removeFile(conn->CgiObj->OutFile.c_str());
     }
 }
 

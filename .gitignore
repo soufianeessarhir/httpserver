@@ -8,3 +8,6 @@ upload/
 .vscode/
 tests/
 sheets/
+*.o
+*.a
+testimage.png

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/18 10:24:47 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/23 16:26:40 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include "Connection.hpp"
-#include <arpa/inet.h>
+// #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <string>
 #include <vector>
@@ -38,6 +38,12 @@
 typedef struct timeval t_time;
 
 class Connection;
+typedef enum CgiState
+{
+    Runing,
+    Finished,
+    Start,
+} CgiState;
 
 class CGI
 {
@@ -69,7 +75,7 @@ class CGI
         pid_t   Pid;
         int    Is_Runing;
         time_t start;
-
+        CgiState State;
         // add time to check timeout
         
         

@@ -1,15 +1,19 @@
 Name=webserv
-CXX=c++ -g3 -fsanitize=address,undefined,leak 
-CXXFLAGS=-Wall -Wextra -Werror -std=c++98  
+CXX=c++ -o3 -g3 -fsanitize=address,undefined,leak
+CXXFLAGS=-Wall -Wextra -Werror -std=c++98
 
-SRCS= webserv.cpp src/HttpServer.cpp  src/Lexer.cpp  src/Parser.cpp\
-	  src/Connection.cpp src/Request.cpp src/Response.cpp src/Error.cpp src/Get.cpp\
-	  src/MainResponse.cpp src/ProcessRequest.cpp src/Post.cpp src/MultiPart.cpp\
-	  src/CGI.cpp src/Delete.cpp src/EPost.cpp src/ConfigValidator.cpp src/Chunked.cpp
+SRCS=webserv.cpp src/HttpServer.cpp src/Lexer.cpp src/Parser.cpp \
+     src/Connection.cpp src/Request.cpp src/Response.cpp src/Error.cpp src/Get.cpp \
+     src/MainResponse.cpp src/ProcessRequest.cpp src/Post.cpp src/MultiPart.cpp \
+     src/CGI.cpp src/Delete.cpp src/EPost.cpp src/ConfigValidator.cpp src/Chunked.cpp
+
+HDRS=include/CGI.hpp include/ConfigValidator.hpp include/Exceptions.hpp include/Lexer.hpp include/MultiPart.hpp \
+     include/Post.hpp include/Response.hpp include/ConfigData.hpp include/Connection.hpp include/HttpServer.hpp \
+     include/MainResponse.hpp include/Parser.hpp include/Request.hpp webserv.hpp
 
 OBJS=$(SRCS:.cpp=.o)
 
-RM=rm -f
+RM=rm -rf
 
 all: $(Name)
 
@@ -18,7 +22,7 @@ $(Name): $(OBJS)
 	@echo "Compilation complete. Executable: $@"
 	@echo "Run the server with: ./$(Name) <config_file>"
 
-%.o: %.cpp
+%.o: %.cpp $(HDRS)
 	$(CXX) -I include $(CXXFLAGS) -c $< -o $@
 	@echo "Compiling $< to $@"
 	@echo "Object file created: $@"
@@ -33,6 +37,5 @@ fclean: clean
 
 re: fclean all
 	@echo "Recompiled everything."
-.PHONY: all clean fclean re
 
-# To use this Makefile, place it in the same directory as your source files.
+.PHONY: clean fclean re
