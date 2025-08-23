@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/19 18:30:53 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/22 09:35:46 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -473,5 +473,17 @@ HttpServer::~HttpServer()
 	{
 		close(event_fd);
 	}
+}
+
+// C++98 compatible file removal function
+int removeFile(const char* filepath) {
+    if (!filepath) {
+        return -1;
+    }
+    
+    // Use the standard C library function remove() which is C++98 compatible
+    // remove() works for both files and empty directories
+    int result = std::remove(filepath);
+    return result;
 }
 

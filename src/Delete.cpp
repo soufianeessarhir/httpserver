@@ -27,7 +27,7 @@ void    ExecuteDelete(Connection *conn)
             conn->state = Connection::COMPLETE;
             return ;
         }
-        if (unlink(conn->request->GetUri().c_str()) == 0) 
+        if (removeFile(conn->request->GetUri().c_str()) == 0) 
         {
             conn->response->SetStatusCode(204);
             if (!conn->response->DELETE)

@@ -48,6 +48,7 @@
 #include		"Connection.hpp"
 #include		<errno.h>
 #include		<deque>
+#include		<cstdio>
 #include		<algorithm>
 #include		<cstdio>
 #include 		<arpa/inet.h>
@@ -173,6 +174,9 @@ private:
 
 	const std::map<std::string,bool>&		headerCaseMap;
 };
+
+// C++98 compatible utility function
+int removeFile(const char* filepath);
 
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/19 17:58:19 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/23 10:53:16 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,6 +97,12 @@ void    CheckCgiExist(Connection *conn) // add by eaboudi
         {
             Ext = Path.substr(Pos);
             Pos = Path.size();
+        }
+        if (Ext != ".php" && Ext != ".py")
+        {
+            conn->request->SetUri(Path);
+            conn->UseCgi = false;
+            return ;
         }
         CheckDir = Path.substr(0, Pos);
         Pos = CheckDir.find_last_of('/');

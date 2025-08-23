@@ -35,7 +35,7 @@ void    ExecuteGET(Connection *conn)
             if (conn->response->GET->ResponseStat == SENDING_COMPLETE)
             {
                 if (conn->response->GET->autoindex)
-                    unlink(conn->request->GetUri().c_str());
+                    removeFile(conn->request->GetUri().c_str());
                 conn->state = Connection::COMPLETE;
                 delete conn->response->GET;
                 conn->response->GET = NULL;

@@ -3,19 +3,26 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:26:08 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/11 09:30:31 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 11:56:10 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
 
+void sigchld_handler(int sig)
+{
+    (void)sig;
+    while (waitpid(-1, NULL, WNOHANG) > 0)
+        ;
+}
 
 int main(int argc, char **argv)
 {
-	signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGCHLD, sigchld_handler);
 	std::vector<Server> servers;
 	if (argc != 2)
 		return std::cerr << "Usage: " << argv[0] << " <config_file>" << std::endl, 1;

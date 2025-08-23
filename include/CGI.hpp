@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:07:58 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/18 10:24:47 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/22 10:08:13 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,12 @@
 typedef struct timeval t_time;
 
 class Connection;
+typedef enum CgiState
+{
+    Runing,
+    Finished,
+    Start,
+} CgiState;
 
 class CGI
 {
@@ -69,7 +75,7 @@ class CGI
         pid_t   Pid;
         int    Is_Runing;
         time_t start;
-
+        CgiState State;
         // add time to check timeout
         
         
