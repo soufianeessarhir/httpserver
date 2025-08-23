@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/21 20:37:00 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 13:14:55 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 	}
 	else if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
 	{
-		conn->response = new Response(431, Error); //[sessarhi] header field too large response
+		conn->response = new Response(431, Error);
 		SetSocketForWrite(conn);
 		conn->state = Connection::SENDING_RESPONSE;
 		return;
@@ -140,7 +140,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		return;
 	}
 	FillLocationMisseddata(conn);
-	CheckCgiExist(conn); //added by eaboudi
+	CheckCgiExist(conn);
 	if (conn->request->GetMethod() == "POST")
 	{
 		if (conn->location->methods.find("POST") == conn->location->methods.end())
@@ -185,6 +185,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		conn->response = new Response(conn->request->GetStatus(), DELETE);
 	}
 }
+
 bool HttpServer::MatchLocation(Connection *conn)
 {
     std::string target = conn->request->GetUri();

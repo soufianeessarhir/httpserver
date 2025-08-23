@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/21 13:47:33 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 13:34:15 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -219,7 +219,6 @@ void Post::GenerateUploadfile(const std::string &ext)
     std::stringstream oss; 
     gettimeofday(&tm,NULL);
     oss << tm.tv_sec << &tm << tm.tv_usec << &oss<<ext;
-    std::cout<<filename<<std::endl;
     if (conn->CgiObj)
     {
         filename = "/tmp/" + oss.str();

@@ -153,10 +153,9 @@ void MainResponse::SetStatusLine()
 
 void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
 {
-    std::cout << ContentLength << std::endl;
     if (!CloseConn)
     {
-        if (conn->request->headers["connection"] != "Keep-alive")
+        if (!conn->request->CheckField("connection") || conn->request->GetHeader("connection") == "Keep-alive")
             Headers["Connection"] = "close\r\n";     
         else
             Headers["Connection"] = "keep-alive\r\n";
@@ -208,7 +207,6 @@ void MainResponse::SendStatusLine(Connection *conn)
         std::string location = conn->CgiObj->CgiHeaders["Location"];
         if (!location.empty())
             StatusLine = "HTTP/1.1 302 Found\r\nLocation: " + location + "\r\nConnection:close\r\n\r\n";
-        // std::cout << location << "'---------'" << std::endl;
     }
     ssize_t BytesWriten = 0;
     size_t TotalSent = 0;
@@ -260,7 +258,6 @@ void MainResponse::SendHeaders(Connection *conn)
             HeadersStr += itc->first + ": " + itc->second + "\r\n";
     }
     HeadersStr += "\r\n";
-    // std::cout << HeadersStr << std::endl;
     while (TotalSent < HeadersStr.size())
     {
         BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 

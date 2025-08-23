@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/21 20:33:10 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 13:31:04 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@
 	
 #endif
 
-#define			MAX_EVENTS					200
+#define			MAX_EVENTS					10240
 #define			CLIENT_PER_CYCLE			1024
 #define			MAX_REQUEST_LINE_LENGHT		8000
 #define			MAX_header_field_LENGHT		24000
