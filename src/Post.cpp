@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/24 10:58:56 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 11:38:15 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,6 +210,13 @@ bool Post::CheckFileName(std::string &filename)
 void Post::WriteDataToFile(size_t size)
 {
     output_file.write(conn->buffer.data(),size);
+    if (output_file.bad())
+    {
+        output_file.close();
+        conn->response = new Response(500,Error);
+        transfer_type = ERROR;
+        conn->state = Connection::SENDING_RESPONSE;
+    }
 }
 
 void Post::GenerateUploadfile(const std::string &ext)

@@ -1,7 +1,7 @@
 #include "Response.hpp"
 #include "MainResponse.hpp"
 
-class Response;
+
 void    ExecuteError(Connection *conn)
 {
     if (!conn->response->Error)

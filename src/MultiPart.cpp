@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:31:37 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/24 10:59:32 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 11:33:51 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ void Post::ReadPartHeaders()
         {
             if (output_file.is_open())
                 output_file.close();
-            output_file.open(filename.c_str(),std::ios::out | std::ios::app | std::ios::binary);
+            output_file.open(filename.c_str(),std::ios::out | std::ios::trunc | std::ios::binary);
         }
         conn->buffer.erase(0 , CRLFCRLF + 4);
         multipart_state = Post::READING_PART_DATA;
@@ -164,8 +164,6 @@ bool Post::ProcessMultiPartHeaders(std::string data)
         Request::ToCanonical(name);
         headers[name] = value;
     }
-    // if (headers.find("name") == headers.end())
-    //     return false;
     return true;
 }
 
