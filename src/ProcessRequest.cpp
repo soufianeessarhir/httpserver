@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 13:14:55 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 09:56:34 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,10 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	if(getsockname(conn->fd, (struct sockaddr*)&server_addr, &addr_len) == -1)
 		return;
 	int port = ntohs(server_addr.sin_port);
-	std::string ip = inet_ntoa(server_addr.sin_addr);
+	const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&server_addr.sin_addr);
+    std::ostringstream oss;
+    oss << static_cast<int>(bytes[0]) << "."<< static_cast<int>(bytes[1]) << "."<< static_cast<int>(bytes[2]) << "."<< static_cast<int>(bytes[3]);
+	std::string ip = oss.str();
 	Server* default_server = NULL;
     Server* matched_server = NULL;
     for (size_t i = 0; i < servers.size(); ++i) 
@@ -185,7 +188,6 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		conn->response = new Response(conn->request->GetStatus(), DELETE);
 	}
 }
-
 bool HttpServer::MatchLocation(Connection *conn)
 {
     std::string target = conn->request->GetUri();

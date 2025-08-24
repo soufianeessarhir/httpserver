@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 21:05:58 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 10:01:44 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@
 #include		<cstdio>
 #include		<algorithm>
 #include		<cstdio>
-#include 		<arpa/inet.h>
 #include		<sys/types.h>
 #include		"Exceptions.hpp"
 
@@ -67,7 +66,7 @@
 #define			MAX_REQUEST_LINE_LENGHT		8000
 #define			MAX_header_field_LENGHT		24000
 #define			READ_BUFFER_SIZE			64000
-#define			ACTIVITY_TIMEOUT			10
+#define			ACTIVITY_TIMEOUT			60
 
 
 class Connection;

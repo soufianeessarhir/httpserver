@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:25:08 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 10:38:39 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/24 09:59:21 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,6 @@
 
 #include "include/Parser.hpp"
 #include "include/HttpServer.hpp"
-#include <signal.h>
-
-
-
-
-
+#include <csignal>
 
 #endif

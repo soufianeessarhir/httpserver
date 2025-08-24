@@ -1,15 +1,14 @@
 #include "Response.hpp"
 #include "MainResponse.hpp"
 
+class Response;
 void    ExecuteError(Connection *conn)
 {
     if (!conn->response->Error)
     {  
         std::string Path;
-
-        //this should be protected
         conn->response->Error = new MainResponse(conn->response->GetStatusCode());
-        if (conn->location->error_pages.find(conn->response->GetStatusCode()) != conn->location->error_pages.end())
+        if (conn->location && !conn->location->error_pages.empty() && conn->location->error_pages.find(conn->response->GetStatusCode()) != conn->location->error_pages.end())
             Path = conn->location->root + conn->location->error_pages[conn->response->GetStatusCode()];
         else
             Path = conn->response->Error->ErrorHtmlPath.find(conn->response->GetStatusCode())->second;

@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 11:23:23 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/23 17:27:21 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 10:03:03 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,15 +14,18 @@
 #define MAINRESPONSE_HPP
 
 #ifdef __linux__
+
     #include <sys/socket.h>
+    
 #elif defined(__APPLE__)
+
     #ifndef MSG_NOSIGNAL
     #define MSG_NOSIGNAL 0
     #endif
     #include <sys/socket.h>
+    
 #endif
 
-// #include "Response.hpp"
 #include <fstream>
 
 #include "Connection.hpp"

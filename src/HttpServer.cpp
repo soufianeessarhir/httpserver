@@ -6,13 +6,13 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 21:03:12 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 10:12:21 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
 
-
+class HttpServer;
 HttpServer::HttpServer(std::vector<Server> &srvs) :buf(claculateBufferSize()), servers(srvs),headerCaseMap(getHeaderCaseMap())
 {
     event_fd = CreateEvent();
@@ -369,27 +369,29 @@ bool		HttpServer::read(Connection *conn)
     }
 }
 
-
-void		HttpServer::HandleNewConnection(int fd)
+void        HttpServer::HandleNewConnection(int fd)
 {
-	for (;;)
-	{
-		struct sockaddr_in s;
-		socklen_t socklen = sizeof(s);
-		int client_fd = accept(fd, (sockaddr *)&s, &socklen);
-		if (clients.size() > 1024)
-			return;
-		if (client_fd == -1)
-			return;
-		Connection *conn = new Connection(client_fd);
-		char ipstr[INET_ADDRSTRLEN];
-		inet_ntop(AF_INET, &s.sin_addr, ipstr, sizeof(ipstr));//should be removed
-		conn->ip 			= ipstr;
-		conn->port 			= ntohs(s.sin_port);
-		SetClientSocketToNonblocking(client_fd);
-		AddEvent(client_fd,READ_EVENT | EDGE_TRIGGERED);
-		clients[client_fd] 	= conn;
-	}
+    for (;;)
+    {
+        if (active_clients.size() >= 1024)break;
+        struct sockaddr_in s;
+        socklen_t socklen = sizeof(s);
+        int client_fd = accept(fd, (sockaddr *)&s, &socklen);
+        if (clients.size() > 1024)
+            return;
+        if (client_fd == -1)
+            return;
+        Connection *conn = new Connection(client_fd);
+        std::ostringstream oss;
+        unsigned char* bytes = (unsigned char*) &s.sin_addr.s_addr;
+        oss << (int)bytes[0] << '.'<< (int)bytes[1] << '.'<< (int)bytes[2] << '.'<< (int)bytes[3];
+        std::string ipstr = oss.str();
+        conn->ip             = ipstr;
+        conn->port             = ntohs(s.sin_port);
+        SetClientSocketToNonblocking(client_fd);
+        AddEvent(client_fd,READ_EVENT | EDGE_TRIGGERED);
+        clients[client_fd]     = conn;
+    }
 }
 
 void		HttpServer::HandlIncommingData(int fd)

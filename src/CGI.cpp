@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/23 16:26:46 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 10:07:49 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,13 @@
 #include <ctime>
 #include <signal.h>
 #include <errno.h>
+
+void my_usleep(unsigned int usec) {
+    struct timeval tv;
+    tv.tv_sec  = usec / 1000000;
+    tv.tv_usec = usec % 1000000;
+    select(0, NULL, NULL, NULL, &tv);
+}
 
 CGI::CGI()
 {
@@ -104,7 +111,7 @@ bool CGI::ExecuteCgi(Connection *conn)
             conn->response->SetMethod(Error);
             conn->response->SetStatusCode(504);
             kill(Pid, SIGTERM);
-            usleep(100000);
+            my_usleep(100000);
             kill(Pid, SIGKILL);
             waitpid(Pid, NULL, WNOHANG);
             State = Finished;
@@ -235,6 +242,9 @@ bool    CGI::IsCgiComplet(Connection *conn)
             OFile << content;
             OFile.close();
             conn->response->SetStatusCode(200);
+            kill(Pid, SIGKILL);
+            while (waitpid(Pid, &Status, WNOHANG) >= 0)
+                ;
         }
         else
         {
@@ -252,7 +262,7 @@ CGI::~CGI()
     if (Pid > 0 && State != Finished)
     {
         kill(Pid, SIGTERM);
-        usleep(100000);
+        my_usleep(100000);
         if (waitpid(Pid, NULL, WNOHANG) == 0)
         {
             kill(Pid, SIGKILL);
