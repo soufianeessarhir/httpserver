@@ -29,7 +29,7 @@ void PostResponse(Connection *conn)
             if (conn->response->POST->CheckForSending(conn) == false)
                 return ;
             if (!conn->CgiObj)
-                conn->response->GET->SetContentType(conn);
+                conn->response->POST->SetContentType(conn);
             conn->response->POST->SetStatusLine();
             conn->response->POST->SendStatusLine(conn);
             if (conn->CgiObj)
