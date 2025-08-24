@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   HttpServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/24 10:25:11 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/24 15:36:04 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpServer.hpp"
 
-class HttpServer;
+
 HttpServer::HttpServer(std::vector<Server> &srvs) :buf(claculateBufferSize()), servers(srvs),headerCaseMap(getHeaderCaseMap())
 {
     event_fd = CreateEvent();
@@ -215,25 +215,31 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
     return event_count;
 }
 
-void		HttpServer::checkTimouts()
+void HttpServer::checkTimouts()
 {
     time_t now = time(NULL);
-    
-    for (std::map<int, Connection*>::iterator it = clients.begin();  it != clients.end();)
+
+    for (std::map<int, Connection*>::iterator it = clients.begin(); it != clients.end(); )
     {
         if (now - it->second->timeouts.last_act > ACTIVITY_TIMEOUT)
         {
-			if (it->second->state ==  Connection::READING_REQUEST_LINE)
-			{
-				int fd = it->first;
-				++it;
-				ClientCleanUp(fd);
-			}
-			Connection *conn = it->second;
-			if(conn->response)
-				delete conn->response;
-			conn->response = new Response(408,Error);
-			conn->state = Connection::SENDING_RESPONSE;
+            if (it->second->state == Connection::READING_REQUEST_LINE)
+            {
+                int fd = it->first;
+                std::map<int, Connection*>::iterator next = it;
+				++next;
+                ClientCleanUp(fd); 
+                it = next; 
+            }
+            else
+            {
+                Connection *conn = it->second;
+                if(conn->response)
+                    delete conn->response;
+                conn->response = new Response(408, Error);
+                conn->state = Connection::SENDING_RESPONSE;
+                ++it;
+            }
         }
         else
         {

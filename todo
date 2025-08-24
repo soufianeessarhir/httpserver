@@ -8,5 +8,6 @@
 
 - remove all not allowed functions
 
+- check if max body client size
 
 - change the buffer size
