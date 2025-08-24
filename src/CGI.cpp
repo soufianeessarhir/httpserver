@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/24 09:38:15 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/24 10:25:01 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,7 @@
 #include <signal.h>
 #include <errno.h>
 
-#include <sys/select.h>
-
-void my_usleep(unsigned int usec) 
-{
+void my_usleep(unsigned int usec) {
     struct timeval tv;
     tv.tv_sec  = usec / 1000000;
     tv.tv_usec = usec % 1000000;
@@ -245,6 +242,9 @@ bool    CGI::IsCgiComplet(Connection *conn)
             OFile << content;
             OFile.close();
             conn->response->SetStatusCode(200);
+            kill(Pid, SIGKILL);
+            while (waitpid(Pid, &Status, WNOHANG) >= 0)
+                ;
         }
         else
         {

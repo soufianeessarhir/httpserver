@@ -1,38 +1,45 @@
-Name=webserv
-CXX=c++ -g #-fsanitize=address 
-CXXFLAGS=-Wall -Wextra -Werror -std=c++98  
+NAME = webserv
 
-SRCS= webserv.cpp src/HttpServer.cpp  src/Lexer.cpp  src/Parser.cpp\
-	  src/Connection.cpp src/Request.cpp src/Response.cpp src/Error.cpp src/Get.cpp\
-	  src/MainResponse.cpp src/ProcessRequest.cpp src/Post.cpp src/MultiPart.cpp\
-	  src/CGI.cpp src/Delete.cpp src/EPost.cpp src/ConfigValidator.cpp
+CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -O3 -g3 -fsanitize=address
+INCLUDES = -I include
 
-OBJS=$(SRCS:.cpp=.o)
+SRCS = webserv.cpp \
+       src/HttpServer.cpp src/Lexer.cpp src/Parser.cpp \
+       src/Connection.cpp src/Request.cpp src/Response.cpp src/Error.cpp src/Get.cpp \
+       src/MainResponse.cpp src/ProcessRequest.cpp src/Post.cpp src/MultiPart.cpp \
+       src/CGI.cpp src/Delete.cpp src/EPost.cpp src/ConfigValidator.cpp src/Chunked.cpp
 
-RM=rm -f
+HDRS = include/CGI.hpp include/ConfigValidator.hpp include/Exceptions.hpp include/Lexer.hpp \
+       include/Post.hpp include/Response.hpp include/ConfigData.hpp include/Connection.hpp include/HttpServer.hpp \
+       include/MainResponse.hpp include/Parser.hpp include/Request.hpp webserv.hpp
 
-all: $(Name)
+OBJS = $(SRCS:.cpp=.o)
 
-$(Name): $(OBJS)
+RM = rm -rf
+
+all: $(NAME)
+
+$(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)
 	@echo "Compilation complete. Executable: $@"
-	@echo "Run the server with: ./$(Name) <config_file>"
+	@echo "Run the server with: ./$(NAME) <config_file>"
 
-%.o: %.cpp
-	$(CXX) -I include $(CXXFLAGS) -c $< -o $@
-	@echo "Compiling $< to $@"
-	@echo "Object file created: $@"
+src/%.o: src/%.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	@echo "Compiled $<"
+
+webserv.o: webserv.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	$(RM) $(OBJS)
-	@echo "Cleaned up object files."
+	$(RM) $(OBJS) webserv.o
+	@echo "Cleaned object files."
 
 fclean: clean
-	$(RM) $(Name)
-	@echo "Cleaned up executable."
+	$(RM) $(NAME)
+	@echo "Removed executable."
 
 re: fclean all
-	@echo "Recompiled everything."
-.PHONY: all clean fclean re
 
-# To use this Makefile, place it in the same directory as your source files.
+.PHONY: all clean fclean re

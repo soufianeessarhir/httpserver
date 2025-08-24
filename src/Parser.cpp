@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 15:10:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/20 15:48:55 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/21 20:36:42 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -351,18 +351,18 @@ void		Parser::AutoindexDirective(bool &autoindex)
 
 void        Parser::IndexDirective(std::string &index)
 {
-    currentToken = lexer.getNextToken();
-    if (currentToken.type != TOKEN_IDENTIFIER)
-        throw ParseException("Expected path after 'index'");
-    index = currentToken.value;
-    currentToken = lexer.getNextToken();
-    while (currentToken.type == TOKEN_IDENTIFIER)
-    {
-        index = currentToken.value;
-        currentToken = lexer.getNextToken();
-    }
-    if (currentToken.type != TOKEN_SEMICOLON)
-        throw ParseException("Expected ';' after 'index' directive");
+	currentToken = lexer.getNextToken();
+	if (currentToken.type != TOKEN_IDENTIFIER)
+		throw ParseException("Expected path after 'index'");
+	index = currentToken.value;
+	currentToken = lexer.getNextToken();
+	while (currentToken.type == TOKEN_IDENTIFIER)
+	{
+		index = currentToken.value;
+		currentToken = lexer.getNextToken();
+	}
+	if (currentToken.type != TOKEN_SEMICOLON)
+		throw ParseException("Expected ';' after 'index' directive");
 }
 
 

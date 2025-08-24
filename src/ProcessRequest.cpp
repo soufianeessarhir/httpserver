@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ProcessRequest.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/19 22:09:57 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/24 10:19:22 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,13 @@
 
 bool HttpServer::isValueCaseInsensitive(const std::string& headerName) {
 
-    const std::map<std::string, bool>& map = HeaderValueCase::get();
+    const std::map<std::string, bool>& map = getHeaderCaseMap();
     std::map<std::string, bool>::const_iterator it = map.find(headerName);
     if (it != map.end())
         return it->second;
     return false;
 }
+
 void		HttpServer::ProcessRequestLine(Connection *conn)
 {
 
@@ -71,7 +72,7 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 	}
 	else if (conn->state == Connection::READING_HEADERS && conn->buffer.size() >= MAX_header_field_LENGHT)
 	{
-		conn->response = new Response(431, Error); //[sessarhi] header field too large response
+		conn->response = new Response(431, Error);
 		SetSocketForWrite(conn);
 		conn->state = Connection::SENDING_RESPONSE;
 		return;
@@ -98,7 +99,10 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 	if(getsockname(conn->fd, (struct sockaddr*)&server_addr, &addr_len) == -1)
 		return;
 	int port = ntohs(server_addr.sin_port);
-	std::string ip = inet_ntoa(server_addr.sin_addr);
+	const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&server_addr.sin_addr);
+    std::ostringstream oss;
+    oss << static_cast<int>(bytes[0]) << "."<< static_cast<int>(bytes[1]) << "."<< static_cast<int>(bytes[2]) << "."<< static_cast<int>(bytes[3]);
+	std::string ip = oss.str();
 	Server* default_server = NULL;
     Server* matched_server = NULL;
     for (size_t i = 0; i < servers.size(); ++i) 
@@ -112,7 +116,8 @@ void 		HttpServer::ProcessRequest(Connection *conn)
                 break;
             }
         }
-        if (!port_matches) continue;
+        if (!port_matches) 
+			continue;
         if (!default_server) 
             default_server = &servers[i]; 
         for (size_t k = 0; k < servers[i].server_names.size(); ++k) {
@@ -138,7 +143,7 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 		return;
 	}
 	FillLocationMisseddata(conn);
-	CheckCgiExist(conn); //added by eaboudi
+	CheckCgiExist(conn);
 	if (conn->request->GetMethod() == "POST")
 	{
 		if (conn->location->methods.find("POST") == conn->location->methods.end())
@@ -158,7 +163,8 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
-		conn->response = new Response(conn->request->GetStatus(), POST);
+		if (!conn->response)
+			conn->response = new Response(conn->request->GetStatus(), POST);
 	}
 	else if (conn->request->GetMethod() == "GET")
 	{
@@ -168,7 +174,8 @@ void 		HttpServer::ProcessRequest(Connection *conn)
 			conn->state = Connection::SENDING_RESPONSE;
 			return;
 		}
-		conn->response = new Response(conn->request->GetStatus(), GET);
+		if (!conn->response)
+			conn->response = new Response(conn->request->GetStatus(), GET);
 	}
 	else if (conn->request->GetMethod() == "DELETE")
 	{

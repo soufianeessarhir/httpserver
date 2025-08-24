@@ -4,7 +4,10 @@ CMakeLists.txt
 todo
 webserv.conf
 To Do
-uploads/
+upload/
 .vscode/
 tests/
 sheets/
+*.o
+*.a
+testimage.png

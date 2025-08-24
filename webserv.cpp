@@ -3,26 +3,26 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:26:08 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 11:56:10 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/23 19:57:08 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
 
-void sigchld_handler(int sig)
-{
-    (void)sig;
-    while (waitpid(-1, NULL, WNOHANG) > 0)
-        ;
-}
+// void sigchld_handler(int sig)
+// {
+//     (void)sig;
+//     while (waitpid(-1, NULL, WNOHANG) > 0)
+//         ;
+// }
 
 int main(int argc, char **argv)
 {
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGCHLD, sigchld_handler);
+    // signal(SIGCHLD, sigchld_handler);
 	std::vector<Server> servers;
 	if (argc != 2)
 		return std::cerr << "Usage: " << argv[0] << " <config_file>" << std::endl, 1;
@@ -44,7 +44,6 @@ int main(int argc, char **argv)
 			configFile.close();
 			return  1;
 		}
-		configFile.close();
 	}
 	if (servers.empty())
 	{
@@ -59,7 +58,6 @@ int main(int argc, char **argv)
 	catch (HttpServerError &e)
 	{
 		std::cerr << "HttpServerError: " << e.what() << std::endl;
-		// httpServer.cleanup();
 		return 1;
 	}
 

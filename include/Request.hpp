@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:30:12 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 18:31:48 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/23 13:24:07 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,19 +64,11 @@ public:
     void            NormalizePath();
 
     void            RemoveFromOutputpath(std::string &);
-
-
-
-    
-
-
-
     
     std::string     GetUri();
 
     void            SetUri(std::string NewUri);
 
-    const char*     GetBody()const;
     
     std::string     GetHeader(std::string )const;
     
@@ -84,14 +76,15 @@ public:
 
     int             GetStatus()const;
 
-
     std::string    GetMethod();
 
     bool            CheckField(const std::string &);
     
-    std::map<std::string,std::string>   headers;
 
+    std::map<std::string,std::string>   headers;
+    
 private:
+
 
     int                                 RequestStatusCode;
     

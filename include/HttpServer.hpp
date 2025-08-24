@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/14 09:21:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 10:18:39 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,28 +14,6 @@
 # define 		HTTPSERVER_HPP
 
 #include		"ConfigData.hpp"
-
-#ifdef __linux__
-    #include <sys/epoll.h>
-#elif defined(__APPLE__)
-    #include <sys/event.h>
-    #include <sys/time.h>
-#endif
-
-#ifdef __linux__
-    #define READ_EVENT EPOLLIN
-    #define WRITE_EVENT EPOLLOUT
-    #define ERROR_EVENT EPOLLERR
-    #define HUP_EVENT EPOLLHUP
-    #define EDGE_TRIGGERED EPOLLET
-#elif defined(__APPLE__)
-    #define READ_EVENT		0x01
-    #define WRITE_EVENT 	0x02
-    #define ERROR_EVENT 	0x04
-    #define HUP_EVENT		0x08
-    #define EDGE_TRIGGERED EV_CLEAR
-#endif
-
 #include		<unistd.h>
 #include		<exception>
 #include		<sys/socket.h>
@@ -51,49 +29,54 @@
 #include		<cstdio>
 #include		<algorithm>
 #include		<cstdio>
-#include 		<arpa/inet.h>
 #include		<sys/types.h>
 #include		"Exceptions.hpp"
 
-class Connection;
-#define			MAX_EVENTS					1024
+#ifdef 			__linux__
+
+#include 		<sys/epoll.h>
+	
+#elif 			defined(__APPLE__)
+
+#include		<sys/event.h>
+#include		<sys/time.h>
+
+#endif
+
+#ifdef 			__linux__
+
+#define			READ_EVENT EPOLLIN
+#define			WRITE_EVENT EPOLLOUT
+#define			ERROR_EVENT EPOLLERR
+#define			HUP_EVENT EPOLLHUP
+#define			EDGE_TRIGGERED EPOLLET
+	
+#elif 			defined(__APPLE__)
+
+#define			READ_EVENT					0x01
+#define			WRITE_EVENT 				0x02
+#define			ERROR_EVENT 				0x04
+#define			HUP_EVENT					0x08
+#define			EDGE_TRIGGERED  			EV_CLEAR
+	
+#endif
+
+#define			MAX_EVENTS					10240
 #define			CLIENT_PER_CYCLE			1024
 #define			MAX_REQUEST_LINE_LENGHT		8000
 #define			MAX_header_field_LENGHT		24000
 #define			READ_BUFFER_SIZE			64000
+#define			ACTIVITY_TIMEOUT			60
 
-struct PlatformEvent {
-    int fd;
-    int events;
-    void* data;
+
+class Connection;
+
+struct PlatformEvent 
+{
+    int		fd;
+    int		events;
+    void*	data;
 };
-
-
-struct HeaderValueCase {
-    static const std::map<std::string, bool>& get() 
-	{
-        static std::map<std::string, bool> headerCaseMap;
-            headerCaseMap["transfer-encoding"] = true;
-            headerCaseMap["content-encoding"] = true;
-            headerCaseMap["connection"] = true;
-            headerCaseMap["content-type"] = true;
-            headerCaseMap["accept"] = true;
-            headerCaseMap["accept-encoding"] = true;
-            headerCaseMap["expect"] = true;
-            headerCaseMap["allow"] = true;
-            headerCaseMap["etag"] = false;
-            headerCaseMap["if-match"] = false;
-            headerCaseMap["if-none-match"] = false;
-            headerCaseMap["set-cookie"] = false;
-            headerCaseMap["cookie"] = false;
-            headerCaseMap["content-disposition"] = false;
-            headerCaseMap["location"] = false;
-            headerCaseMap["referer"] = false;
-        return headerCaseMap;
-    }
-};
-
-
 
 
 class HttpServer
@@ -101,18 +84,28 @@ class HttpServer
 
 public:
 
-	HttpServer(std::vector<Server> &);
+				HttpServer(std::vector<Server> &);
 	
-	~HttpServer();
+				~HttpServer();
 	
 	void		run();
 	
-	void		cleanup();
 
 	static bool 		isValueCaseInsensitive(const std::string& headerName);
-private:	
+	
+private:
 
+    static const       std::map<std::string, bool>& getHeaderCaseMap();
+
+	void		cleanup();
+	
 	void		init();
+
+	int			claculateBufferSize();
+
+	void		CreateSocket(struct addrinfo *,int &sockfd,struct addrinfo *);	
+	
+	bool		read(Connection *);
 	
 	void		ClientCleanUp(int fd);
 	
@@ -148,35 +141,48 @@ private:
 
 	
 	int 		CreateEvent();
+	
     int 		AddEvent(int fd, int events);
+
     int 		ModifyEvent(int fd, int events);
+	
     int 		RemoveEvent(int fd);
+	
     int 		WaitForEvents(PlatformEvent* events, int max_events, int timeout);
-    int 		event_fd;
+
+	void		checkTimouts();
+	
     
 #ifdef __linux__
-    struct epoll_event ev, events[MAX_EVENTS];
+
+    struct epoll_event						ev, events[MAX_EVENTS];
+
 #elif defined(__APPLE__)
-    struct kevent kevents[MAX_EVENTS];
-    struct kevent change_list[MAX_EVENTS];
-    int change_count;
+
+    struct kevent							kevents[MAX_EVENTS];
+    struct kevent 							change_list[4];
+	struct timespec 						ts;
+    int 									change_count;
+	
 #endif
+    int 									event_fd;
 	
-    char                            buf[READ_BUFFER_SIZE];
+	size_t									buf_size;
+	
+	std::vector<char>						buf;
     
-	std::vector<Server>				&servers;
+	std::vector<Server>						&servers;
 	
-	std::map<int, Server> 			server_map;
+	std::map<int, Server> 					server_map;
 	
-	std::map<int , Connection* > 	clients;
+	std::map<int , Connection* > 			clients;
 	
-	std::deque<PlatformEvent>		active_clients;
+	std::deque<PlatformEvent>				active_clients;
 
 	const std::map<std::string,bool>&		headerCaseMap;
 };
 
-// C++98 compatible utility function
-int removeFile(const char* filepath);
+int				removeFile(const char* filepath);
 
 
 #endif

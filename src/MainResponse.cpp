@@ -153,10 +153,9 @@ void MainResponse::SetStatusLine()
 
 void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
 {
-    std::cout << ContentLength << std::endl;
     if (!CloseConn)
     {
-        if (conn->request->headers["connection"] != "Keep-alive")
+        if (!conn->request->CheckField("connection") || conn->request->GetHeader("connection") == "Keep-alive")
             Headers["Connection"] = "close\r\n";     
         else
             Headers["Connection"] = "keep-alive\r\n";
@@ -201,14 +200,12 @@ void MainResponse::SendStatusLine(Connection *conn)
         redirect_response << "\r\n";
         
         StatusLine = redirect_response.str();
-        std::cout << "Redirect Response:\n" << StatusLine << std::endl;
     }
     if (conn->CgiObj)
     {
         std::string location = conn->CgiObj->CgiHeaders["Location"];
         if (!location.empty())
             StatusLine = "HTTP/1.1 302 Found\r\nLocation: " + location + "\r\nConnection:close\r\n\r\n";
-        // std::cout << location << "'---------'" << std::endl;
     }
     ssize_t BytesWriten = 0;
     size_t TotalSent = 0;
@@ -260,7 +257,6 @@ void MainResponse::SendHeaders(Connection *conn)
             HeadersStr += itc->first + ": " + itc->second + "\r\n";
     }
     HeadersStr += "\r\n";
-    // std::cout << HeadersStr << std::endl;
     while (TotalSent < HeadersStr.size())
     {
         BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 
@@ -366,7 +362,7 @@ void MainResponse::SetAndSendBody(Connection* conn)
                                 CheckProg.BuffSize - CheckProg.BuffOffs,
                                 MSG_NOSIGNAL);
     if (bytes_sent == 0)
-        return;
+        return ;
     if (bytes_sent < 0)
     {
             conn->state = Connection::COMPLETE;
@@ -400,8 +396,6 @@ std::string MainResponse::GenerateAutoIndex(Connection *conn)
         
         return "";
     }
-
-    std::cout << uri << std::endl;
     html << "<!DOCTYPE html>\n";
     html << "<html>\n<head>\n";
     html << "<title>Index of " << uri << "</title>\n";

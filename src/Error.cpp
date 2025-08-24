@@ -1,6 +1,7 @@
 #include "Response.hpp"
 #include "MainResponse.hpp"
 
+class Response;
 void    ExecuteError(Connection *conn)
 {
     if (!conn->response->Error)
@@ -44,6 +45,7 @@ void    ExecuteError(Connection *conn)
                 conn->state = Connection::COMPLETE;
                 delete conn->response->Error;
                 conn->response->Error = NULL;
+                
             }
             break;
         }
