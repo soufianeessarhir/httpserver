@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 17:23:48 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 21:05:58 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,7 @@
 #define			MAX_REQUEST_LINE_LENGHT		8000
 #define			MAX_header_field_LENGHT		24000
 #define			READ_BUFFER_SIZE			64000
+#define			ACTIVITY_TIMEOUT			10
 
 
 class Connection;
@@ -90,7 +91,6 @@ public:
 	
 	void		run();
 	
-	void		cleanup();
 
 	static bool 		isValueCaseInsensitive(const std::string& headerName);
 	
@@ -98,6 +98,8 @@ private:
 
     static const       std::map<std::string, bool>& getHeaderCaseMap();
 
+	void		cleanup();
+	
 	void		init();
 
 	int			claculateBufferSize();
@@ -138,9 +140,6 @@ private:
 
 	void 		SetServerSocketToNonblocking(int fd);
 
-    
-
-	void		SetTimeOut();
 	
 	int 		CreateEvent();
 	
@@ -151,6 +150,8 @@ private:
     int 		RemoveEvent(int fd);
 	
     int 		WaitForEvents(PlatformEvent* events, int max_events, int timeout);
+
+	void		checkTimouts();
 	
     
 #ifdef __linux__
@@ -161,7 +162,6 @@ private:
 
     struct kevent							kevents[MAX_EVENTS];
     struct kevent 							change_list[4];
-	struct timespec 						*pts;
 	struct timespec 						ts;
     int 									change_count;
 	
@@ -183,7 +183,7 @@ private:
 	const std::map<std::string,bool>&		headerCaseMap;
 };
 
-int removeFile(const char* filepath);
+int				removeFile(const char* filepath);
 
 
 #endif

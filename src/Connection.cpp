@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:32:49 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 16:27:05 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 20:15:19 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,15 +16,13 @@
 
 Connection::Connection(int fd): UseCgi(false), CgiObj(NULL), state(READING_REQUEST_LINE),fd(fd)
             ,request(new Request()),response(NULL),server(NULL),location(NULL) ,post(NULL)
-{
-    timeouts.read_fails = false;   
-    timeouts.last_activity = time(NULL);     
-    timeouts.read_timeout = time(NULL);  
+{   
+    timeouts.last_act = time(NULL);     
 }
 
-void Connection::UpdateTime(time_t &t)
+void Connection::UpdateTime()
 {
-    t  = time(NULL);
+   timeouts.last_act = time(NULL);
 }
 
 void Connection::Reset()

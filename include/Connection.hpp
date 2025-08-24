@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 14:50:50 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/17 18:35:27 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/23 20:14:55 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,7 @@ class Post;
 class CGI;
 struct Timeouts
 {
-    bool read_fails;
-	time_t last_activity; // Last activity timestamp
-    time_t read_timeout;  // Read timeout value
+	time_t last_act;
 };
 
 class Connection
@@ -37,7 +35,7 @@ class Connection
 public:
     Connection(int fd);
     void Reset();
-    void UpdateTime(time_t &t);
+    void UpdateTime();
     ~Connection();
     int event_fd;
     enum State 

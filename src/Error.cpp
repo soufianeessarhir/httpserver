@@ -6,6 +6,8 @@ void    ExecuteError(Connection *conn)
     if (!conn->response->Error)
     {  
         std::string Path;
+
+        //this should be protected
         conn->response->Error = new MainResponse(conn->response->GetStatusCode());
         if (conn->location->error_pages.find(conn->response->GetStatusCode()) != conn->location->error_pages.end())
             Path = conn->location->root + conn->location->error_pages[conn->response->GetStatusCode()];

@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 17:29:53 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 21:03:12 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ HttpServer::HttpServer(std::vector<Server> &srvs) :buf(claculateBufferSize()), s
         perror("Event queue creation failed");
 #if defined(__APPLE__)
     change_count = 0;
-	pts = NULL;
 #endif
     this->init();
 }
@@ -114,7 +113,7 @@ int HttpServer::AddEvent(int fd, int events)
         EV_SET(&change_list[change_count++], fd, EVFILT_READ, flags, 0, 0, NULL);
     if (events & WRITE_EVENT)
         EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, flags, 0, 0, NULL);
-    result = kevent(event_fd, change_list, change_count, NULL, 0, pts);
+    result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
     if (result < 0 && errno != ENOENT && errno != EBADF)
        throw  HttpClientError("AddEvent failed",fd);
@@ -142,7 +141,7 @@ int HttpServer::ModifyEvent(int fd, int events)
 		EV_SET(&change_list[change_count++], fd, EVFILT_READ, EV_ENABLE | EV_CLEAR, 0, 0, NULL);
 	if (events & WRITE_EVENT)
 		EV_SET(&change_list[change_count++], fd, EVFILT_WRITE, EV_ENABLE | EV_CLEAR, 0, 0, NULL);
-	result = kevent(event_fd, change_list, change_count, NULL, 0, pts);
+	result = kevent(event_fd, change_list, change_count, NULL, 0, NULL);
     change_count = 0;
 #endif
     return result;
@@ -216,6 +215,33 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
     return event_count;
 }
 
+void		HttpServer::checkTimouts()
+{
+    time_t now = time(NULL);
+    
+    for (std::map<int, Connection*>::iterator it = clients.begin();  it != clients.end();)
+    {
+        if (now - it->second->timeouts.last_act > ACTIVITY_TIMEOUT)
+        {
+			if (it->second->state ==  Connection::READING_REQUEST_LINE)
+			{
+				int fd = it->first;
+				++it;
+				ClientCleanUp(fd);
+			}
+			Connection *conn = it->second;
+			if(conn->response)
+				delete conn->response;
+			conn->response = new Response(408,Error);
+			conn->state = Connection::SENDING_RESPONSE;
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
 void		HttpServer::CreateSocket(struct addrinfo *p,int &sockfd,struct addrinfo *res)
 {
 	for (p = res; p != NULL; p = p->ai_next)
@@ -231,8 +257,7 @@ void		HttpServer::CreateSocket(struct addrinfo *p,int &sockfd,struct addrinfo *r
 		struct linger sl;
 		sl.l_onoff = 1;
 		sl.l_linger = 1;
-		if (setsockopt(sockfd, SOL_SOCKET, SO_LINGER,
-					&sl, sizeof(sl)) < 0) {
+		if (setsockopt(sockfd, SOL_SOCKET, SO_LINGER,&sl, sizeof(sl)) < 0) {
 			close(sockfd);
 			freeaddrinfo(res);
 			perror("setsockopt(SO_LINGER) failed");
@@ -374,6 +399,7 @@ void		HttpServer::HandlIncommingData(int fd)
 		return ;
 	if (!read(conn))
 		return;
+	conn->UpdateTime();
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -454,6 +480,7 @@ void		HttpServer::run()
 			}
 			if (!active_clients.empty())
 				ProcessClientsRoundRobin();
+			checkTimouts();
 		}
 		catch(const HttpClientError &e)
 		{
@@ -498,6 +525,7 @@ void		HttpServer::ProcessClientsRoundRobin()
 void        HttpServer::HandlOutgoingData(int fd)
 {
     Connection *conn = clients[fd];
+	conn->UpdateTime();
 	excuteGetMethod(conn);
 	if (conn->state == Connection::COMPLETE)
 	{
@@ -538,20 +566,16 @@ void		HttpServer::cleanup()
 
 HttpServer::~HttpServer()
 {
+	cleanup();
 	if (event_fd != -1)
 	{
 		close(event_fd);
 	}
 }
 
-// C++98 compatible file removal function
-int removeFile(const char* filepath) {
-    if (!filepath) {
+int			removeFile(const char* filepath) {
+    if (!filepath)
         return -1;
-    }
-    
-    // Use the standard C library function remove() which is C++98 compatible
-    // remove() works for both files and empty directories
     int result = std::remove(filepath);
     return result;
 }

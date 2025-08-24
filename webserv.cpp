@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:26:08 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/23 17:30:48 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/23 19:57:08 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,6 @@ int main(int argc, char **argv)
 			configFile.close();
 			return  1;
 		}
-		configFile.close();
 	}
 	if (servers.empty())
 	{
@@ -59,7 +58,6 @@ int main(int argc, char **argv)
 	catch (HttpServerError &e)
 	{
 		std::cerr << "HttpServerError: " << e.what() << std::endl;
-		// httpServer.cleanup();
 		return 1;
 	}
 
