@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:31:37 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/21 13:36:44 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 10:59:32 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,33 +15,33 @@
 
 void Post::ReadPreamble()
 {
-    size_t del = part_buffer.find(initial_boundry);
+    size_t del = conn->buffer.find(initial_boundry);
     if (del != std::string::npos)
     {
-        part_buffer.erase(0,del + initial_boundry.length());
+        conn->buffer.erase(0,del + initial_boundry.length());
         multipart_state = Post::READING_PART_HEADERS;
         contunue = true;
     }
 }
 void Post::ReadBoundry()
 {
-    size_t  CRLF = part_buffer.find(subsequent_boundry);
+    size_t  CRLF = conn->buffer.find(subsequent_boundry);
     if(CRLF != std::string::npos)
     {
-        part_buffer.erase(0,subsequent_boundry.length());
+        conn->buffer.erase(0,subsequent_boundry.length());
         multipart_state = Post::READING_PART_HEADERS;
         contunue = true;
         return;
     }
-    size_t close_del = part_buffer.find(close_boundry);
+    size_t close_del = conn->buffer.find(close_boundry);
     if (close_del !=  std::string::npos)
     {
-        part_buffer.erase(0, close_boundry.length());
+        conn->buffer.erase(0, close_boundry.length());
         multipart_state = Post::MULTIPART_COMPLETE;
         contunue = true;
         return;
     }
-    if (part_buffer.length() > subsequent_boundry.length())
+    if (conn->buffer.length() > subsequent_boundry.length())
     {
         multipart_state = Post::MULTIPART_ERROR;
         contunue = true;
@@ -51,10 +51,10 @@ void Post::ReadPartHeaders()
 {
     filename.clear();
     headers.clear();
-    size_t CRLFCRLF = part_buffer.find("\r\n\r\n");
+    size_t CRLFCRLF = conn->buffer.find("\r\n\r\n");
     if (CRLFCRLF != std::string::npos)
     {
-        if(!ProcessMultiPartHeaders(part_buffer.substr(0,CRLFCRLF))) 
+        if(!ProcessMultiPartHeaders(conn->buffer.substr(0,CRLFCRLF))) 
         {
             multipart_state = Post::MULTIPART_ERROR;
             contunue = true;
@@ -79,28 +79,28 @@ void Post::ReadPartHeaders()
                 output_file.close();
             output_file.open(filename.c_str(),std::ios::out | std::ios::app | std::ios::binary);
         }
-        part_buffer.erase(0 , CRLFCRLF + 4);
+        conn->buffer.erase(0 , CRLFCRLF + 4);
         multipart_state = Post::READING_PART_DATA;
         contunue = true;
     }
 }
 void Post::ReadPartData()
  {
-    size_t pos = part_buffer.find(delimiter);
+    size_t pos = conn->buffer.find(delimiter);
     if (pos != std::string::npos) {
         if (is_file_upload)
-            output_file.write(part_buffer.data(), pos);
-        part_buffer.erase(0, pos);
+            output_file.write(conn->buffer.data(), pos);
+        conn->buffer.erase(0, pos);
         multipart_state = Post::READING_BOUNDARY;
         contunue = true;
         return;
     }
     size_t k = delimiter.size();
-    if (part_buffer.size() >= k) {
-        size_t safe =  part_buffer.size() - (k - 1);
+    if (conn->buffer.size() >= k) {
+        size_t safe =  conn->buffer.size() - (k - 1);
         if (is_file_upload && safe > 0)
-            output_file.write( part_buffer.data(),safe);
-        part_buffer.erase(0, safe);
+            output_file.write( conn->buffer.data(),safe);
+        conn->buffer.erase(0, safe);
     }
 }
 void Post::ProcessMultiPart()
