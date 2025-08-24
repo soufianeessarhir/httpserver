@@ -153,6 +153,7 @@ void MainResponse::SetStatusLine()
 
 void    MainResponse::SetHeaders(bool CloseConn, Connection *conn)
 {
+    std::cout << ContentLength << std::endl;
     if (!CloseConn)
     {
         if (!conn->request->CheckField("connection") || conn->request->GetHeader("connection") == "Keep-alive")
@@ -258,6 +259,7 @@ void MainResponse::SendHeaders(Connection *conn)
             HeadersStr += itc->first + ": " + itc->second + "\r\n";
     }
     HeadersStr += "\r\n";
+    // std::cout << HeadersStr << std::endl;
     while (TotalSent < HeadersStr.size())
     {
         BytesWriten = send(conn->fd, HeadersStr.c_str() + TotalSent, 
@@ -297,6 +299,8 @@ bool    MainResponse::CheckForSending(Connection *conn)
         else if (conn->location && conn->location->autoindex)
         {
             std::string autoindexHTML = conn->response->GET->GenerateAutoIndex(conn);
+            if (autoindexHTML.empty())
+                return false;
             std::stringstream filefd;
             filefd << conn->fd;
             std::string tempFile = "/tmp/autoindex_" + filefd.str() + ".html";
@@ -339,7 +343,6 @@ void MainResponse::SetAndSendBody(Connection* conn)
         ssize_t bytes_read = read(CheckProg.FileFd, CheckProg.Buff, BUFFER_SIZE);
         if (bytes_read < 0)
         {
-            perror("read");
             conn->state = Connection::COMPLETE;
             ResponseStat = SENDING_COMPLETE;
             close(CheckProg.FileFd);
@@ -377,8 +380,27 @@ std::string MainResponse::GenerateAutoIndex(Connection *conn)
     std::ostringstream html;
     std::string uri = conn->request->GetUri();
     std::string path = conn->request->GetUri();
-    
-    // Generate HTML header
+
+    if (!uri.empty() && uri[uri.length() - 1] != '/')
+    {
+        int pos = uri.find_last_of('/');
+        std::string dir = uri.substr(pos);
+        std::ostringstream response;
+        response << "HTTP/1.1 301 Moved Permanently\r\n";
+        response << "Location: " << dir << "/\r\n";
+        response << "Content-Length: 0\r\n";
+        response << "Connection: close\r\n";
+        response << "\r\n";
+        std::string responseStr = response.str();
+        ssize_t bytes_sent = send(conn->fd, responseStr.c_str(), responseStr.length(), MSG_NOSIGNAL);
+        if (bytes_sent < 0) {
+            return "";
+        }
+        
+        return "";
+    }
+
+    std::cout << uri << std::endl;
     html << "<!DOCTYPE html>\n";
     html << "<html>\n<head>\n";
     html << "<title>Index of " << uri << "</title>\n";
@@ -395,8 +417,6 @@ std::string MainResponse::GenerateAutoIndex(Connection *conn)
     html << "<h1>Index of " << uri << "</h1>\n";
     html << "<table>\n";
     html << "<tr><th>Name</th><th>Size</th><th>Last Modified</th></tr>\n";
-    
-    // Add parent directory link if not root
     if (uri != "/") {
         html << "<tr><td><a href=\"../\">../</a></td><td>-</td><td>-</td></tr>\n";
     }
@@ -409,7 +429,7 @@ std::string MainResponse::GenerateAutoIndex(Connection *conn)
         {
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
                 continue;
-            std::string fullPath = path + "/" + entry->d_name;
+            std::string fullPath = path + entry->d_name;
             struct stat fileStat;
             if (stat(fullPath.c_str(), &fileStat) == 0)
             {
@@ -425,8 +445,6 @@ std::string MainResponse::GenerateAutoIndex(Connection *conn)
                     sizeStr << fileStat.st_size;
                     size = sizeStr.str();
                 }
-                
-                // Format modification time
                 char timeStr[100];
                 struct tm *timeinfo = localtime(&fileStat.st_mtime);
                 strftime(timeStr, sizeof(timeStr), "%d-%b-%Y %H:%M", timeinfo);
