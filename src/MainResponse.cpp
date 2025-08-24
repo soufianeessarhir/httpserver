@@ -111,11 +111,21 @@ const std::map<int, std::string> MainResponse::ErrorHtmlPath  = CreateMapOfHtmlE
 
 void    MainResponse::SetContentType(Connection *conn)
 {
-    std::string Extension = conn->request->GetUri().substr(conn->request->GetUri().find_last_of('.') + 1);
+    size_t dot_pos = conn->request->GetUri().find_last_of('.');
+    if (dot_pos == std::string::npos)
+    {
+        ContentType = "application/octet-stream"; // Default type for files without extension
+        IsBinaryFile = true;
+        return ;
+    }
+    std::string Extension = conn->request->GetUri().substr(dot_pos + 1);
     std::map<std::string, std::string>::const_iterator it = MimeTypes.find(Extension);
     if (it != MimeTypes.end())
     {
-        ContentType = it->second;
+        std::cout << it->first << std::endl;
+        std::cout << it->second << std::endl;
+        std::cout << ContentType << "----" << std::endl;
+        ContentType = (*it).second;
         IsBinaryFile = (ContentType.find("text/") != 0 && 
                    ContentType != "application/javascript" &&
                    ContentType != "application/json" &&
