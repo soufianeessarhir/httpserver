@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 12:00:41 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/24 10:19:22 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 18:01:04 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ void		HttpServer::ProcessRequestLine(Connection *conn)
 			conn->response =  new Response(conn->request->GetStatus(), Error);
 			conn->state =  Connection::SENDING_RESPONSE;
 		}
+		conn->UpdateTime();
 	}
 	else if (conn->state == Connection::READING_REQUEST_LINE && conn->buffer.size() >= MAX_REQUEST_LINE_LENGHT)
 	{
@@ -60,6 +61,7 @@ void		HttpServer::ProcessHeaders(Connection *conn)
 	size_t end = conn->buffer.find("\r\n\r\n");
 	if (end != std::string::npos)
 	{
+		conn->UpdateTime();
 		bool IsValid = conn->request->ParseHeaders(conn->buffer.substr(0,end + 2));
 		conn->buffer.erase(0,end + 4);
 		if (IsValid)
