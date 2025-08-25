@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 18:08:39 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/24 15:36:04 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 18:07:21 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,7 +176,7 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
 {
 	int event_count;
 	if (active_clients.empty())
-		timeout = -1;
+		timeout = 1000;
 #ifdef __linux__
 
     event_count = epoll_wait(event_fd, events, max_events, timeout);
@@ -218,18 +218,17 @@ int HttpServer::WaitForEvents(PlatformEvent* platform_events, int max_events, in
 void HttpServer::checkTimouts()
 {
     time_t now = time(NULL);
-
     for (std::map<int, Connection*>::iterator it = clients.begin(); it != clients.end(); )
     {
         if (now - it->second->timeouts.last_act > ACTIVITY_TIMEOUT)
         {
-            if (it->second->state == Connection::READING_REQUEST_LINE)
+            if (it->second->state == Connection::READING_REQUEST_LINE || it->second->state == Connection::READING_HEADERS)
             {
                 int fd = it->first;
                 std::map<int, Connection*>::iterator next = it;
-				++next;
+                ++next;
                 ClientCleanUp(fd); 
-                it = next; 
+                it = next;
             }
             else
             {
@@ -238,6 +237,7 @@ void HttpServer::checkTimouts()
                     delete conn->response;
                 conn->response = new Response(408, Error);
                 conn->state = Connection::SENDING_RESPONSE;
+                SetSocketForWrite(conn);
                 ++it;
             }
         }
@@ -247,7 +247,6 @@ void HttpServer::checkTimouts()
         }
     }
 }
-
 void		HttpServer::CreateSocket(struct addrinfo *p,int &sockfd,struct addrinfo *res)
 {
 	for (p = res; p != NULL; p = p->ai_next)
@@ -407,7 +406,6 @@ void		HttpServer::HandlIncommingData(int fd)
 		return ;
 	if (!read(conn))
 		return;
-	conn->UpdateTime();
 	bool continue_processing = true;
 	while (continue_processing)
 	{
@@ -427,7 +425,7 @@ void		HttpServer::HandlIncommingData(int fd)
 				break;
 				
 			case Connection::PROCESSING:
-
+				
 				ProcessRequest(conn);
 				if (conn->request->ExpectBody() && conn->request->GetMethod() == "POST")
 				{
@@ -437,6 +435,7 @@ void		HttpServer::HandlIncommingData(int fd)
 				}
 				else
 					SetSocketForWrite(conn);
+				conn->UpdateTime();
 				break;
 				
 			case Connection::READING_BODY:
@@ -444,6 +443,7 @@ void		HttpServer::HandlIncommingData(int fd)
 					conn->post->ProcessChunck();
 				else
 					conn->post->ProcessContentLength();
+				conn->UpdateTime();
 				break;
 				
 			case Connection::SENDING_RESPONSE:
@@ -486,9 +486,9 @@ void		HttpServer::run()
 					ClientCleanUp(e.client_fd);
 				}
 			}
+			checkTimouts();
 			if (!active_clients.empty())
 				ProcessClientsRoundRobin();
-			checkTimouts();
 		}
 		catch(const HttpClientError &e)
 		{
@@ -501,8 +501,7 @@ void		HttpServer::run()
 
 void		HttpServer::ProcessClientsRoundRobin()
 {
-    if (active_clients.empty())
-        return;
+    if (active_clients.empty()) return;
     int clients_count =  std::min(active_clients.size(),(size_t)CLIENT_PER_CYCLE);
     for (;clients_count--;)
     {

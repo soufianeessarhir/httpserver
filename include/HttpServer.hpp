@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 16:13:01 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/24 10:18:39 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/24 17:59:47 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@
 #define			MAX_REQUEST_LINE_LENGHT		8000
 #define			MAX_header_field_LENGHT		24000
 #define			READ_BUFFER_SIZE			64000
-#define			ACTIVITY_TIMEOUT			60
+#define			ACTIVITY_TIMEOUT			30
 
 
 class Connection;
