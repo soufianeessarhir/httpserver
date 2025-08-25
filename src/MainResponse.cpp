@@ -122,9 +122,6 @@ void    MainResponse::SetContentType(Connection *conn)
     std::map<std::string, std::string>::const_iterator it = MimeTypes.find(Extension);
     if (it != MimeTypes.end())
     {
-        std::cout << it->first << std::endl;
-        std::cout << it->second << std::endl;
-        std::cout << ContentType << "----" << std::endl;
         ContentType = (*it).second;
         IsBinaryFile = (ContentType.find("text/") != 0 && 
                    ContentType != "application/javascript" &&
@@ -333,8 +330,19 @@ bool    MainResponse::CheckForSending(Connection *conn)
             return false;
         }
     }
-    stat(conn->request->GetUri().c_str(), &FileState);
+    if (stat(conn->request->GetUri().c_str(), &FileState) == -1)
+    {
+        conn->response->SetStatusCode(404);
+        conn->response->SetMethod(Error);
+        return false;
+    }
     CheckProg.FileFd = open(conn->request->GetUri().c_str(), O_RDONLY);
+    if (CheckProg.FileFd < 0)
+    {
+        conn->response->SetStatusCode(404);
+        conn->response->SetMethod(Error);
+        return false;
+    }
     CheckProg.FileOffset = 0;
     CheckProg.FileSize = FileState.st_size;
     CheckProg.BuffSize = 0;
@@ -476,9 +484,6 @@ bool    CheckFileRD(Connection *conn)
     if (conn->UseCgi)
     {    
         conn->request->SetUri(conn->CgiObj->OutFile);
-        // delete conn->CgiObj;
-        // conn->CgiObj = NULL;
-        // conn->UseCgi = false;
     }
     struct stat FileState;
     if (stat(conn->request->GetUri().c_str(), &FileState) == -1)
