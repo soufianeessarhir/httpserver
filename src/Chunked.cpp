@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:32:17 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/24 11:00:36 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/25 10:16:03 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,13 @@ void Post::ReadChunkSize()
         return;
     }
     current_chunk_size = static_cast<size_t>(val);
+    content_bytes_read += current_chunk_size;
+    if (content_bytes_read > max_body_size)
+    {
+        conn->response = new Response(413, Error);
+        chunk_state = Post::CHUNK_ERROR;
+        return;
+    }
     if (current_chunk_size == 0)
         chunk_state = Post::READING_TRAILER_HEADERS;
     else

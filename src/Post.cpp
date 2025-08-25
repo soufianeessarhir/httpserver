@@ -6,7 +6,7 @@
 /*   By: sessarhi <sessarhi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 20:30:27 by sessarhi          #+#    #+#             */
-/*   Updated: 2025/08/24 11:38:15 by sessarhi         ###   ########.fr       */
+/*   Updated: 2025/08/25 10:18:28 by sessarhi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,10 +68,17 @@ Post::Post(Connection *conn , TransferType type):transfer_type(type),conn(conn),
 {
     std::string content_type = conn->request->GetHeader("content-type");
     max_body_size = conn->location->max_body_size;
+    content_bytes_read = 0;
     if (type ==  CONTENT_LENGTH)
     {
         content_length = conn->request->GetContentLenght();
-        content_bytes_read = 0;
+        if (content_length > max_body_size)
+        {
+            conn->response = new Response(413,Error);
+            conn->state =  Connection::SENDING_RESPONSE;
+            transfer_type = Post::ERROR;
+            return;
+        }
         ChecKMultiPart(content_type);
         if (is_multipart)
             return;

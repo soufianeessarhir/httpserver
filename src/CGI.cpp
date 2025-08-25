@@ -6,7 +6,7 @@
 /*   By: eaboudi <eaboudi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 10:19:37 by eaboudi           #+#    #+#             */
-/*   Updated: 2025/08/24 10:25:01 by eaboudi          ###   ########.fr       */
+/*   Updated: 2025/08/25 09:55:06 by eaboudi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,6 @@ CGI::CGI()
 
 char **    CGI::BuildEnv(Connection *conn)
 {
-    // std::cerr << "enter to BuildEnvv" << std::endl;
     std::stringstream ss;
     ss << conn->fd;
     if (!PATH_INFO.empty())
@@ -63,7 +62,6 @@ char **    CGI::BuildEnv(Connection *conn)
         EnvString.push_back("CONTENT_LENGTH=" + CONTENT_LENGTH);
         EnvString.push_back("CONTENT_TYPE=" + CONTENT_TYPE);
     }
-    // EnvString.push_back("SCRIPT_NAME=" + SCRIPT_NAME);
     EnvString.push_back("PATH_TRANSLATED=" + conn->location->root + conn->CgiObj->PATH_INFO);
     EnvString.push_back("HTTP_USER_AGENT=Client ID:" + ss.str());
     EnvString.push_back("SERVER_PROTOCOL=" + SERVER_PROTOCOL);
@@ -108,6 +106,7 @@ bool CGI::ExecuteCgi(Connection *conn)
         time_t current(std::time(NULL));
         if (current - start > 10)
         {
+            std::cout << "time out" << std::endl;
             conn->response->SetMethod(Error);
             conn->response->SetStatusCode(504);
             kill(Pid, SIGTERM);
@@ -193,6 +192,19 @@ bool    CGI::IsCgiComplet(Connection *conn)
 { 
     if (State == Finished)
         return true;
+    time_t current(std::time(NULL));
+    if (current - start > 10)
+    {
+        std::cout << "CGI timeout in IsCgiComplet" << std::endl;
+        conn->response->SetMethod(Error);
+        conn->response->SetStatusCode(504);
+        kill(Pid, SIGTERM);
+        my_usleep(100000);
+        kill(Pid, SIGKILL);
+        waitpid(Pid, NULL, WNOHANG);
+        State = Finished;
+        return true;
+    }
     
     int Status;
     pid_t   Res = waitpid(Pid, &Status, WNOHANG);
