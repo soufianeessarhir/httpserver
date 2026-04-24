@@ -119,23 +119,23 @@ void Post::ProcessChunck()
         switch (chunk_state)
         {
             case Post::READING_CHUNK_SIZE:
-            ReadChunkSize();
-            contunue = chunk_state != Post::READING_CHUNK_SIZE;
-            break;
+                ReadChunkSize();
+                contunue = chunk_state != Post::READING_CHUNK_SIZE;
+                break;
             case Post::READING_CHUNK_DATA:
-            ReadChunkData();
-            contunue = chunk_state != Post::READING_CHUNK_DATA;
-            break;
+                ReadChunkData();
+                contunue = chunk_state != Post::READING_CHUNK_DATA;
+                break;
             case Post::READING_TRAILER_HEADERS:
-            ReadTrailerHeaders();
-            contunue = chunk_state != Post::READING_TRAILER_HEADERS;
-            break;
+                ReadTrailerHeaders();
+                contunue = chunk_state != Post::READING_TRAILER_HEADERS;
+                break;
             case Post::CHUNK_COMPLETE:
-            conn->state = Connection::SENDING_RESPONSE;
-            break;
+                conn->state = Connection::SENDING_RESPONSE;
+                break;
             case Post::CHUNK_ERROR:
-            conn->state = Connection::SENDING_RESPONSE; 
-            break;
+                conn->state = Connection::SENDING_RESPONSE; 
+                break;
         }
     }
 }
